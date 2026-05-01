@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import PageTransition from '../components/PageTransition'
 import logo from '../assets/logo.png'
 
 function GoogleIcon() {
@@ -51,13 +52,14 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-white">
-      <div className="fixed top-0 left-0 right-0">
-        <div className="h-3" style={{ background: '#CC0000' }} />
-        <div className="h-3" style={{ background: '#FFE600' }} />
-      </div>
+    <PageTransition>
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-white">
+        <div className="fixed top-0 left-0 right-0">
+          <div className="h-3" style={{ background: '#CC0000' }} />
+          <div className="h-3" style={{ background: '#FFE600' }} />
+        </div>
 
-      <div className="w-full max-w-sm">
+        <div className="w-full max-w-sm">
         <div className="flex justify-center mb-4">
           <img src={logo} alt="DEK NOI" className="h-36 w-auto object-contain" />
         </div>
@@ -120,6 +122,7 @@ export default function Login() {
         <div className="h-3" style={{ background: '#CC0000' }} />
         <div className="h-3" style={{ background: '#FFE600' }} />
       </div>
-    </div>
+      </div>
+    </PageTransition>
   )
 }

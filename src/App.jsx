@@ -1,6 +1,8 @@
+import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Layout from './components/Layout'
+import SplashScreen from './components/SplashScreen'
 import Login from './pages/Login'
 import Register from './pages/Register'
 
@@ -30,7 +32,26 @@ function RequireAuth({ children, adminOnly = false }) {
 
 function Root() {
   const { user, profile } = useAuth()
+  const [showSplash, setShowSplash] = useState(false)
+
+  useEffect(() => {
+    // Show splash screen when user just logged in
+    if (user && !sessionStorage.getItem('hasSeenSplash')) {
+      setShowSplash(true)
+    }
+  }, [user])
+
+  const handleSplashComplete = () => {
+    sessionStorage.setItem('hasSeenSplash', 'true')
+    setShowSplash(false)
+  }
+
   if (!user) return <Navigate to="/login" replace />
+  
+  if (showSplash) {
+    return <SplashScreen onComplete={handleSplashComplete} />
+  }
+
   return <Navigate to={profile?.role === 'admin' ? '/admin' : '/dashboard'} replace />
 }
 

@@ -6,11 +6,16 @@ import { Star, TrendingUp, Gift, Clock, ChevronRight, Megaphone } from 'lucide-r
 import { Link } from 'react-router-dom'
 import lineQr from '../../assets/line-qr.png'
 import charHappy from '../../assets/char-happy.png'
+import Toast from '../../components/Toast'
+import { useRedemptionNotifications } from '../../hooks/useRedemptionNotifications'
+import PromoCarousel from '../../components/PromoCarousel'
 
 export default function CustomerDashboard() {
   const { user, profile } = useAuth()
   const [transactions, setTransactions] = useState([])
   const [pendingCount, setPendingCount] = useState(0)
+  const [promos, setPromos] = useState([])
+  const { notification, clearNotification } = useRedemptionNotifications(user?.uid)
 
   useEffect(() => {
     if (!user) return
@@ -18,6 +23,30 @@ export default function CustomerDashboard() {
       .then(snap => setTransactions(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
     getDocs(query(collection(db, 'redemptions'), where('userId', '==', user.uid), where('status', '==', 'pending')))
       .then(snap => setPendingCount(snap.size))
+    // Load active promos (without orderBy to avoid index requirement)
+    getDocs(query(collection(db, 'promos'), where('active', '==', true)))
+      .then(snap => {
+        const promosData = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => {
+            // Sort by createdAt in memory (newest first)
+            const aTime = a.createdAt?.toMillis?.() || 0
+            const bTime = b.createdAt?.toMillis?.() || 0
+            return bTime - aTime
+          })
+        console.log('📢 Loaded promos for carousel:', promosData)
+        console.log('📢 Number of active promos:', promosData.length)
+        setPromos(promosData)
+      })
+      .catch(error => {
+        console.error('❌ Error loading promos:', error)
+        // Fallback: try loading all promos without filter
+        getDocs(collection(db, 'promos'))
+          .then(snap => {
+            const allPromos = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+            console.log('📢 Loaded all promos (fallback):', allPromos)
+            setPromos(allPromos)
+          })
+      })
   }, [user])
 
   const pts = profile?.points ?? 0
@@ -26,7 +55,19 @@ export default function CustomerDashboard() {
 
   return (
     <div className="p-6 md:p-8 max-w-2xl">
+      {notification && (
+        <Toast
+          message={notification.message}
+          type={notification.type}
+          onClose={clearNotification}
+          duration={8000}
+        />
+      )}
+      
       <h1 className="text-2xl font-black text-gray-900 mb-6">Hi, {profile?.name?.split(' ')[0]} 👋</h1>
+
+      {/* Promo Carousel */}
+      <PromoCarousel promos={promos} />
 
       {/* Points card */}
       <div className="rounded-3xl p-6 text-white mb-6 shadow-lg relative overflow-hidden" style={{ background: '#CC0000' }}>
@@ -81,6 +122,18 @@ export default function CustomerDashboard() {
             <div>
               <p className="font-black text-gray-900 text-sm">Rewards Store</p>
               <p className="text-xs text-gray-500">Redeem your points for gifts</p>
+            </div>
+          </div>
+          <ChevronRight size={18} className="text-gray-400" />
+        </Link>
+        <Link to="/my-redemptions" className="flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#F0FFF4' }}>
+              <Gift size={20} style={{ color: '#16a34a' }} />
+            </div>
+            <div>
+              <p className="font-black text-gray-900 text-sm">My Redemptions</p>
+              <p className="text-xs text-gray-500">View your reward requests</p>
             </div>
           </div>
           <ChevronRight size={18} className="text-gray-400" />

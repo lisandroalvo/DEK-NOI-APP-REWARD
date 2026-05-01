@@ -17,23 +17,61 @@ export default function AdminRedemptions() {
   const [rejectModal, setRejectModal] = useState(null)
   const [rejectNote, setRejectNote] = useState('')
   const [working, setWorking] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   const load = async (status) => {
-    const snap = await getDocs(query(collection(db, 'redemptions'), where('status', '==', status), orderBy('requestedAt', 'desc')))
-    setItems(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    setLoading(true)
+    setError(null)
+    try {
+      // Try with orderBy first (requires index)
+      let snap
+      try {
+        snap = await getDocs(query(collection(db, 'redemptions'), where('status', '==', status), orderBy('requestedAt', 'desc')))
+      } catch (indexError) {
+        // If index doesn't exist, fall back to query without orderBy
+        console.warn('Firestore index not found, using fallback query:', indexError.message)
+        snap = await getDocs(query(collection(db, 'redemptions'), where('status', '==', status)))
+      }
+      
+      let data = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      
+      // Sort in memory if we couldn't use orderBy
+      data.sort((a, b) => {
+        const aTime = a.requestedAt?.toMillis?.() || 0
+        const bTime = b.requestedAt?.toMillis?.() || 0
+        return bTime - aTime
+      })
+      
+      console.log(`Loaded ${data.length} ${status} redemptions:`, data)
+      setItems(data)
+    } catch (error) {
+      console.error('Error loading redemptions:', error)
+      setError(error.message || 'Failed to load redemptions')
+      setItems([])
+    } finally {
+      setLoading(false)
+    }
   }
 
   const loadCounts = async () => {
-    const [p, a, r] = await Promise.all([
-      getDocs(query(collection(db, 'redemptions'), where('status', '==', 'pending'))),
-      getDocs(query(collection(db, 'redemptions'), where('status', '==', 'approved'))),
-      getDocs(query(collection(db, 'redemptions'), where('status', '==', 'rejected'))),
-    ])
-    setCounts({ pending: p.size, approved: a.size, rejected: r.size })
+    try {
+      const [p, a, r] = await Promise.all([
+        getDocs(query(collection(db, 'redemptions'), where('status', '==', 'pending'))),
+        getDocs(query(collection(db, 'redemptions'), where('status', '==', 'approved'))),
+        getDocs(query(collection(db, 'redemptions'), where('status', '==', 'rejected'))),
+      ])
+      console.log('Counts:', { pending: p.size, approved: a.size, rejected: r.size })
+      setCounts({ pending: p.size, approved: a.size, rejected: r.size })
+    } catch (error) {
+      console.error('Error loading counts:', error)
+    }
   }
 
-  useEffect(() => { load(tab) }, [tab])
-  useEffect(() => { loadCounts() }, [])
+  useEffect(() => { 
+    load(tab)
+    loadCounts()
+  }, [tab])
 
   const approve = async (r) => {
     if (!confirm(`Approve "${r.rewardName}" for ${r.userName}?\nThis will deduct ${r.pointsCost} points from their account.`)) return
@@ -103,12 +141,24 @@ export default function AdminRedemptions() {
       </div>
 
       <div className="space-y-3 max-w-2xl">
-        {items.length === 0 && (
+        {error && (
+          <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-4">
+            <p className="text-sm font-bold text-red-800">Error loading redemptions</p>
+            <p className="text-xs text-red-600 mt-1">{error}</p>
+          </div>
+        )}
+        
+        {loading ? (
+          <div className="text-center py-16 text-gray-400">
+            <Clock size={40} className="mx-auto mb-2 opacity-20 animate-spin" />
+            <p>Loading...</p>
+          </div>
+        ) : items.length === 0 ? (
           <div className="text-center py-16 text-gray-400">
             <Clock size={40} className="mx-auto mb-2 opacity-20" />
             <p>No {tab} requests.</p>
           </div>
-        )}
+        ) : null}
         {items.map(r => (
           <div key={r.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="p-4 flex items-start justify-between gap-4">

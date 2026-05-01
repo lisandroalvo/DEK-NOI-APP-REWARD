@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { Plus, Pencil, Trash2, X, Gift } from 'lucide-react'
+import ImageUploadSimple from '../../components/ImageUploadSimple'
 
-const EMPTY = { name: '', description: '', pointsCost: '', emoji: '', available: true }
+const EMPTY = { name: '', description: '', pointsCost: '', emoji: '', available: true, imageUrl: null }
 
 export default function AdminRewards() {
   const [rewards, setRewards] = useState([])
@@ -15,7 +16,7 @@ export default function AdminRewards() {
   useEffect(() => { load() }, [])
 
   const open = (r = null) => {
-    setForm(r ? { name: r.name, description: r.description, pointsCost: String(r.pointsCost), emoji: r.emoji || '', available: r.available } : EMPTY)
+    setForm(r ? { name: r.name, description: r.description, pointsCost: String(r.pointsCost), emoji: r.emoji || '', available: r.available, imageUrl: r.imageUrl || null } : EMPTY)
     setModal(r ?? 'new')
   }
 
@@ -95,6 +96,11 @@ export default function AdminRewards() {
                   />
                 </div>
               ))}
+              <ImageUploadSimple
+                value={form.imageUrl}
+                onChange={(url) => setForm(f => ({ ...f, imageUrl: url }))}
+                label="Reward Image (optional)"
+              />
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={form.available} onChange={e => setForm(f => ({ ...f, available: e.target.checked }))} className="w-4 h-4" />
                 <span className="text-sm font-semibold text-gray-700">Available to customers</span>

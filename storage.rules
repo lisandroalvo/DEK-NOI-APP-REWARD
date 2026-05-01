@@ -1,0 +1,11 @@
+rules_version = '2';
+
+// Temporary TEST MODE - Allow all access for development
+// IMPORTANT: Change this before production!
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if true;
+    }
+  }
+}

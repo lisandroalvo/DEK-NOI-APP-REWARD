@@ -6,6 +6,8 @@ import { ShoppingBag } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import lineQr from '../../assets/line-qr.png'
 import charSitting from '../../assets/char-sitting.png'
+import Toast from '../../components/Toast'
+import { useRedemptionNotifications } from '../../hooks/useRedemptionNotifications'
 
 const STATUS = {
   pending:  { bg: '#FFF9E0', color: '#CC7700', label: '⏳ Pending Approval',   desc: 'Admin will review your request shortly.' },
@@ -18,11 +20,42 @@ export default function MyRedemptions() {
   const { user } = useAuth()
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const { notification, clearNotification } = useRedemptionNotifications(user?.uid)
 
   useEffect(() => {
     if (!user) return
-    getDocs(query(collection(db, 'redemptions'), where('userId', '==', user.uid), orderBy('requestedAt', 'desc')))
-      .then(snap => { setItems(snap.docs.map(d => ({ id: d.id, ...d.data() }))); setLoading(false) })
+    
+    const loadRedemptions = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        let snap
+        try {
+          snap = await getDocs(query(collection(db, 'redemptions'), where('userId', '==', user.uid), orderBy('requestedAt', 'desc')))
+        } catch (indexError) {
+          console.warn('Firestore index not found, using fallback query:', indexError.message)
+          snap = await getDocs(query(collection(db, 'redemptions'), where('userId', '==', user.uid)))
+        }
+        
+        let data = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        data.sort((a, b) => {
+          const aTime = a.requestedAt?.toMillis?.() || 0
+          const bTime = b.requestedAt?.toMillis?.() || 0
+          return bTime - aTime
+        })
+        
+        console.log('Loaded redemptions:', data)
+        setItems(data)
+      } catch (err) {
+        console.error('Error loading redemptions:', err)
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadRedemptions()
   }, [user])
 
   const pending = items.filter(i => i.status === 'pending')
@@ -30,10 +63,29 @@ export default function MyRedemptions() {
 
   return (
     <div className="p-6 md:p-8 max-w-lg">
+      {notification && (
+        <Toast
+          message={notification.message}
+          type={notification.type}
+          onClose={clearNotification}
+          duration={8000}
+        />
+      )}
+      
       <h1 className="text-2xl font-black text-gray-900 mb-6">My Redemptions</h1>
 
+      {error && (
+        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-4">
+          <p className="text-sm font-bold text-red-800">Error loading redemptions</p>
+          <p className="text-xs text-red-600 mt-1">{error}</p>
+        </div>
+      )}
+
       {loading ? (
-        <p className="text-gray-400 text-sm">Loading…</p>
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-2" style={{ borderColor: '#CC0000' }} />
+          <p className="text-gray-400 text-sm">Loading…</p>
+        </div>
       ) : items.length === 0 ? (
         <div className="text-center py-8 text-gray-400">
           <img src={charSitting} alt="" className="h-36 mx-auto mb-2" />

@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, orderBy, query } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { Plus, Pencil, Trash2, X, Megaphone } from 'lucide-react'
+import ImageUploadSimple from '../../components/ImageUploadSimple'
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
-const EMPTY = { title: '', description: '', month: '', bonusPoints: '', active: true }
+const EMPTY = { title: '', description: '', month: '', bonusPoints: '', active: true, imageUrl: null }
 
 export default function AdminPromos() {
   const [promos, setPromos] = useState([])
@@ -16,18 +17,39 @@ export default function AdminPromos() {
   useEffect(() => { load() }, [])
 
   const open = (p = null) => {
-    setForm(p ? { title: p.title, description: p.description, month: p.month || '', bonusPoints: String(p.bonusPoints || ''), active: p.active } : EMPTY)
+    setForm(p ? { title: p.title, description: p.description, month: p.month || '', bonusPoints: String(p.bonusPoints || ''), active: p.active, imageUrl: p.imageUrl || null } : EMPTY)
     setModal(p ?? 'new')
   }
 
   const save = async () => {
     setSaving(true)
     const data = { ...form, bonusPoints: form.bonusPoints ? parseInt(form.bonusPoints) : null, updatedAt: serverTimestamp() }
+    
+    console.log('💾 Saving promo...')
+    console.log('Form data:', {
+      title: form.title,
+      hasImage: !!form.imageUrl,
+      imageSize: form.imageUrl ? Math.round(form.imageUrl.length / 1024) + ' KB' : 'No image'
+    })
+    
     try {
-      if (modal === 'new') await addDoc(collection(db, 'promos'), { ...data, createdAt: serverTimestamp() })
-      else await updateDoc(doc(db, 'promos', modal.id), data)
-      setModal(null); load()
-    } finally { setSaving(false) }
+      if (modal === 'new') {
+        console.log('Creating new promo...')
+        await addDoc(collection(db, 'promos'), { ...data, createdAt: serverTimestamp() })
+        console.log('✅ Promo created successfully')
+      } else {
+        console.log('Updating promo:', modal.id)
+        await updateDoc(doc(db, 'promos', modal.id), data)
+        console.log('✅ Promo updated successfully')
+      }
+      setModal(null)
+      load()
+    } catch (error) {
+      console.error('❌ Save error:', error)
+      alert('Failed to save promo: ' + error.message)
+    } finally {
+      setSaving(false)
+    }
   }
 
   const remove = async (id) => { if (!confirm('Delete this promo?')) return; await deleteDoc(doc(db, 'promos', id)); load() }
@@ -36,19 +58,27 @@ export default function AdminPromos() {
 
   return (
     <div className="p-6 md:p-8">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-black text-gray-900">Promos</h1>
         <button onClick={() => open()} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black text-white" style={{ background: '#CC0000' }}>
           <Plus size={16} /> New Promo
         </button>
       </div>
+      
 
-      <div className="space-y-3 max-w-2xl">
+      <div className="space-y-3 max-w-4xl">
         {promos.map(p => (
           <div key={p.id} className={`bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100 ${!p.active ? 'opacity-50' : ''}`}>
             <div className="h-1.5" style={{ background: '#CC0000' }} />
             <div className="h-1.5" style={{ background: '#FFE600' }} />
-            <div className="p-4 flex justify-between items-start">
+            <div className="p-4 flex gap-4 items-start">
+              {p.imageUrl && (
+                <img 
+                  src={p.imageUrl} 
+                  alt={p.title}
+                  className="w-32 h-20 object-cover rounded-lg shrink-0 border-2 border-gray-200"
+                />
+              )}
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xs font-black uppercase tracking-wide" style={{ color: '#CC0000' }}>{p.month || 'General'}</span>
@@ -111,6 +141,11 @@ export default function AdminPromos() {
                   className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none"
                   onFocus={e => e.target.style.borderColor = '#CC0000'} onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
               </div>
+              <ImageUploadSimple
+                value={form.imageUrl}
+                onChange={(url) => setForm(f => ({ ...f, imageUrl: url }))}
+                label="Promo Image (for carousel)"
+              />
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={form.active} onChange={e => setForm(f => ({ ...f, active: e.target.checked }))} className="w-4 h-4" />
                 <span className="text-sm font-semibold text-gray-700">Show to customers</span>
