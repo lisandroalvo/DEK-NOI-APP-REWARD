@@ -30,6 +30,8 @@ export default function Login() {
     setLoading(true)
     try {
       await login(email, password)
+      // Clear splash screen flag so it shows after login
+      sessionStorage.removeItem('hasSeenSplash')
       navigate('/')
     } catch {
       setError('Invalid email or password.')
@@ -43,6 +45,8 @@ export default function Login() {
     setGLoading(true)
     try {
       await loginWithGoogle()
+      // Clear splash screen flag so it shows after login
+      sessionStorage.removeItem('hasSeenSplash')
       navigate('/')
     } catch (err) {
       if (err.code !== 'auth/popup-closed-by-user') setError('Google sign-in failed. Please try again.')
