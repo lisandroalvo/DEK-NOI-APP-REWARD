@@ -69,10 +69,10 @@ export default function Layout({ children }) {
   ]
 
   const customerLinks = [
-    { to: '/dashboard',      icon: <Star size={18} />,        label: 'My Points' },
-    { to: '/rewards',        icon: <Gift size={18} />,        label: 'Rewards' },
-    { to: '/my-redemptions', icon: <ShoppingBag size={18} />, label: 'My Orders' },
-    { to: '/promos',         icon: <Megaphone size={18} />,   label: 'Promos' },
+    { to: '/dashboard',      icon: <Star size={22} />,        label: 'My Points' },
+    { to: '/rewards',        icon: <Gift size={22} />,        label: 'Rewards' },
+    { to: '/my-redemptions', icon: <ShoppingBag size={22} />, label: 'My Orders' },
+    { to: '/promos',         icon: <Megaphone size={22} />,   label: 'Promos' },
   ]
 
   const links = isAdmin ? adminLinks : customerLinks
@@ -167,14 +167,19 @@ export default function Layout({ children }) {
 
       {/* ── Customer bottom tab bar (mobile only) ── */}
       {!isAdmin && (
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 flex">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t-2 shadow-lg flex" style={{ borderColor: '#CC0000' }}>
           {customerLinks.map(({ to, icon, label }) => {
             const active = pathname === to
             return (
               <Link key={to} to={to}
-                className="flex-1 flex flex-col items-center justify-center py-2 gap-0.5 text-xs font-bold transition-colors"
-                style={{ color: active ? '#CC0000' : '#999' }}>
-                <span style={{ color: active ? '#CC0000' : '#bbb' }}>{icon}</span>
+                className="flex-1 flex flex-col items-center justify-center py-3 gap-1 text-xs font-bold transition-all"
+                style={{ 
+                  color: active ? '#CC0000' : '#666',
+                  background: active ? '#FFF5F5' : 'transparent'
+                }}>
+                <span style={{ transform: active ? 'scale(1.1)' : 'scale(1)' }}>
+                  {icon}
+                </span>
                 {label}
               </Link>
             )
