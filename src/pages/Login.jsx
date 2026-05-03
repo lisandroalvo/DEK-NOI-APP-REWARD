@@ -57,18 +57,18 @@ export default function Login() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-white">
-        <div className="fixed top-0 left-0 right-0">
-          <div className="h-3" style={{ background: '#CC0000' }} />
-          <div className="h-3" style={{ background: '#FFE600' }} />
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-white overflow-x-hidden">
+        <div className="fixed top-0 left-0 right-0 z-10">
+          <div className="h-2 sm:h-3" style={{ background: '#CC0000' }} />
+          <div className="h-2 sm:h-3" style={{ background: '#FFE600' }} />
         </div>
 
         <div className="w-full max-w-sm">
         <div className="flex justify-center mb-4">
-          <img src={logo} alt="DEK NOI" className="h-36 w-auto object-contain" />
+          <img src={logo} alt="DEK NOI" className="h-28 sm:h-36 w-auto object-contain" />
         </div>
 
-        <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-gray-100 p-6 sm:p-8">
           <h2 className="text-xl font-black text-gray-900 mb-1">Welcome back!</h2>
           <p className="text-sm text-gray-500 mb-6">Sign in to your Rewards account</p>
 

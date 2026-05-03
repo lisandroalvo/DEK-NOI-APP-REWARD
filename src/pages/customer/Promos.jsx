@@ -32,15 +32,15 @@ export default function CustomerPromos() {
     : promos.filter(p => p.category === selectedCategory)
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto">
+    <div className="p-4 sm:p-6 md:p-8 max-w-6xl w-full mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-black text-gray-900 mb-2">🎉 Monthly Promos</h1>
-        <p className="text-gray-500">Discover amazing deals and special offers this month!</p>
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">🎉 Monthly Promos</h1>
+        <p className="text-sm sm:text-base text-gray-500">Discover amazing deals and special offers this month!</p>
       </div>
 
       {/* Category Chips */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide">
+      <div className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
         {CATEGORIES.map(cat => {
           const Icon = cat.icon
           const isActive = selectedCategory === cat.id

@@ -54,7 +54,7 @@ export default function CustomerDashboard() {
   const redeemed = Math.abs(transactions.filter(t => t.points < 0).reduce((a, t) => a + t.points, 0))
 
   return (
-    <div className="p-6 md:p-8 max-w-2xl">
+    <div className="p-4 sm:p-6 md:p-8 max-w-2xl w-full mx-auto">
       {notification && (
         <Toast
           message={notification.message}
@@ -64,24 +64,24 @@ export default function CustomerDashboard() {
         />
       )}
       
-      <h1 className="text-2xl font-black text-gray-900 mb-6">Hi, {profile?.name?.split(' ')[0]} 👋</h1>
+      <h1 className="text-xl sm:text-2xl font-black text-gray-900 mb-4 sm:mb-6">Hi, {profile?.name?.split(' ')[0]} 👋</h1>
 
       {/* Promo Carousel */}
       <PromoCarousel promos={promos} />
 
       {/* Game-like Points Card */}
-      <div className="rounded-3xl p-6 text-white mb-6 shadow-2xl relative overflow-hidden" 
+      <div className="rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white mb-4 sm:mb-6 shadow-2xl relative overflow-hidden" 
         style={{ 
           background: 'linear-gradient(135deg, #CC0000 0%, #FF3333 100%)',
           boxShadow: '0 20px 60px rgba(204, 0, 0, 0.3)'
         }}>
         {/* Animated background elements */}
-        <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full opacity-20 animate-pulse" style={{ background: '#FFE600' }} />
-        <div className="absolute -bottom-4 -left-4 w-24 h-24 rounded-full opacity-10 animate-pulse" style={{ background: '#FFE600', animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 w-40 h-40 rounded-full opacity-5" style={{ background: '#FFE600', transform: 'translate(-50%, -50%)' }} />
+        <div className="absolute -top-6 -right-6 w-24 sm:w-32 h-24 sm:h-32 rounded-full opacity-20 animate-pulse" style={{ background: '#FFE600' }} />
+        <div className="absolute -bottom-4 -left-4 w-20 sm:w-24 h-20 sm:h-24 rounded-full opacity-10 animate-pulse" style={{ background: '#FFE600', animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 w-32 sm:w-40 h-32 sm:h-40 rounded-full opacity-5" style={{ background: '#FFE600', transform: 'translate(-50%, -50%)' }} />
         
         {/* Character */}
-        <img src={charHappy} alt="" className="absolute -bottom-2 right-3 h-32 w-auto object-contain pointer-events-none drop-shadow-lg" />
+        <img src={charHappy} alt="" className="absolute -bottom-2 right-2 sm:right-3 h-24 sm:h-32 w-auto object-contain pointer-events-none drop-shadow-lg" />
         
         {/* Points Display */}
         <div className="relative z-10">
@@ -91,8 +91,8 @@ export default function CustomerDashboard() {
           </div>
           
           {/* Big Points Number */}
-          <div className="flex items-baseline gap-3 mb-4">
-            <span className="text-7xl font-black tracking-tight drop-shadow-lg"
+          <div className="flex items-baseline gap-2 sm:gap-3 mb-3 sm:mb-4">
+            <span className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight drop-shadow-lg"
               style={{
                 textShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
                 animation: 'pulse 2s ease-in-out infinite'
@@ -100,7 +100,7 @@ export default function CustomerDashboard() {
               {pts.toLocaleString()}
             </span>
             <div className="flex flex-col">
-              <span className="text-2xl font-black" style={{ color: '#FFE600' }}>PTS</span>
+              <span className="text-xl sm:text-2xl font-black" style={{ color: '#FFE600' }}>PTS</span>
               <span className="text-xs text-white/70 font-bold">Available</span>
             </div>
           </div>

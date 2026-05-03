@@ -41,17 +41,17 @@ export default function Profile() {
   }
 
   return (
-    <div className="p-6 md:p-8 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-black text-gray-900 mb-6">My Profile</h1>
+    <div className="p-4 sm:p-6 md:p-8 max-w-2xl w-full mx-auto">
+      <h1 className="text-xl sm:text-2xl font-black text-gray-900 mb-4 sm:mb-6">My Profile</h1>
 
       {/* Profile Card */}
-      <div className="bg-white rounded-3xl shadow-lg border-2 overflow-hidden mb-6" style={{ borderColor: '#CC0000' }}>
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg border-2 overflow-hidden mb-4 sm:mb-6" style={{ borderColor: '#CC0000' }}>
         {/* Header with gradient */}
-        <div className="h-32 relative" style={{ background: 'linear-gradient(135deg, #CC0000 0%, #FF3333 100%)' }}>
-          <div className="absolute -bottom-16 left-6">
+        <div className="h-24 sm:h-32 relative" style={{ background: 'linear-gradient(135deg, #CC0000 0%, #FF3333 100%)' }}>
+          <div className="absolute -bottom-12 sm:-bottom-16 left-4 sm:left-6">
             <div className="relative">
               {/* Profile Photo */}
-              <div className="w-32 h-32 rounded-full border-4 border-white overflow-hidden bg-gray-100 shadow-xl">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white overflow-hidden bg-gray-100 shadow-xl">
                 {form.photoURL ? (
                   <img src={form.photoURL} alt={form.name} className="w-full h-full object-cover" />
                 ) : (
@@ -71,7 +71,7 @@ export default function Profile() {
         </div>
 
         {/* Content */}
-        <div className="pt-20 p-6">
+        <div className="pt-16 sm:pt-20 p-4 sm:p-6">
           {editing ? (
             <div className="space-y-4 mb-6">
               {/* Photo Upload */}

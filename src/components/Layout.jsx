@@ -189,7 +189,7 @@ export default function Layout({ children }) {
       )}
 
       {/* ── Main content ── */}
-      <main className={`flex-1 overflow-auto bg-gray-50 ${!isAdmin ? 'pt-16 pb-20 md:pt-0 md:pb-0' : 'pt-14 md:pt-0'}`}>
+      <main className={`flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 ${!isAdmin ? 'pt-16 pb-24 md:pt-0 md:pb-0' : 'pt-14 md:pt-0'}`}>
         {children}
       </main>
 

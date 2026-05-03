@@ -44,15 +44,17 @@ export default function CustomerRewards() {
   const pts = profile?.points ?? 0
 
   return (
-    <div className="p-6 md:p-8">
+    <div className="p-4 sm:p-6 md:p-8 w-full max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-2">
-        <h1 className="text-2xl font-black text-gray-900">Rewards Store</h1>
-        <div className="flex items-center gap-1.5 rounded-full px-4 py-2 font-black text-sm" style={{ background: '#FFE600', color: '#CC0000' }}>
-          <Star size={14} fill="currentColor" /> {pts.toLocaleString()} pts
+      <div className="flex items-center justify-between mb-2 gap-2">
+        <h1 className="text-xl sm:text-2xl font-black text-gray-900">Rewards Store</h1>
+        <div className="flex items-center gap-1 sm:gap-1.5 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 font-black text-xs sm:text-sm whitespace-nowrap" style={{ background: '#FFE600', color: '#CC0000' }}>
+          <Star size={12} className="sm:hidden" fill="currentColor" />
+          <Star size={14} className="hidden sm:block" fill="currentColor" />
+          {pts.toLocaleString()} pts
         </div>
       </div>
-      <p className="text-gray-400 text-sm mb-6">Redeem your points for great rewards!</p>
+      <p className="text-gray-400 text-xs sm:text-sm mb-4 sm:mb-6">Redeem your points for great rewards!</p>
 
       {success && (
         <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-2xl flex items-start gap-3 text-green-700">
