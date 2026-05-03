@@ -45,23 +45,34 @@ export default function AdminRewards() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {rewards.map(r => (
-          <div key={r.id} className={`bg-white rounded-2xl shadow-sm border-2 p-4 ${!r.available ? 'opacity-50' : ''}`}
+          <div key={r.id} className={`bg-white rounded-2xl shadow-sm border-2 overflow-hidden ${!r.available ? 'opacity-50' : ''}`}
             style={{ borderColor: r.available ? '#CC0000' : '#e5e7eb' }}>
-            <div className="flex justify-between items-start mb-3">
-              <span className="text-3xl">{r.emoji || '🎁'}</span>
-              <div className="flex gap-1">
-                <button onClick={() => open(r)} className="p-1.5 hover:bg-gray-100 rounded-lg"><Pencil size={14} className="text-gray-500" /></button>
-                <button onClick={() => remove(r.id)} className="p-1.5 hover:bg-red-50 rounded-lg"><Trash2 size={14} style={{ color: '#CC0000' }} /></button>
+            {/* Image or Emoji Header */}
+            <div className="h-32 flex items-center justify-center relative" style={{ background: '#FFF0F0' }}>
+              {r.imageUrl ? (
+                <img src={r.imageUrl} alt={r.name} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-5xl">{r.emoji || '🎁'}</span>
+              )}
+              <div className="absolute top-2 right-2 flex gap-1">
+                <button onClick={() => open(r)} className="p-1.5 bg-white/90 hover:bg-white rounded-lg shadow-sm">
+                  <Pencil size={14} className="text-gray-600" />
+                </button>
+                <button onClick={() => remove(r.id)} className="p-1.5 bg-white/90 hover:bg-white rounded-lg shadow-sm">
+                  <Trash2 size={14} style={{ color: '#CC0000' }} />
+                </button>
               </div>
             </div>
-            <h3 className="font-black text-gray-900">{r.name}</h3>
-            <p className="text-xs text-gray-500 mt-1 mb-3">{r.description}</p>
-            <div className="flex items-center justify-between">
-              <span className="font-black text-sm" style={{ color: '#CC0000' }}>⭐ {r.pointsCost} pts</span>
-              <button onClick={() => toggle(r)} className="text-xs px-2.5 py-1 rounded-full font-black"
-                style={r.available ? { background: '#FFE600', color: '#CC0000' } : { background: '#f3f4f6', color: '#666' }}>
-                {r.available ? 'Active' : 'Hidden'}
-              </button>
+            <div className="p-4">
+              <h3 className="font-black text-gray-900">{r.name}</h3>
+              <p className="text-xs text-gray-500 mt-1 mb-3 line-clamp-2">{r.description}</p>
+              <div className="flex items-center justify-between">
+                <span className="font-black text-sm" style={{ color: '#CC0000' }}>⭐ {r.pointsCost} pts</span>
+                <button onClick={() => toggle(r)} className="text-xs px-2.5 py-1 rounded-full font-black"
+                  style={r.available ? { background: '#FFE600', color: '#CC0000' } : { background: '#f3f4f6', color: '#666' }}>
+                  {r.available ? 'Active' : 'Hidden'}
+                </button>
+              </div>
             </div>
           </div>
         ))}

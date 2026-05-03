@@ -76,12 +76,23 @@ export default function CustomerRewards() {
             return (
               <div key={r.id} className="bg-white rounded-2xl shadow-sm overflow-hidden border-2 transition-all"
                 style={{ borderColor: canAfford ? '#CC0000' : '#e5e7eb' }}>
-                <div className="h-32 flex flex-col items-center justify-center gap-1" style={{ background: canAfford ? '#FFF0F0' : '#f9fafb' }}>
-                  <span className="text-5xl">{r.emoji || '🎁'}</span>
+                <div className="h-40 flex flex-col items-center justify-center gap-1 relative overflow-hidden" 
+                  style={{ background: canAfford ? '#FFF0F0' : '#f9fafb' }}>
+                  {r.imageUrl ? (
+                    <img 
+                      src={r.imageUrl} 
+                      alt={r.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-5xl">{r.emoji || '🎁'}</span>
+                  )}
                   {!canAfford && (
-                    <span className="text-xs font-bold text-gray-400 flex items-center gap-1">
-                      <Lock size={10} /> Need {ptsNeeded.toLocaleString()} more pts
-                    </span>
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <span className="text-xs font-bold text-white flex items-center gap-1 bg-black/60 px-3 py-1.5 rounded-full">
+                        <Lock size={12} /> Need {ptsNeeded.toLocaleString()} more pts
+                      </span>
+                    </div>
                   )}
                 </div>
                 <div className="p-4">
