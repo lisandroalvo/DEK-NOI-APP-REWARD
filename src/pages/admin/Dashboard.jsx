@@ -46,8 +46,8 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="p-6 md:p-8">
-      <h1 className="text-2xl font-black text-gray-900 mb-1">Admin Dashboard</h1>
+    <div className="p-4 sm:p-6 md:p-8 w-full max-w-6xl mx-auto">
+      <h1 className="text-xl sm:text-2xl font-black text-gray-900 mb-1">Admin Dashboard</h1>
       <p className="text-gray-400 text-sm mb-6">DEK NOI Rewards — overview</p>
 
       {/* Pending alert banner */}

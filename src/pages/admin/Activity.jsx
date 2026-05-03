@@ -34,8 +34,8 @@ export default function AdminActivity() {
   )
 
   return (
-    <div className="p-6 md:p-8">
-      <h1 className="text-2xl font-black text-gray-900 mb-1">Activity Log</h1>
+    <div className="p-4 sm:p-6 md:p-8 w-full max-w-6xl mx-auto">
+      <h1 className="text-xl sm:text-2xl font-black text-gray-900 mb-1">Activity Log</h1>
       <p className="text-sm text-gray-400 mb-6">All point transactions across all members</p>
 
       <div className="relative mb-5 max-w-sm">

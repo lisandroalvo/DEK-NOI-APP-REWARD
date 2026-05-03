@@ -35,9 +35,9 @@ export default function AdminRewards() {
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
 
   return (
-    <div className="p-6 md:p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-black text-gray-900">Rewards</h1>
+    <div className="p-4 sm:p-6 md:p-8 w-full max-w-6xl mx-auto">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-black text-gray-900">Rewards</h1>
         <button onClick={() => open()} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black text-white" style={{ background: '#CC0000' }}>
           <Plus size={16} /> New Reward
         </button>

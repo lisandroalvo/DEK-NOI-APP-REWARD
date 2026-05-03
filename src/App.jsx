@@ -36,31 +36,23 @@ function Root() {
   const [showSplash, setShowSplash] = useState(false)
 
   useEffect(() => {
-    console.log('🎬 Root useEffect - user:', !!user, 'hasSeenSplash:', sessionStorage.getItem('hasSeenSplash'))
     // Show splash screen when user just logged in
     if (user && !sessionStorage.getItem('hasSeenSplash')) {
-      console.log('✅ Showing splash screen!')
       setShowSplash(true)
     }
   }, [user])
 
   const handleSplashComplete = () => {
-    console.log('🎉 Splash complete!')
     sessionStorage.setItem('hasSeenSplash', 'true')
     setShowSplash(false)
   }
 
-  if (!user) {
-    console.log('❌ No user, redirecting to login')
-    return <Navigate to="/login" replace />
-  }
+  if (!user) return <Navigate to="/login" replace />
   
   if (showSplash) {
-    console.log('🎪 Rendering splash screen')
     return <SplashScreen onComplete={handleSplashComplete} />
   }
 
-  console.log('➡️ Redirecting to dashboard/admin')
   return <Navigate to={profile?.role === 'admin' ? '/admin' : '/dashboard'} replace />
 }
 

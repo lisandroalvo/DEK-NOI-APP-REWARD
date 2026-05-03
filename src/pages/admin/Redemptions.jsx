@@ -116,8 +116,8 @@ export default function AdminRedemptions() {
   ]
 
   return (
-    <div className="p-6 md:p-8">
-      <h1 className="text-2xl font-black text-gray-900 mb-6">Redemption Requests</h1>
+    <div className="p-4 sm:p-6 md:p-8 w-full max-w-6xl mx-auto">
+      <h1 className="text-xl sm:text-2xl font-black text-gray-900 mb-1">Redemption Requests</h1>
 
       {/* Tabs with counts */}
       <div className="flex gap-2 mb-6">

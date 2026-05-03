@@ -166,30 +166,28 @@ export default function Layout({ children }) {
         </div>
       )}
 
-      {/* ── Customer bottom tab bar (mobile only) ── */}
-      {!isAdmin && (
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t-2 shadow-lg flex" style={{ borderColor: '#CC0000' }}>
-          {customerLinks.map(({ to, icon, label }) => {
-            const active = pathname === to
-            return (
-              <Link key={to} to={to}
-                className="flex-1 flex flex-col items-center justify-center py-3 gap-1 text-xs font-bold transition-all"
-                style={{ 
-                  color: active ? '#CC0000' : '#666',
-                  background: active ? '#FFF5F5' : 'transparent'
-                }}>
-                <span style={{ transform: active ? 'scale(1.1)' : 'scale(1)' }}>
-                  {icon}
-                </span>
-                {label}
-              </Link>
-            )
-          })}
-        </nav>
-      )}
+      {/* ── Bottom tab bar (mobile only) ── */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t-2 shadow-lg flex overflow-x-auto scrollbar-hide" style={{ borderColor: '#CC0000' }}>
+        {links.map(({ to, icon, label }) => {
+          const active = pathname === to
+          return (
+            <Link key={to} to={to}
+              className="flex-1 flex flex-col items-center justify-center py-3 gap-1 text-xs font-bold transition-all min-w-[60px]"
+              style={{ 
+                color: active ? '#CC0000' : '#666',
+                background: active ? '#FFF5F5' : 'transparent'
+              }}>
+              <span style={{ transform: active ? 'scale(1.1)' : 'scale(1)' }}>
+                {icon}
+              </span>
+              <span className="truncate px-1">{label}</span>
+            </Link>
+          )
+        })}
+      </nav>
 
       {/* ── Main content ── */}
-      <main className={`flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 ${!isAdmin ? 'pt-16 pb-24 md:pt-0 md:pb-0' : 'pt-14 md:pt-0'}`}>
+      <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 pt-14 sm:pt-16 pb-24 md:pt-0 md:pb-0">
         {children}
       </main>
 

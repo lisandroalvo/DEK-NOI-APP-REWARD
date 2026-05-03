@@ -72,10 +72,10 @@ export default function AdminCustomers() {
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 4000) }
 
   return (
-    <div className="p-6 md:p-8">
+    <div className="p-4 sm:p-6 md:p-8 w-full max-w-6xl mx-auto">
+      <h1 className="text-xl sm:text-2xl font-black text-gray-900 mb-4 sm:mb-6">Customers</h1>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-black text-gray-900">Members</h1>
           <p className="text-sm text-gray-400 mt-0.5">{customers.length} total member{customers.length !== 1 ? 's' : ''}</p>
         </div>
       </div>
