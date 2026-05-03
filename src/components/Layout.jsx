@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { LogOut, Star, Gift, Megaphone, Users, LayoutDashboard, ShoppingBag, TrendingUp, Menu, X } from 'lucide-react'
+import { LogOut, Star, Gift, Megaphone, Users, LayoutDashboard, ShoppingBag, TrendingUp, Menu, X, User } from 'lucide-react'
 import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import logo from '../assets/logo.png'
@@ -73,6 +73,7 @@ export default function Layout({ children }) {
     { to: '/rewards',        icon: <Gift size={22} />,        label: 'Rewards' },
     { to: '/my-redemptions', icon: <ShoppingBag size={22} />, label: 'My Orders' },
     { to: '/promos',         icon: <Megaphone size={22} />,   label: 'Promos' },
+    { to: '/profile',        icon: <User size={22} />,        label: 'Profile' },
   ]
 
   const links = isAdmin ? adminLinks : customerLinks

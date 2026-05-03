@@ -11,6 +11,7 @@ import CustomerDashboard from './pages/customer/Dashboard'
 import CustomerRewards from './pages/customer/Rewards'
 import MyRedemptions from './pages/customer/MyRedemptions'
 import CustomerPromos from './pages/customer/Promos'
+import Profile from './pages/customer/Profile'
 
 // Admin pages
 import AdminDashboard from './pages/admin/Dashboard'
@@ -76,6 +77,7 @@ export default function App() {
           <Route path="/rewards" element={<RequireAuth><Layout><CustomerRewards /></Layout></RequireAuth>} />
           <Route path="/my-redemptions" element={<RequireAuth><Layout><MyRedemptions /></Layout></RequireAuth>} />
           <Route path="/promos" element={<RequireAuth><Layout><CustomerPromos /></Layout></RequireAuth>} />
+          <Route path="/profile" element={<RequireAuth><Layout><Profile /></Layout></RequireAuth>} />
 
           {/* Admin routes */}
           <Route path="/admin" element={<RequireAuth adminOnly><Layout><AdminDashboard /></Layout></RequireAuth>} />

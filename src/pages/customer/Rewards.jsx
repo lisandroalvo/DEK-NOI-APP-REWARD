@@ -11,6 +11,7 @@ export default function CustomerRewards() {
   const [success, setSuccess] = useState('')
   const [redeeming, setRedeeming] = useState(null)
   const [showModal, setShowModal] = useState(null)
+  const [detailsModal, setDetailsModal] = useState(null)
 
   useEffect(() => {
     getDocs(query(collection(db, 'rewards'), where('available', '==', true)))
@@ -74,7 +75,9 @@ export default function CustomerRewards() {
             const canAfford = pts >= r.pointsCost
             const ptsNeeded = r.pointsCost - pts
             return (
-              <div key={r.id} className="bg-white rounded-2xl shadow-sm overflow-hidden border-2 transition-all"
+              <div key={r.id} 
+                onClick={() => setDetailsModal(r)}
+                className="bg-white rounded-2xl shadow-sm overflow-hidden border-2 transition-all cursor-pointer hover:shadow-lg"
                 style={{ borderColor: canAfford ? '#CC0000' : '#e5e7eb' }}>
                 <div className="h-40 flex flex-col items-center justify-center gap-1 relative overflow-hidden" 
                   style={{ background: canAfford ? '#FFF0F0' : '#f9fafb' }}>
@@ -103,7 +106,10 @@ export default function CustomerRewards() {
                       <Star size={13} fill="currentColor" /> {r.pointsCost.toLocaleString()} pts
                     </div>
                     <button
-                      onClick={() => canAfford && setShowModal(r)}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        canAfford && setShowModal(r)
+                      }}
                       disabled={!canAfford}
                       className="px-4 py-1.5 rounded-xl text-sm font-black transition-all"
                       style={canAfford ? { background: '#CC0000', color: '#fff' } : { background: '#f3f4f6', color: '#bbb', cursor: 'not-allowed' }}>
@@ -155,6 +161,76 @@ export default function CustomerRewards() {
                 style={{ background: '#CC0000' }}>
                 {redeeming === showModal.id ? 'Submitting…' : 'Confirm Redeem'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Details modal */}
+      {detailsModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4"
+          onClick={() => setDetailsModal(null)}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}>
+            {/* Image or Emoji */}
+            <div className="mb-5 rounded-2xl overflow-hidden border-2" style={{ borderColor: '#CC0000' }}>
+              {detailsModal.imageUrl ? (
+                <img src={detailsModal.imageUrl} alt={detailsModal.name} className="w-full h-56 object-cover" />
+              ) : (
+                <div className="h-56 flex items-center justify-center" style={{ background: '#FFF0F0' }}>
+                  <span className="text-8xl">{detailsModal.emoji || '🎁'}</span>
+                </div>
+              )}
+            </div>
+            
+            {/* Details */}
+            <div className="mb-5">
+              <h2 className="text-2xl font-black text-gray-900 mb-2">{detailsModal.name}</h2>
+              <p className="text-sm text-gray-600 leading-relaxed">{detailsModal.description}</p>
+            </div>
+
+            {/* Points Cost */}
+            <div className="rounded-2xl p-4 mb-5" style={{ background: '#FFF0F0' }}>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-gray-600">Points Required</span>
+                <div className="flex items-center gap-1 text-2xl font-black" style={{ color: '#CC0000' }}>
+                  <Star size={20} fill="currentColor" /> {detailsModal.pointsCost.toLocaleString()}
+                </div>
+              </div>
+            </div>
+
+            {/* Your Balance */}
+            <div className="rounded-2xl p-4 mb-5 border-2 border-gray-100">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-gray-600">Your Balance</span>
+                <div className="flex items-center gap-1 text-xl font-black" style={{ color: pts >= detailsModal.pointsCost ? '#10b981' : '#ef4444' }}>
+                  <Star size={16} fill="currentColor" /> {pts.toLocaleString()} pts
+                </div>
+              </div>
+              {pts < detailsModal.pointsCost && (
+                <p className="text-xs text-gray-500 mt-2">
+                  You need <strong>{(detailsModal.pointsCost - pts).toLocaleString()} more points</strong> to redeem this reward
+                </p>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button onClick={() => setDetailsModal(null)} 
+                className="flex-1 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-600">
+                Close
+              </button>
+              {pts >= detailsModal.pointsCost && (
+                <button 
+                  onClick={() => {
+                    setShowModal(detailsModal)
+                    setDetailsModal(null)
+                  }}
+                  className="flex-1 py-3 rounded-xl text-sm font-black text-white"
+                  style={{ background: '#CC0000' }}>
+                  Redeem Now
+                </button>
+              )}
             </div>
           </div>
         </div>
