@@ -86,11 +86,19 @@ export default function AdminRewards() {
 
       {modal !== null && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-5">
               <h2 className="font-black text-gray-900">{modal === 'new' ? 'New Reward' : 'Edit Reward'}</h2>
               <button onClick={() => setModal(null)}><X size={20} className="text-gray-400" /></button>
             </div>
+            
+            {/* Image Preview */}
+            {form.imageUrl && (
+              <div className="mb-4 rounded-2xl overflow-hidden border-2" style={{ borderColor: '#CC0000' }}>
+                <img src={form.imageUrl} alt="Reward preview" className="w-full h-48 object-cover" />
+              </div>
+            )}
+            
             <div className="space-y-4">
               {[
                 { label: 'Reward name', key: 'name', placeholder: 'Free coffee', type: 'text' },

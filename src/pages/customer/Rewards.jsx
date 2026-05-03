@@ -121,9 +121,19 @@ export default function CustomerRewards() {
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6">
+            {/* Image or Emoji */}
+            <div className="mb-5 rounded-2xl overflow-hidden border-2" style={{ borderColor: '#CC0000' }}>
+              {showModal.imageUrl ? (
+                <img src={showModal.imageUrl} alt={showModal.name} className="w-full h-48 object-cover" />
+              ) : (
+                <div className="h-48 flex items-center justify-center" style={{ background: '#FFF0F0' }}>
+                  <span className="text-7xl">{showModal.emoji || '🎁'}</span>
+                </div>
+              )}
+            </div>
+            
             <div className="text-center mb-5">
-              <span className="text-6xl">{showModal.emoji || '🎁'}</span>
-              <h2 className="text-xl font-black text-gray-900 mt-3">{showModal.name}</h2>
+              <h2 className="text-xl font-black text-gray-900">{showModal.name}</h2>
               <p className="text-sm text-gray-500 mt-1">{showModal.description}</p>
             </div>
             <div className="rounded-2xl p-4 mb-5 text-center" style={{ background: '#FFF0F0' }}>

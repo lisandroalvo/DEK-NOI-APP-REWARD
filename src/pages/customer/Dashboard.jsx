@@ -69,18 +69,68 @@ export default function CustomerDashboard() {
       {/* Promo Carousel */}
       <PromoCarousel promos={promos} />
 
-      {/* Points card */}
-      <div className="rounded-3xl p-6 text-white mb-6 shadow-lg relative overflow-hidden" style={{ background: '#CC0000' }}>
-        <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full opacity-20" style={{ background: '#FFE600' }} />
-        <div className="absolute -bottom-4 -left-4 w-20 h-20 rounded-full opacity-10" style={{ background: '#FFE600' }} />
-        <img src={charHappy} alt="" className="absolute -bottom-2 right-3 h-28 w-auto object-contain pointer-events-none" />
-        <p className="text-red-200 text-sm mb-1 font-medium">Your Points Balance</p>
-        <div className="flex items-end gap-2 mb-4">
-          <span className="text-6xl font-black">{pts.toLocaleString()}</span>
-          <span className="text-red-200 text-lg mb-2">pts</span>
-        </div>
-        <div className="flex items-center gap-2 text-sm font-bold" style={{ color: '#FFE600' }}>
-          <Star size={14} fill="currentColor" /> DEK NOI Rewards Member
+      {/* Game-like Points Card */}
+      <div className="rounded-3xl p-6 text-white mb-6 shadow-2xl relative overflow-hidden" 
+        style={{ 
+          background: 'linear-gradient(135deg, #CC0000 0%, #FF3333 100%)',
+          boxShadow: '0 20px 60px rgba(204, 0, 0, 0.3)'
+        }}>
+        {/* Animated background elements */}
+        <div className="absolute -top-6 -right-6 w-32 h-32 rounded-full opacity-20 animate-pulse" style={{ background: '#FFE600' }} />
+        <div className="absolute -bottom-4 -left-4 w-24 h-24 rounded-full opacity-10 animate-pulse" style={{ background: '#FFE600', animationDelay: '1s' }} />
+        <div className="absolute top-1/2 left-1/2 w-40 h-40 rounded-full opacity-5" style={{ background: '#FFE600', transform: 'translate(-50%, -50%)' }} />
+        
+        {/* Character */}
+        <img src={charHappy} alt="" className="absolute -bottom-2 right-3 h-32 w-auto object-contain pointer-events-none drop-shadow-lg" />
+        
+        {/* Points Display */}
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-2">
+            <Star size={18} fill="#FFE600" className="text-yellow-400 animate-pulse" />
+            <p className="text-white/90 text-sm font-bold tracking-wide">POINTS BALANCE</p>
+          </div>
+          
+          {/* Big Points Number */}
+          <div className="flex items-baseline gap-3 mb-4">
+            <span className="text-7xl font-black tracking-tight drop-shadow-lg"
+              style={{
+                textShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+                animation: 'pulse 2s ease-in-out infinite'
+              }}>
+              {pts.toLocaleString()}
+            </span>
+            <div className="flex flex-col">
+              <span className="text-2xl font-black" style={{ color: '#FFE600' }}>PTS</span>
+              <span className="text-xs text-white/70 font-bold">Available</span>
+            </div>
+          </div>
+          
+          {/* Level/Progress Bar */}
+          <div className="bg-white/20 rounded-full h-3 mb-3 overflow-hidden backdrop-blur-sm">
+            <div 
+              className="h-full rounded-full transition-all duration-1000 ease-out relative overflow-hidden"
+              style={{ 
+                width: `${Math.min((pts % 1000) / 10, 100)}%`,
+                background: 'linear-gradient(90deg, #FFE600 0%, #FFF200 100%)',
+                boxShadow: '0 0 10px rgba(255, 230, 0, 0.5)'
+              }}>
+              <div className="absolute inset-0 opacity-50"
+                style={{
+                  background: 'linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.6) 50%, transparent 100%)',
+                  animation: 'shimmer 2s infinite'
+                }} />
+            </div>
+          </div>
+          
+          {/* Next Milestone */}
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold text-white/80">
+              {pts < 1000 ? `${1000 - pts} pts to next milestone` : 'Milestone reached! 🎉'}
+            </span>
+            <span className="font-black px-2 py-0.5 rounded-full text-xs" style={{ background: '#FFE600', color: '#CC0000' }}>
+              ⭐ VIP Member
+            </span>
+          </div>
         </div>
       </div>
 
