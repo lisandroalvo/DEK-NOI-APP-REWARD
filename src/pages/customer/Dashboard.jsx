@@ -64,7 +64,19 @@ export default function CustomerDashboard() {
         />
       )}
       
-      <h1 className="text-xl sm:text-2xl font-black text-gray-900 mb-4 sm:mb-6">Hi, {profile?.name?.split(' ')[0]} 👋</h1>
+      {/* Profile Picture + Greeting */}
+      <div className="flex items-center gap-4 mb-4 sm:mb-6">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-4 border-red-600 shrink-0 shadow-lg">
+          {profile?.photoURL ? (
+            <img src={profile.photoURL} alt={profile.name} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-100 to-red-200">
+              <span className="text-3xl sm:text-4xl">👤</span>
+            </div>
+          )}
+        </div>
+        <h1 className="text-xl sm:text-2xl font-black text-gray-900">Hi, {profile?.name?.split(' ')[0]} 👋</h1>
+      </div>
 
       {/* Promo Carousel */}
       <PromoCarousel promos={promos} />

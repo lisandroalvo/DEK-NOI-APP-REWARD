@@ -152,21 +152,7 @@ export default function Layout({ children }) {
       {/* ── Mobile header bar ── */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b-2 flex items-center justify-between px-4 py-2.5"
         style={{ borderColor: '#CC0000' }}>
-        {/* Profile Picture on Left */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-red-600 shrink-0">
-            {profile?.photoURL ? (
-              <img src={profile.photoURL} alt={profile.name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-100 to-red-200">
-                <User size={20} className="text-red-600" />
-              </div>
-            )}
-          </div>
-          <img src={logo} alt="DEK NOI" className="h-10 w-auto object-contain" />
-        </div>
-        
-        {/* Right Side */}
+        <img src={logo} alt="DEK NOI" className="h-10 w-auto object-contain" />
         <div className="flex items-center gap-3">
           {!isAdmin && (
             <div className="flex items-center gap-1 rounded-full px-3 py-1 text-xs font-black" style={{ background: '#FFE600', color: '#CC0000' }}>
