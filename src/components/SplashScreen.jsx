@@ -98,9 +98,9 @@ export default function SplashScreen({ onComplete }) {
     }
 
     // Start fade in immediately
-    const fadeInTimer = setTimeout(fadeIn, 100)
-    // Start fade out before splash ends (at 4 seconds for 5 second splash)
-    const fadeOutTimer = setTimeout(fadeOut, 4000)
+    const fadeInTimer = setTimeout(fadeIn, 50)
+    // Start fade out before splash ends (at 2.5 seconds for 3 second splash)
+    const fadeOutTimer = setTimeout(fadeOut, 2500)
 
     return () => {
       clearTimeout(fadeInTimer)
@@ -114,14 +114,14 @@ export default function SplashScreen({ onComplete }) {
   }, [audio])
 
   useEffect(() => {
-    // Shorter splash screen (5 seconds total)
-    const timer1 = setTimeout(() => setPhase('enter'), 100)
-    const timer2 = setTimeout(() => setPhase('logo'), 300)
-    const timer3 = setTimeout(() => setPhase('products'), 700)
-    const timer4 = setTimeout(() => setPhase('shine'), 1500)
-    const timer5 = setTimeout(() => setPhase('complete'), 2500)
-    const timer6 = setTimeout(() => setPhase('fadeOut'), 4500)
-    const timer7 = setTimeout(() => onComplete(), 5000)
+    // Fast splash screen (3 seconds total)
+    const timer1 = setTimeout(() => setPhase('enter'), 50)
+    const timer2 = setTimeout(() => setPhase('logo'), 200)
+    const timer3 = setTimeout(() => setPhase('products'), 500)
+    const timer4 = setTimeout(() => setPhase('shine'), 1000)
+    const timer5 = setTimeout(() => setPhase('complete'), 1500)
+    const timer6 = setTimeout(() => setPhase('fadeOut'), 2500)
+    const timer7 = setTimeout(() => onComplete(), 3000)
 
     const progressInterval = setInterval(() => {
       setProgress(prev => {
@@ -129,9 +129,9 @@ export default function SplashScreen({ onComplete }) {
           clearInterval(progressInterval)
           return 100
         }
-        return prev + 2 // Faster progress
+        return prev + 3 // Much faster progress
       })
-    }, 50) // Faster interval
+    }, 30) // Much faster interval
 
     return () => {
       clearTimeout(timer1)

@@ -33,19 +33,9 @@ function RequireAuth({ children, adminOnly = false }) {
 
 function Root() {
   const { user, profile } = useAuth()
-  const [showSplash, setShowSplash] = useState(true) // Always start with splash
-
-  const handleSplashComplete = () => {
-    setShowSplash(false)
-  }
-
+  
   if (!user) return <Navigate to="/login" replace />
   
-  // Always show splash when app loads with authenticated user
-  if (showSplash) {
-    return <SplashScreen onComplete={handleSplashComplete} />
-  }
-
   return <Navigate to={profile?.role === 'admin' ? '/admin' : '/dashboard'} replace />
 }
 
