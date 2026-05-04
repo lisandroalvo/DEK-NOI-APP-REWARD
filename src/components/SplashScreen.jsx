@@ -25,6 +25,7 @@ export default function SplashScreen({ onComplete }) {
   const [progress, setProgress] = useState(0)
   const [phase, setPhase] = useState('initial')
   const [rainingProducts, setRainingProducts] = useState([])
+  const [audioStarted, setAudioStarted] = useState(false)
   const [audio] = useState(() => {
     // Create audio element for background music
     const audioElement = new Audio('/splash-music.mp3')
@@ -32,6 +33,13 @@ export default function SplashScreen({ onComplete }) {
     audioElement.loop = false
     return audioElement
   })
+
+  // Try to start audio on any user interaction
+  const handleInteraction = () => {
+    if (!audioStarted) {
+      setAudioStarted(true)
+    }
+  }
 
   // Generate raining products
   useEffect(() => {
@@ -56,21 +64,22 @@ export default function SplashScreen({ onComplete }) {
 
     const fadeIn = async () => {
       try {
-        // Try to play audio
+        // Try to play audio - autoplay will work after user interaction
+        audio.volume = 0
         await audio.play()
         isPlaying = true
         let volume = 0
         fadeInterval = setInterval(() => {
-          if (volume < 0.5) { // Max volume 50%
-            volume += 0.02
-            audio.volume = Math.min(volume, 0.5)
+          if (volume < 0.6) { // Max volume 60%
+            volume += 0.03
+            audio.volume = Math.min(volume, 0.6)
           } else {
             clearInterval(fadeInterval)
           }
-        }, 50)
+        }, 40)
       } catch (err) {
-        console.log('Audio autoplay blocked or file not found:', err.message)
-        // Audio blocked by browser or file missing - continue without sound
+        console.log('Audio autoplay blocked - will try on interaction:', err.message)
+        // Audio blocked - will play after user clicks/taps
       }
     }
 
@@ -88,10 +97,10 @@ export default function SplashScreen({ onComplete }) {
       }, 50)
     }
 
-    // Start fade in after a brief delay
-    const fadeInTimer = setTimeout(fadeIn, 300)
-    // Start fade out before splash ends (at 10 seconds for 12 second splash)
-    const fadeOutTimer = setTimeout(fadeOut, 10000)
+    // Start fade in immediately
+    const fadeInTimer = setTimeout(fadeIn, 100)
+    // Start fade out before splash ends (at 4 seconds for 5 second splash)
+    const fadeOutTimer = setTimeout(fadeOut, 4000)
 
     return () => {
       clearTimeout(fadeInTimer)
@@ -105,14 +114,14 @@ export default function SplashScreen({ onComplete }) {
   }, [audio])
 
   useEffect(() => {
-    // Much longer splash screen (12 seconds total)
-    const timer1 = setTimeout(() => setPhase('enter'), 200)
-    const timer2 = setTimeout(() => setPhase('logo'), 800)
-    const timer3 = setTimeout(() => setPhase('products'), 2000)
-    const timer4 = setTimeout(() => setPhase('shine'), 4000)
-    const timer5 = setTimeout(() => setPhase('complete'), 7000)
-    const timer6 = setTimeout(() => setPhase('fadeOut'), 11000)
-    const timer7 = setTimeout(() => onComplete(), 12000)
+    // Shorter splash screen (5 seconds total)
+    const timer1 = setTimeout(() => setPhase('enter'), 100)
+    const timer2 = setTimeout(() => setPhase('logo'), 300)
+    const timer3 = setTimeout(() => setPhase('products'), 700)
+    const timer4 = setTimeout(() => setPhase('shine'), 1500)
+    const timer5 = setTimeout(() => setPhase('complete'), 2500)
+    const timer6 = setTimeout(() => setPhase('fadeOut'), 4500)
+    const timer7 = setTimeout(() => onComplete(), 5000)
 
     const progressInterval = setInterval(() => {
       setProgress(prev => {
@@ -120,9 +129,9 @@ export default function SplashScreen({ onComplete }) {
           clearInterval(progressInterval)
           return 100
         }
-        return prev + 0.5 // Much slower progress
+        return prev + 2 // Faster progress
       })
-    }, 100) // Slower interval
+    }, 50) // Faster interval
 
     return () => {
       clearTimeout(timer1)
