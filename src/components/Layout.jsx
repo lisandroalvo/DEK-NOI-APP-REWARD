@@ -82,8 +82,21 @@ export default function Layout({ children }) {
 
   const SidebarContent = ({ onLinkClick }) => (
     <>
-      {/* Logo */}
+      {/* Logo + Profile */}
       <div className="p-4 border-b-2 shrink-0" style={{ borderColor: '#FFE600' }}>
+        {/* Profile Picture */}
+        <div className="flex justify-center mb-3">
+          <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-red-600">
+            {profile?.photoURL ? (
+              <img src={profile.photoURL} alt={profile.name} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-100 to-red-200">
+                <User size={28} className="text-red-600" />
+              </div>
+            )}
+          </div>
+        </div>
+        
         <img src={logo} alt="DEK NOI" className="h-16 w-auto mx-auto object-contain" />
         <p className="text-center text-xs font-bold mt-1" style={{ color: '#CC0000' }}>
           {isAdmin ? '— Admin Panel —' : '— Rewards Club —'}
@@ -139,7 +152,21 @@ export default function Layout({ children }) {
       {/* ── Mobile header bar ── */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b-2 flex items-center justify-between px-4 py-2.5"
         style={{ borderColor: '#CC0000' }}>
-        <img src={logo} alt="DEK NOI" className="h-10 w-auto object-contain" />
+        {/* Profile Picture on Left */}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-red-600 shrink-0">
+            {profile?.photoURL ? (
+              <img src={profile.photoURL} alt={profile.name} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-red-100 to-red-200">
+                <User size={20} className="text-red-600" />
+              </div>
+            )}
+          </div>
+          <img src={logo} alt="DEK NOI" className="h-10 w-auto object-contain" />
+        </div>
+        
+        {/* Right Side */}
         <div className="flex items-center gap-3">
           {!isAdmin && (
             <div className="flex items-center gap-1 rounded-full px-3 py-1 text-xs font-black" style={{ background: '#FFE600', color: '#CC0000' }}>
@@ -147,7 +174,7 @@ export default function Layout({ children }) {
             </div>
           )}
           <button onClick={() => setMobileOpen(true)} className="p-1">
-            <Menu size={24} className="text-gray-700" />
+            <Menu size={24} style={{ color: '#CC0000' }} />
           </button>
         </div>
       </div>
