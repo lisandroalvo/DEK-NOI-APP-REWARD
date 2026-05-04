@@ -80,9 +80,9 @@ export default function SplashScreen({ onComplete }) {
     }
 
     // Start fade in after a brief delay
-    const fadeInTimer = setTimeout(fadeIn, 200)
-    // Start fade out before splash ends
-    const fadeOutTimer = setTimeout(fadeOut, 5500)
+    const fadeInTimer = setTimeout(fadeIn, 300)
+    // Start fade out before splash ends (at 10 seconds for 12 second splash)
+    const fadeOutTimer = setTimeout(fadeOut, 10000)
 
     return () => {
       clearTimeout(fadeInTimer)
@@ -94,14 +94,14 @@ export default function SplashScreen({ onComplete }) {
   }, [audio])
 
   useEffect(() => {
-    // Extended timing for longer splash screen (6 seconds total)
-    const timer1 = setTimeout(() => setPhase('enter'), 100)
-    const timer2 = setTimeout(() => setPhase('logo'), 400)
-    const timer3 = setTimeout(() => setPhase('products'), 900)
-    const timer4 = setTimeout(() => setPhase('shine'), 1800)
-    const timer5 = setTimeout(() => setPhase('complete'), 3500)
-    const timer6 = setTimeout(() => setPhase('fadeOut'), 5500)
-    const timer7 = setTimeout(() => onComplete(), 6200)
+    // Much longer splash screen (12 seconds total)
+    const timer1 = setTimeout(() => setPhase('enter'), 200)
+    const timer2 = setTimeout(() => setPhase('logo'), 800)
+    const timer3 = setTimeout(() => setPhase('products'), 2000)
+    const timer4 = setTimeout(() => setPhase('shine'), 4000)
+    const timer5 = setTimeout(() => setPhase('complete'), 7000)
+    const timer6 = setTimeout(() => setPhase('fadeOut'), 11000)
+    const timer7 = setTimeout(() => onComplete(), 12000)
 
     const progressInterval = setInterval(() => {
       setProgress(prev => {
@@ -109,9 +109,9 @@ export default function SplashScreen({ onComplete }) {
           clearInterval(progressInterval)
           return 100
         }
-        return prev + 1 // Slower progress
+        return prev + 0.5 // Much slower progress
       })
-    }, 60) // Slower interval
+    }, 100) // Slower interval
 
     return () => {
       clearTimeout(timer1)
