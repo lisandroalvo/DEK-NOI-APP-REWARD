@@ -49,31 +49,49 @@ function Root() {
   return <Navigate to={profile?.role === 'admin' ? '/admin' : '/dashboard'} replace />
 }
 
+function AppContent() {
+  const { user } = useAuth()
+  const [showSplash, setShowSplash] = useState(true)
+
+  const handleSplashComplete = () => {
+    setShowSplash(false)
+  }
+
+  // Show splash screen when user is authenticated
+  if (user && showSplash) {
+    return <SplashScreen onComplete={handleSplashComplete} />
+  }
+
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+
+      {/* Customer routes */}
+      <Route path="/dashboard" element={<RequireAuth><Layout><CustomerDashboard /></Layout></RequireAuth>} />
+      <Route path="/rewards" element={<RequireAuth><Layout><CustomerRewards /></Layout></RequireAuth>} />
+      <Route path="/my-redemptions" element={<RequireAuth><Layout><MyRedemptions /></Layout></RequireAuth>} />
+      <Route path="/promos" element={<RequireAuth><Layout><CustomerPromos /></Layout></RequireAuth>} />
+      <Route path="/profile" element={<RequireAuth><Layout><Profile /></Layout></RequireAuth>} />
+
+      {/* Admin routes */}
+      <Route path="/admin" element={<RequireAuth adminOnly><Layout><AdminDashboard /></Layout></RequireAuth>} />
+      <Route path="/admin/customers" element={<RequireAuth adminOnly><Layout><AdminCustomers /></Layout></RequireAuth>} />
+      <Route path="/admin/rewards" element={<RequireAuth adminOnly><Layout><AdminRewards /></Layout></RequireAuth>} />
+      <Route path="/admin/redemptions" element={<RequireAuth adminOnly><Layout><AdminRedemptions /></Layout></RequireAuth>} />
+      <Route path="/admin/promos" element={<RequireAuth adminOnly><Layout><AdminPromos /></Layout></RequireAuth>} />
+      <Route path="/admin/activity" element={<RequireAuth adminOnly><Layout><AdminActivity /></Layout></RequireAuth>} />
+
+      <Route path="*" element={<Root />} />
+    </Routes>
+  )
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-
-          {/* Customer routes */}
-          <Route path="/dashboard" element={<RequireAuth><Layout><CustomerDashboard /></Layout></RequireAuth>} />
-          <Route path="/rewards" element={<RequireAuth><Layout><CustomerRewards /></Layout></RequireAuth>} />
-          <Route path="/my-redemptions" element={<RequireAuth><Layout><MyRedemptions /></Layout></RequireAuth>} />
-          <Route path="/promos" element={<RequireAuth><Layout><CustomerPromos /></Layout></RequireAuth>} />
-          <Route path="/profile" element={<RequireAuth><Layout><Profile /></Layout></RequireAuth>} />
-
-          {/* Admin routes */}
-          <Route path="/admin" element={<RequireAuth adminOnly><Layout><AdminDashboard /></Layout></RequireAuth>} />
-          <Route path="/admin/customers" element={<RequireAuth adminOnly><Layout><AdminCustomers /></Layout></RequireAuth>} />
-          <Route path="/admin/rewards" element={<RequireAuth adminOnly><Layout><AdminRewards /></Layout></RequireAuth>} />
-          <Route path="/admin/redemptions" element={<RequireAuth adminOnly><Layout><AdminRedemptions /></Layout></RequireAuth>} />
-          <Route path="/admin/promos" element={<RequireAuth adminOnly><Layout><AdminPromos /></Layout></RequireAuth>} />
-          <Route path="/admin/activity" element={<RequireAuth adminOnly><Layout><AdminActivity /></Layout></RequireAuth>} />
-
-          <Route path="*" element={<Root />} />
-        </Routes>
+        <AppContent />
       </BrowserRouter>
     </AuthProvider>
   )
