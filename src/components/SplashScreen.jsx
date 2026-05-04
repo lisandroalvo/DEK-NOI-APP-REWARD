@@ -52,21 +52,30 @@ export default function SplashScreen({ onComplete }) {
   // Audio fade in/out effect
   useEffect(() => {
     let fadeInterval
+    let isPlaying = false
 
-    const fadeIn = () => {
-      audio.play().catch(err => console.log('Audio play failed:', err))
-      let volume = 0
-      fadeInterval = setInterval(() => {
-        if (volume < 0.5) { // Max volume 50%
-          volume += 0.02
-          audio.volume = Math.min(volume, 0.5)
-        } else {
-          clearInterval(fadeInterval)
-        }
-      }, 50)
+    const fadeIn = async () => {
+      try {
+        // Try to play audio
+        await audio.play()
+        isPlaying = true
+        let volume = 0
+        fadeInterval = setInterval(() => {
+          if (volume < 0.5) { // Max volume 50%
+            volume += 0.02
+            audio.volume = Math.min(volume, 0.5)
+          } else {
+            clearInterval(fadeInterval)
+          }
+        }, 50)
+      } catch (err) {
+        console.log('Audio autoplay blocked or file not found:', err.message)
+        // Audio blocked by browser or file missing - continue without sound
+      }
     }
 
     const fadeOut = () => {
+      if (!isPlaying) return
       let volume = audio.volume
       fadeInterval = setInterval(() => {
         if (volume > 0) {
@@ -88,8 +97,10 @@ export default function SplashScreen({ onComplete }) {
       clearTimeout(fadeInTimer)
       clearTimeout(fadeOutTimer)
       clearInterval(fadeInterval)
-      audio.pause()
-      audio.currentTime = 0
+      if (isPlaying) {
+        audio.pause()
+        audio.currentTime = 0
+      }
     }
   }, [audio])
 

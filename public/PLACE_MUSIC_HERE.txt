@@ -1,0 +1,16 @@
+🎵 MUSIC FILE INSTRUCTIONS 🎵
+
+Please add your music file here:
+
+1. Name it exactly: splash-music.mp3
+2. Place it in this folder (public/)
+3. The file should be:
+   - Format: MP3
+   - Duration: 10-12 seconds recommended
+   - Size: Under 1MB
+
+After adding the file:
+1. Run: npm run build
+2. Run: npx firebase-tools deploy --only hosting
+
+The music will play with smooth fade in/out during the splash screen!

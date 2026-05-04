@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Layout from './components/Layout'
@@ -51,14 +51,13 @@ function Root() {
 
 function AppContent() {
   const { user } = useAuth()
-  const [showSplash, setShowSplash] = useState(() => {
-    // Only show splash if user is authenticated and hasn't seen it this session
-    return user && !sessionStorage.getItem('splashShown')
-  })
+  const hasShownSplashRef = useRef(false)
+  const [showSplash, setShowSplash] = useState(false)
 
   useEffect(() => {
-    // Show splash when user becomes authenticated and hasn't seen it
-    if (user && !sessionStorage.getItem('splashShown')) {
+    // Only show splash once when user is authenticated
+    if (user && !hasShownSplashRef.current && !sessionStorage.getItem('splashShown')) {
+      hasShownSplashRef.current = true
       setShowSplash(true)
     }
   }, [user])
