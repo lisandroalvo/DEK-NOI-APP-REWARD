@@ -51,9 +51,20 @@ function Root() {
 
 function AppContent() {
   const { user } = useAuth()
-  const [showSplash, setShowSplash] = useState(true)
+  const [showSplash, setShowSplash] = useState(() => {
+    // Only show splash if user is authenticated and hasn't seen it this session
+    return user && !sessionStorage.getItem('splashShown')
+  })
+
+  useEffect(() => {
+    // Show splash when user becomes authenticated and hasn't seen it
+    if (user && !sessionStorage.getItem('splashShown')) {
+      setShowSplash(true)
+    }
+  }, [user])
 
   const handleSplashComplete = () => {
+    sessionStorage.setItem('splashShown', 'true')
     setShowSplash(false)
   }
 
