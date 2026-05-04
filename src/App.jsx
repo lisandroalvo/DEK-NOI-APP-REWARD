@@ -33,22 +33,15 @@ function RequireAuth({ children, adminOnly = false }) {
 
 function Root() {
   const { user, profile } = useAuth()
-  const [showSplash, setShowSplash] = useState(false)
-
-  useEffect(() => {
-    // Show splash screen when user just logged in
-    if (user && !sessionStorage.getItem('hasSeenSplash')) {
-      setShowSplash(true)
-    }
-  }, [user])
+  const [showSplash, setShowSplash] = useState(true) // Always start with splash
 
   const handleSplashComplete = () => {
-    sessionStorage.setItem('hasSeenSplash', 'true')
     setShowSplash(false)
   }
 
   if (!user) return <Navigate to="/login" replace />
   
+  // Always show splash when app loads with authenticated user
   if (showSplash) {
     return <SplashScreen onComplete={handleSplashComplete} />
   }

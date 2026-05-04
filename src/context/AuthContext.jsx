@@ -66,10 +66,7 @@ export function AuthProvider({ children }) {
     return cred
   }
 
-  const logout = () => {
-    sessionStorage.removeItem('hasSeenSplash')
-    return signOut(auth)
-  }
+  const logout = () => signOut(auth)
 
   return (
     <AuthContext.Provider value={{ user, profile, loading, login, loginWithGoogle, register, logout }}>
