@@ -25,7 +25,7 @@ export default function SplashScreen({ onComplete }) {
   const [progress, setProgress] = useState(0)
   const [phase, setPhase] = useState('initial')
   const [rainingProducts, setRainingProducts] = useState([])
-  const [audioStarted, setAudioStarted] = useState(false)
+  const [showTapToStart, setShowTapToStart] = useState(true)
   const [audio] = useState(() => {
     // Create audio element for background music
     const audioElement = new Audio('/splash-music.mp3')
@@ -34,10 +34,14 @@ export default function SplashScreen({ onComplete }) {
     return audioElement
   })
 
-  // Try to start audio on any user interaction
-  const handleInteraction = () => {
-    if (!audioStarted) {
-      setAudioStarted(true)
+  // Start animation and music when user taps
+  const handleTapToStart = async () => {
+    setShowTapToStart(false)
+    // Try to play audio immediately after user interaction
+    try {
+      await audio.play()
+    } catch (err) {
+      console.log('Audio play failed:', err)
     }
   }
 
@@ -57,30 +61,24 @@ export default function SplashScreen({ onComplete }) {
     setRainingProducts(products)
   }, [])
 
-  // Audio fade in/out effect
+  // Audio fade in/out effect - only after tap to start
   useEffect(() => {
+    if (showTapToStart) return // Don't start audio until user taps
+
     let fadeInterval
     let isPlaying = false
 
-    const fadeIn = async () => {
-      try {
-        // Try to play audio - autoplay will work after user interaction
-        audio.volume = 0
-        await audio.play()
-        isPlaying = true
-        let volume = 0
-        fadeInterval = setInterval(() => {
-          if (volume < 0.6) { // Max volume 60%
-            volume += 0.03
-            audio.volume = Math.min(volume, 0.6)
-          } else {
-            clearInterval(fadeInterval)
-          }
-        }, 40)
-      } catch (err) {
-        console.log('Audio autoplay blocked - will try on interaction:', err.message)
-        // Audio blocked - will play after user clicks/taps
-      }
+    const fadeIn = () => {
+      isPlaying = true
+      let volume = 0
+      fadeInterval = setInterval(() => {
+        if (volume < 0.7) { // Max volume 70%
+          volume += 0.04
+          audio.volume = Math.min(volume, 0.7)
+        } else {
+          clearInterval(fadeInterval)
+        }
+      }, 30)
     }
 
     const fadeOut = () => {
@@ -88,16 +86,16 @@ export default function SplashScreen({ onComplete }) {
       let volume = audio.volume
       fadeInterval = setInterval(() => {
         if (volume > 0) {
-          volume -= 0.02
+          volume -= 0.03
           audio.volume = Math.max(volume, 0)
         } else {
           clearInterval(fadeInterval)
           audio.pause()
         }
-      }, 50)
+      }, 40)
     }
 
-    // Start fade in immediately
+    // Start fade in immediately after tap
     const fadeInTimer = setTimeout(fadeIn, 50)
     // Start fade out before splash ends (at 2.5 seconds for 3 second splash)
     const fadeOutTimer = setTimeout(fadeOut, 2500)
@@ -111,9 +109,11 @@ export default function SplashScreen({ onComplete }) {
         audio.currentTime = 0
       }
     }
-  }, [audio])
+  }, [audio, showTapToStart])
 
   useEffect(() => {
+    if (showTapToStart) return // Don't start animation until user taps
+
     // Fast splash screen (3 seconds total)
     const timer1 = setTimeout(() => setPhase('enter'), 50)
     const timer2 = setTimeout(() => setPhase('logo'), 200)
@@ -143,7 +143,7 @@ export default function SplashScreen({ onComplete }) {
       clearTimeout(timer7)
       clearInterval(progressInterval)
     }
-  }, [onComplete])
+  }, [onComplete, showTapToStart])
 
 
   return (
@@ -403,6 +403,29 @@ export default function SplashScreen({ onComplete }) {
           transitionDelay: '200ms',
         }}
       />
+
+      {/* Tap to Start Button */}
+      {showTapToStart && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-red-600 to-yellow-400">
+          <div className="text-center animate-pulse">
+            <div className="mb-6">
+              <img src={require('../assets/logo.png')} alt="DEK NOI" className="h-32 w-auto mx-auto object-contain drop-shadow-2xl" />
+            </div>
+            <button
+              onClick={handleTapToStart}
+              className="px-8 py-4 bg-white text-red-600 rounded-full font-black text-xl shadow-2xl hover:scale-110 transition-transform active:scale-95"
+              style={{ 
+                boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+              }}
+            >
+              👆 Tap to Start 🎵
+            </button>
+            <p className="mt-4 text-white text-sm font-semibold drop-shadow-lg">
+              Tap to play with sound!
+            </p>
+          </div>
+        </div>
+      )}
 
     </div>
   )
