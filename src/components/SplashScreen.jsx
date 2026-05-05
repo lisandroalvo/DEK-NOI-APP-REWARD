@@ -26,23 +26,10 @@ export default function SplashScreen({ onComplete }) {
   const [phase, setPhase] = useState('initial')
   const [rainingProducts, setRainingProducts] = useState([])
   const [showTapToStart, setShowTapToStart] = useState(true)
-  const [audio] = useState(() => {
-    // Create audio element for background music
-    const audioElement = new Audio('/splash-music.mp3')
-    audioElement.volume = 0 // Start at 0 for fade in
-    audioElement.loop = false
-    return audioElement
-  })
 
-  // Start animation and music when user taps
-  const handleTapToStart = async () => {
+  // Start animation when user taps
+  const handleTapToStart = () => {
     setShowTapToStart(false)
-    // Try to play audio immediately after user interaction
-    try {
-      await audio.play()
-    } catch (err) {
-      console.log('Audio play failed:', err)
-    }
   }
 
   // Generate raining products
@@ -61,55 +48,6 @@ export default function SplashScreen({ onComplete }) {
     setRainingProducts(products)
   }, [])
 
-  // Audio fade in/out effect - only after tap to start
-  useEffect(() => {
-    if (showTapToStart) return // Don't start audio until user taps
-
-    let fadeInterval
-    let isPlaying = false
-
-    const fadeIn = () => {
-      isPlaying = true
-      let volume = 0
-      fadeInterval = setInterval(() => {
-        if (volume < 0.7) { // Max volume 70%
-          volume += 0.04
-          audio.volume = Math.min(volume, 0.7)
-        } else {
-          clearInterval(fadeInterval)
-        }
-      }, 30)
-    }
-
-    const fadeOut = () => {
-      if (!isPlaying) return
-      let volume = audio.volume
-      fadeInterval = setInterval(() => {
-        if (volume > 0) {
-          volume -= 0.03
-          audio.volume = Math.max(volume, 0)
-        } else {
-          clearInterval(fadeInterval)
-          audio.pause()
-        }
-      }, 40)
-    }
-
-    // Start fade in immediately after tap
-    const fadeInTimer = setTimeout(fadeIn, 50)
-    // Start fade out before splash ends (at 2.5 seconds for 3 second splash)
-    const fadeOutTimer = setTimeout(fadeOut, 2500)
-
-    return () => {
-      clearTimeout(fadeInTimer)
-      clearTimeout(fadeOutTimer)
-      clearInterval(fadeInterval)
-      if (isPlaying) {
-        audio.pause()
-        audio.currentTime = 0
-      }
-    }
-  }, [audio, showTapToStart])
 
   useEffect(() => {
     if (showTapToStart) return // Don't start animation until user taps
@@ -418,10 +356,10 @@ export default function SplashScreen({ onComplete }) {
                 boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
               }}
             >
-              👆 Tap to Start 🎵
+              👆 Tap to Start
             </button>
             <p className="mt-6 text-white text-base font-bold drop-shadow-lg">
-              Tap to play with sound!
+              Welcome to DEK NOI!
             </p>
           </div>
         </div>
