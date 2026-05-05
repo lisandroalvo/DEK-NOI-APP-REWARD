@@ -407,20 +407,20 @@ export default function SplashScreen({ onComplete }) {
       {/* Tap to Start Button */}
       {showTapToStart && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-red-600 to-yellow-400">
-          <div className="text-center animate-pulse">
-            <div className="mb-6">
-              <img src={require('../assets/logo.png')} alt="DEK NOI" className="h-32 w-auto mx-auto object-contain drop-shadow-2xl" />
+          <div className="text-center">
+            <div className="mb-8 animate-bounce">
+              <img src={logo} alt="DEK NOI" className="h-48 sm:h-56 w-auto mx-auto object-contain drop-shadow-2xl" />
             </div>
             <button
               onClick={handleTapToStart}
-              className="px-8 py-4 bg-white text-red-600 rounded-full font-black text-xl shadow-2xl hover:scale-110 transition-transform active:scale-95"
+              className="px-10 py-5 bg-white text-red-600 rounded-full font-black text-2xl shadow-2xl hover:scale-110 transition-transform active:scale-95 animate-pulse"
               style={{ 
                 boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
               }}
             >
               👆 Tap to Start 🎵
             </button>
-            <p className="mt-4 text-white text-sm font-semibold drop-shadow-lg">
+            <p className="mt-6 text-white text-base font-bold drop-shadow-lg">
               Tap to play with sound!
             </p>
           </div>
