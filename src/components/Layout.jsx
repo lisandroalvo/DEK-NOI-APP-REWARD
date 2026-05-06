@@ -5,7 +5,9 @@ import { LogOut, Star, Gift, Megaphone, Users, LayoutDashboard, ShoppingBag, Tre
 import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { usePointsNotification } from '../hooks/usePointsNotification'
+import { useBillNotifications } from '../hooks/useBillNotifications'
 import { initAudio } from '../utils/soundEffects'
+import BillNotificationToast from './BillNotificationToast'
 import logo from '../assets/logo.png'
 
 function CompleteProfileModal({ userId }) {
@@ -79,6 +81,9 @@ export default function Layout({ children }) {
 
   // Enable points notification sound for customers
   usePointsNotification(!isAdmin ? user?.uid : null)
+
+  // Enable bill status notifications for customers
+  const { notification: billNotification, clearNotification: clearBillNotification } = useBillNotifications(!isAdmin ? user?.uid : null)
 
   const needsPhone = !isAdmin && profile && !profile.phone
 
@@ -262,6 +267,12 @@ export default function Layout({ children }) {
       <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 pt-14 sm:pt-16 pb-28 md:pt-0 md:pb-0">
         {children}
       </main>
+
+      {/* ── Bill notification toast ── */}
+      <BillNotificationToast 
+        notification={billNotification} 
+        onClose={clearBillNotification} 
+      />
 
       {/* ── Phone number collection for Google sign-in ── */}
       {needsPhone && <CompleteProfileModal userId={user.uid} />}

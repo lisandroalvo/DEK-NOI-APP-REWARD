@@ -65,25 +65,41 @@ export const playPointsAwardedSound = async () => {
   }
 }
 
-export const playSuccessSound = () => {
+export const playSuccessSound = async () => {
   try {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)()
-    const oscillator = audioContext.createOscillator()
-    const gainNode = audioContext.createGain()
+    console.log('🔔 Playing notification sound...')
+    const audioContext = getAudioContext()
     
-    oscillator.connect(gainNode)
-    gainNode.connect(audioContext.destination)
+    // Resume if suspended
+    if (audioContext.state === 'suspended') {
+      await audioContext.resume()
+    }
     
-    // Happy "ding" sound
-    oscillator.frequency.value = 1000
-    oscillator.type = 'sine'
+    // Subtle notification sound - two tones
+    const playTone = (frequency, startTime, duration, volume) => {
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+      
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+      
+      oscillator.frequency.value = frequency
+      oscillator.type = 'sine'
+      
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime + startTime)
+      gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + startTime + 0.01)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + startTime + duration)
+      
+      oscillator.start(audioContext.currentTime + startTime)
+      oscillator.stop(audioContext.currentTime + startTime + duration)
+    }
     
-    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime)
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2)
+    // Gentle "ding-dong" notification
+    playTone(800, 0, 0.15, 0.25)     // First tone
+    playTone(600, 0.12, 0.2, 0.2)    // Second tone (lower)
     
-    oscillator.start(audioContext.currentTime)
-    oscillator.stop(audioContext.currentTime + 0.2)
+    console.log('✅ Notification sound played!')
   } catch (err) {
-    console.log('Audio not available:', err)
+    console.error('Audio error:', err)
   }
 }
