@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
-import { Megaphone, Tag, Coffee, Utensils, ShoppingBag, Sparkles, X } from 'lucide-react'
+import { Megaphone, Tag, Coffee, Utensils, ShoppingBag, Sparkles, X, ChevronRight } from 'lucide-react'
 import lineQr from '../../assets/line-qr.png'
 import charSnacks from '../../assets/char-snacks.png'
 
@@ -31,98 +31,136 @@ export default function CustomerPromos() {
     ? promos 
     : promos.filter(p => p.category === selectedCategory)
 
+  // Group promos by category for sections
+  const promosByCategory = CATEGORIES.slice(1).map(cat => ({
+    ...cat,
+    promos: promos.filter(p => p.category === cat.id)
+  })).filter(cat => cat.promos.length > 0)
+
+  // Featured/All promos
+  const featuredPromos = promos.slice(0, 5)
+
   return (
-    <div className="p-4 sm:p-6 md:p-8 max-w-6xl w-full mx-auto">
+    <div className="pb-6">
       {/* Header */}
-      <div className="mb-4 sm:mb-6">
+      <div className="px-4 sm:px-6 pt-4 sm:pt-6 mb-4">
         <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">🎉 Monthly Promos</h1>
-        <p className="text-sm sm:text-base text-gray-500">Discover amazing deals and special offers this month!</p>
+        <p className="text-sm sm:text-base text-gray-500">Discover amazing deals and special offers!</p>
       </div>
 
-      {/* Category Chips */}
-      <div className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
-        {CATEGORIES.map(cat => {
-          const Icon = cat.icon
-          const isActive = selectedCategory === cat.id
-          return (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
-              className="flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm whitespace-nowrap transition-all shrink-0"
-              style={{
-                background: isActive ? cat.color : '#f3f4f6',
-                color: isActive ? '#fff' : '#666',
-                boxShadow: isActive ? `0 4px 12px ${cat.color}40` : 'none',
-                transform: isActive ? 'scale(1.05)' : 'scale(1)',
-              }}>
-              <Icon size={16} />
-              {cat.label}
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Promos Grid */}
-      {filteredPromos.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
-          <img src={charSnacks} alt="" className="h-40 mx-auto mb-4 opacity-50" />
-          <p className="text-lg font-bold">No promos in this category</p>
-          <p className="text-sm">Try selecting a different category!</p>
+      {/* Featured Promos - Large Horizontal Scroll */}
+      {featuredPromos.length > 0 && (
+        <div className="mb-8">
+          <div className="px-4 sm:px-6 mb-3 flex items-center justify-between">
+            <h2 className="text-lg font-black text-gray-900">✨ Featured Deals</h2>
+            <ChevronRight size={20} className="text-gray-400" />
+          </div>
+          <div className="overflow-x-auto scrollbar-hide">
+            <div className="flex gap-4 px-4 sm:px-6 pb-2">
+              {featuredPromos.map(p => (
+                <div 
+                  key={p.id} 
+                  onClick={() => setSelectedPromo(p)}
+                  className="flex-shrink-0 w-80 bg-white rounded-2xl shadow-lg border-2 border-gray-100 overflow-hidden cursor-pointer hover:shadow-2xl hover:scale-105 transition-all">
+                  {/* Image */}
+                  <div className="h-44 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #FFE600 0%, #FF6B6B 100%)' }}>
+                    {p.imageUrl ? (
+                      <img src={p.imageUrl} alt={p.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Megaphone size={64} className="text-white/30" />
+                      </div>
+                    )}
+                    {/* Badge */}
+                    <div className="absolute top-3 left-3 px-3 py-1.5 rounded-full text-xs font-black bg-red-600 text-white shadow-lg">
+                      🔥 HOT DEAL
+                    </div>
+                  </div>
+                  {/* Content */}
+                  <div className="p-4">
+                    <h3 className="font-black text-gray-900 text-lg mb-1 line-clamp-1">{p.title}</h3>
+                    <p className="text-sm text-gray-500 mb-3 line-clamp-2">{p.description}</p>
+                    {p.price && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl font-black text-red-600">฿{p.price}</span>
+                        <span className="text-xs font-bold text-gray-400">Tap to view →</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
-          {filteredPromos.map(p => (
-            <div 
-              key={p.id} 
-              onClick={() => setSelectedPromo(p)}
-              className="bg-white rounded-2xl shadow-sm border-2 border-gray-100 overflow-hidden cursor-pointer hover:shadow-xl hover:border-red-200 transition-all group">
-              {/* Image */}
-              <div className="h-48 relative overflow-hidden" style={{ background: '#FFF0F0' }}>
-                {p.imageUrl ? (
-                  <img src={p.imageUrl} alt={p.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Megaphone size={64} className="text-red-200" />
-                  </div>
-                )}
-                {/* Category Badge */}
-                {p.category && (
-                  <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-black bg-white/90 backdrop-blur-sm"
-                    style={{ color: CATEGORIES.find(c => c.id === p.category)?.color || '#CC0000' }}>
-                    {CATEGORIES.find(c => c.id === p.category)?.label || 'Promo'}
-                  </div>
-                )}
-              </div>
+      )}
 
-              {/* Content */}
-              <div className="p-4">
-                <h3 className="font-black text-gray-900 text-lg mb-2 line-clamp-2">{p.title}</h3>
-                <p className="text-sm text-gray-500 mb-3 line-clamp-2">{p.description}</p>
-                
-                {/* Price/Info */}
-                {p.price && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-black" style={{ color: '#CC0000' }}>฿{p.price}</span>
-                    <span className="text-xs font-bold text-gray-400">Tap for details</span>
+      {/* Category Sections - Horizontal Scrolls */}
+      {promosByCategory.map(cat => {
+        const Icon = cat.icon
+        return (
+          <div key={cat.id} className="mb-8">
+            <div className="px-4 sm:px-6 mb-3 flex items-center justify-between">
+              <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
+                <Icon size={20} style={{ color: cat.color }} />
+                {cat.label}
+              </h2>
+              <ChevronRight size={20} className="text-gray-400" />
+            </div>
+            <div className="overflow-x-auto scrollbar-hide">
+              <div className="flex gap-4 px-4 sm:px-6 pb-2">
+                {cat.promos.map(p => (
+                  <div 
+                    key={p.id} 
+                    onClick={() => setSelectedPromo(p)}
+                    className="flex-shrink-0 w-64 bg-white rounded-2xl shadow-sm border-2 border-gray-100 overflow-hidden cursor-pointer hover:shadow-xl hover:border-red-200 transition-all">
+                    {/* Image */}
+                    <div className="h-36 relative overflow-hidden" style={{ background: '#FFF0F0' }}>
+                      {p.imageUrl ? (
+                        <img src={p.imageUrl} alt={p.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Icon size={48} style={{ color: cat.color, opacity: 0.3 }} />
+                        </div>
+                      )}
+                    </div>
+                    {/* Content */}
+                    <div className="p-3">
+                      <h3 className="font-black text-gray-900 text-base mb-1 line-clamp-1">{p.title}</h3>
+                      <p className="text-xs text-gray-500 mb-2 line-clamp-2">{p.description}</p>
+                      {p.price && (
+                        <span className="text-xl font-black" style={{ color: cat.color }}>฿{p.price}</span>
+                      )}
+                    </div>
                   </div>
-                )}
+                ))}
               </div>
             </div>
-          ))}
+          </div>
+        )
+      })}
+
+      {/* Empty State */}
+      {promos.length === 0 && (
+        <div className="text-center py-16 px-4 text-gray-400">
+          <img src={charSnacks} alt="" className="h-40 mx-auto mb-4 opacity-50" />
+          <p className="text-lg font-bold">No promos available</p>
+          <p className="text-sm">Check back soon for amazing deals!</p>
         </div>
       )}
 
       {/* LINE QR */}
-      <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl shadow-sm border-2 border-green-200 p-6 max-w-md mx-auto">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-2xl">💬</span>
-          <p className="font-black text-gray-900">Stay Updated!</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <img src={lineQr} alt="LINE QR" className="w-24 h-24 object-contain rounded-xl shrink-0 bg-white p-2" />
-          <p className="text-sm text-gray-600 leading-relaxed">
-            <strong>Add us on LINE</strong> to get instant notifications about new promos, exclusive deals, and special rewards!
-          </p>
+      <div className="px-4 sm:px-6 mt-8">
+        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl shadow-sm border-2 border-green-200 p-6 max-w-md mx-auto">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-2xl">💬</span>
+            <p className="font-black text-gray-900">Stay Updated!</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <img src={lineQr} alt="LINE QR" className="w-24 h-24 object-contain rounded-xl shrink-0 bg-white p-2" />
+            <p className="text-sm text-gray-600 leading-relaxed">
+              <strong>Add us on LINE</strong> to get instant notifications about new promos, exclusive deals, and special rewards!
+            </p>
+          </div>
         </div>
       </div>
 
