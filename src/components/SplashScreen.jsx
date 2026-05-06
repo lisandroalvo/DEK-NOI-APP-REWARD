@@ -25,12 +25,6 @@ export default function SplashScreen({ onComplete }) {
   const [progress, setProgress] = useState(0)
   const [phase, setPhase] = useState('initial')
   const [rainingProducts, setRainingProducts] = useState([])
-  const [showTapToStart, setShowTapToStart] = useState(true)
-
-  // Start animation when user taps
-  const handleTapToStart = () => {
-    setShowTapToStart(false)
-  }
 
   // Generate raining products
   useEffect(() => {
@@ -50,9 +44,7 @@ export default function SplashScreen({ onComplete }) {
 
 
   useEffect(() => {
-    if (showTapToStart) return // Don't start animation until user taps
-
-    // Fast splash screen (3 seconds total)
+    // Fast splash screen (3 seconds total) - starts immediately
     const timer1 = setTimeout(() => setPhase('enter'), 50)
     const timer2 = setTimeout(() => setPhase('logo'), 200)
     const timer3 = setTimeout(() => setPhase('products'), 500)
@@ -81,7 +73,7 @@ export default function SplashScreen({ onComplete }) {
       clearTimeout(timer7)
       clearInterval(progressInterval)
     }
-  }, [onComplete, showTapToStart])
+  }, [onComplete])
 
 
   return (
@@ -341,29 +333,6 @@ export default function SplashScreen({ onComplete }) {
           transitionDelay: '200ms',
         }}
       />
-
-      {/* Tap to Start Button */}
-      {showTapToStart && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-red-600 to-yellow-400">
-          <div className="text-center">
-            <div className="mb-8 animate-bounce">
-              <img src={logo} alt="DEK NOI" className="h-48 sm:h-56 w-auto mx-auto object-contain drop-shadow-2xl" />
-            </div>
-            <button
-              onClick={handleTapToStart}
-              className="px-10 py-5 bg-white text-red-600 rounded-full font-black text-2xl shadow-2xl hover:scale-110 transition-transform active:scale-95 animate-pulse"
-              style={{ 
-                boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
-              }}
-            >
-              👆 Tap to Start
-            </button>
-            <p className="mt-6 text-white text-base font-bold drop-shadow-lg">
-              Welcome to DEK NOI!
-            </p>
-          </div>
-        </div>
-      )}
 
     </div>
   )
