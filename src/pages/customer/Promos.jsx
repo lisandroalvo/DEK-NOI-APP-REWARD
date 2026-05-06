@@ -48,8 +48,77 @@ export default function CustomerPromos() {
         <p className="text-sm sm:text-base text-gray-500">Discover amazing deals and special offers!</p>
       </div>
 
-      {/* Featured Promos - Large Horizontal Scroll */}
-      {featuredPromos.length > 0 && (
+      {/* Category Chips */}
+      <div className="px-4 sm:px-6 mb-6">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          {CATEGORIES.map(cat => {
+            const Icon = cat.icon
+            const isActive = selectedCategory === cat.id
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                className="flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm whitespace-nowrap transition-all shrink-0"
+                style={{
+                  background: isActive ? cat.color : '#f3f4f6',
+                  color: isActive ? '#fff' : '#666',
+                  boxShadow: isActive ? `0 4px 12px ${cat.color}40` : 'none',
+                  transform: isActive ? 'scale(1.05)' : 'scale(1)',
+                }}>
+                <Icon size={16} />
+                {cat.label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Show filtered grid when category selected, or horizontal sections when "all" */}
+      {selectedCategory !== 'all' ? (
+        /* Filtered Grid View */
+        filteredPromos.length === 0 ? (
+          <div className="text-center py-16 px-4 text-gray-400">
+            <img src={charSnacks} alt="" className="h-40 mx-auto mb-4 opacity-50" />
+            <p className="text-lg font-bold">No promos in this category</p>
+            <p className="text-sm">Try selecting a different category!</p>
+          </div>
+        ) : (
+          <div className="px-4 sm:px-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+              {filteredPromos.map(p => (
+                <div 
+                  key={p.id} 
+                  onClick={() => setSelectedPromo(p)}
+                  className="bg-white rounded-2xl shadow-sm border-2 border-gray-100 overflow-hidden cursor-pointer hover:shadow-xl hover:border-red-200 transition-all group">
+                  <div className="h-48 relative overflow-hidden" style={{ background: '#FFF0F0' }}>
+                    {p.imageUrl ? (
+                      <img src={p.imageUrl} alt={p.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Megaphone size={64} className="text-red-200" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-black text-gray-900 text-lg mb-2 line-clamp-2">{p.title}</h3>
+                    <p className="text-sm text-gray-500 mb-3 line-clamp-2">{p.description}</p>
+                    {p.price && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl font-black" style={{ color: '#CC0000' }}>฿{p.price}</span>
+                        <span className="text-xs font-bold text-gray-400">Tap for details</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      ) : (
+        /* Horizontal Scrolling Sections */
+        <>
+          {/* Featured Promos - Large Horizontal Scroll */}
+          {featuredPromos.length > 0 && (
         <div className="mb-8">
           <div className="px-4 sm:px-6 mb-3 flex items-center justify-between">
             <h2 className="text-lg font-black text-gray-900">✨ Featured Deals</h2>
@@ -139,27 +208,40 @@ export default function CustomerPromos() {
         )
       })}
 
-      {/* Empty State */}
-      {promos.length === 0 && (
-        <div className="text-center py-16 px-4 text-gray-400">
-          <img src={charSnacks} alt="" className="h-40 mx-auto mb-4 opacity-50" />
-          <p className="text-lg font-bold">No promos available</p>
-          <p className="text-sm">Check back soon for amazing deals!</p>
-        </div>
+          {/* Empty State for horizontal view */}
+          {promos.length === 0 && (
+            <div className="text-center py-16 px-4 text-gray-400">
+              <img src={charSnacks} alt="" className="h-40 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-bold">No promos available</p>
+              <p className="text-sm">Check back soon for amazing deals!</p>
+            </div>
+          )}
+        </>
       )}
 
-      {/* LINE QR */}
+      {/* LINE Contact Support */}
       <div className="px-4 sm:px-6 mt-8">
         <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl shadow-sm border-2 border-green-200 p-6 max-w-md mx-auto">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-2xl">💬</span>
-            <p className="font-black text-gray-900">Stay Updated!</p>
+            <p className="font-black text-gray-900">Need Help?</p>
           </div>
           <div className="flex items-center gap-4">
             <img src={lineQr} alt="LINE QR" className="w-24 h-24 object-contain rounded-xl shrink-0 bg-white p-2" />
-            <p className="text-sm text-gray-600 leading-relaxed">
-              <strong>Add us on LINE</strong> to get instant notifications about new promos, exclusive deals, and special rewards!
-            </p>
+            <div className="flex-1">
+              <p className="text-sm text-gray-600 leading-relaxed mb-3">
+                Contact our support team on <strong>LINE</strong> for help with promos, rewards, and more!
+              </p>
+              <a
+                href="https://line.me/R/ti/p/@deknoi"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors text-sm"
+              >
+                <span className="text-lg">💬</span>
+                Contact Support
+              </a>
+            </div>
           </div>
         </div>
       </div>

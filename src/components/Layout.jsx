@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { LogOut, Star, Gift, Megaphone, Users, LayoutDashboard, ShoppingBag, TrendingUp, Menu, X, User, Receipt } from 'lucide-react'
 import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { usePointsNotification } from '../hooks/usePointsNotification'
+import { initAudio } from '../utils/soundEffects'
 import logo from '../assets/logo.png'
 
 function CompleteProfileModal({ userId }) {
@@ -57,6 +58,24 @@ export default function Layout({ children }) {
   const { pathname } = useLocation()
   const isAdmin = profile?.role === 'admin'
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  // Initialize audio on first interaction
+  useEffect(() => {
+    const handleInteraction = () => {
+      initAudio()
+      // Remove listeners after first interaction
+      document.removeEventListener('click', handleInteraction)
+      document.removeEventListener('touchstart', handleInteraction)
+    }
+    
+    document.addEventListener('click', handleInteraction)
+    document.addEventListener('touchstart', handleInteraction)
+    
+    return () => {
+      document.removeEventListener('click', handleInteraction)
+      document.removeEventListener('touchstart', handleInteraction)
+    }
+  }, [])
 
   // Enable points notification sound for customers
   usePointsNotification(!isAdmin ? user?.uid : null)

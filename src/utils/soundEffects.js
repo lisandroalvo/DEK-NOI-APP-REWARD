@@ -1,17 +1,40 @@
 // Sound effects using Web Audio API
 
-export const playPointsAwardedSound = () => {
+// Global audio context - create once and reuse
+let globalAudioContext = null;
+
+const getAudioContext = () => {
+  if (!globalAudioContext) {
+    globalAudioContext = new (window.AudioContext || window.webkitAudioContext)()
+  }
+  return globalAudioContext
+}
+
+// Initialize audio on first user interaction
+export const initAudio = () => {
+  try {
+    const ctx = getAudioContext()
+    if (ctx.state === 'suspended') {
+      ctx.resume()
+    }
+    console.log('🎵 Audio initialized')
+  } catch (err) {
+    console.error('Audio init error:', err)
+  }
+}
+
+export const playPointsAwardedSound = async () => {
   try {
     console.log('🎵 Attempting to play points sound...')
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+    const audioContext = getAudioContext()
     
-    // Resume audio context (required on some browsers)
+    // Resume audio context if suspended
     if (audioContext.state === 'suspended') {
-      audioContext.resume()
+      await audioContext.resume()
     }
     
     // Create a pleasant "success" sound with multiple tones
-    const playTone = (frequency, startTime, duration, volume = 0.2) => {
+    const playTone = (frequency, startTime, duration, volume = 0.3) => {
       const oscillator = audioContext.createOscillator()
       const gainNode = audioContext.createGain()
       
@@ -29,10 +52,10 @@ export const playPointsAwardedSound = () => {
       oscillator.stop(audioContext.currentTime + startTime + duration)
     }
     
-    // Play a cheerful ascending melody (C-E-G chord) - louder
-    playTone(523.25, 0, 0.2, 0.25)    // C5
-    playTone(659.25, 0.1, 0.2, 0.25)  // E5
-    playTone(783.99, 0.2, 0.3, 0.3)   // G5
+    // Play a cheerful ascending melody (C-E-G chord) - LOUD
+    playTone(523.25, 0, 0.25, 0.4)    // C5
+    playTone(659.25, 0.12, 0.25, 0.4)  // E5
+    playTone(783.99, 0.24, 0.35, 0.5)   // G5
     
     console.log('✅ Points awarded sound played successfully!')
     return true
