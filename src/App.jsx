@@ -12,6 +12,7 @@ import CustomerRewards from './pages/customer/Rewards'
 import MyRedemptions from './pages/customer/MyRedemptions'
 import CustomerPromos from './pages/customer/Promos'
 import Profile from './pages/customer/Profile'
+import ScanBill from './pages/customer/ScanBill'
 
 // Admin pages
 import AdminDashboard from './pages/admin/Dashboard'
@@ -20,6 +21,7 @@ import AdminRewards from './pages/admin/Rewards'
 import AdminRedemptions from './pages/admin/Redemptions'
 import AdminPromos from './pages/admin/Promos'
 import AdminActivity from './pages/admin/Activity'
+import BillReview from './pages/admin/BillReview'
 
 import './index.css'
 
@@ -73,6 +75,7 @@ function AppContent() {
       <Route path="/my-redemptions" element={<RequireAuth><Layout><MyRedemptions /></Layout></RequireAuth>} />
       <Route path="/promos" element={<RequireAuth><Layout><CustomerPromos /></Layout></RequireAuth>} />
       <Route path="/profile" element={<RequireAuth><Layout><Profile /></Layout></RequireAuth>} />
+      <Route path="/scan-bill" element={<RequireAuth><Layout><ScanBill /></Layout></RequireAuth>} />
 
       {/* Admin routes */}
       <Route path="/admin" element={<RequireAuth adminOnly><Layout><AdminDashboard /></Layout></RequireAuth>} />
@@ -81,6 +84,7 @@ function AppContent() {
       <Route path="/admin/redemptions" element={<RequireAuth adminOnly><Layout><AdminRedemptions /></Layout></RequireAuth>} />
       <Route path="/admin/promos" element={<RequireAuth adminOnly><Layout><AdminPromos /></Layout></RequireAuth>} />
       <Route path="/admin/activity" element={<RequireAuth adminOnly><Layout><AdminActivity /></Layout></RequireAuth>} />
+      <Route path="/admin/bills" element={<RequireAuth adminOnly><Layout><BillReview /></Layout></RequireAuth>} />
 
       <Route path="*" element={<Root />} />
     </Routes>

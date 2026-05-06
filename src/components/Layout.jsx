@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { LogOut, Star, Gift, Megaphone, Users, LayoutDashboard, ShoppingBag, TrendingUp, Menu, X, User } from 'lucide-react'
+import { LogOut, Star, Gift, Megaphone, Users, LayoutDashboard, ShoppingBag, TrendingUp, Menu, X, User, Receipt } from 'lucide-react'
 import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import logo from '../assets/logo.png'
@@ -61,6 +61,7 @@ export default function Layout({ children }) {
 
   const adminLinks = [
     { to: '/admin',              icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
+    { to: '/admin/bills',        icon: <Receipt size={18} />,         label: 'Bill Review' },
     { to: '/admin/customers',    icon: <Users size={18} />,           label: 'Customers' },
     { to: '/admin/rewards',      icon: <Gift size={18} />,            label: 'Rewards' },
     { to: '/admin/redemptions',  icon: <ShoppingBag size={18} />,     label: 'Redemptions' },
@@ -179,28 +180,63 @@ export default function Layout({ children }) {
         </div>
       )}
 
-      {/* ── Bottom tab bar (mobile only) ── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t-2 shadow-lg flex overflow-x-auto scrollbar-hide" style={{ borderColor: '#CC0000' }}>
-        {links.map(({ to, icon, label }) => {
-          const active = pathname === to
-          return (
-            <Link key={to} to={to}
-              className="flex-1 flex flex-col items-center justify-center py-3 gap-1 text-xs font-bold transition-all min-w-[60px]"
+      {/* ── Bottom tab bar (mobile only) with floating center button ── */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 shadow-2xl" style={{ background: '#CC0000', height: '75px' }}>
+        <div className="relative flex h-full">
+          {/* Left side buttons */}
+          <div className="flex-1 flex">
+            {links.slice(0, 2).map(({ to, icon, label }) => {
+              const active = pathname === to
+              return (
+                <Link key={to} to={to}
+                  className="flex-1 flex flex-col items-center justify-center gap-1 text-xs font-bold transition-all"
+                  style={{ 
+                    color: active ? '#FFE600' : 'rgba(255, 255, 255, 0.7)',
+                  }}>
+                  <span style={{ transform: active ? 'scale(1.2)' : 'scale(1)' }}>
+                    {icon}
+                  </span>
+                  <span className="truncate px-1">{label}</span>
+                </Link>
+              )
+            })}
+          </div>
+
+          {/* Center floating button */}
+          <div className="absolute left-1/2 -translate-x-1/2 -top-6">
+            <Link to="/scan-bill"
+              className="w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-transform hover:scale-110 active:scale-95"
               style={{ 
-                color: active ? '#CC0000' : '#666',
-                background: active ? '#FFF5F5' : 'transparent'
+                background: 'linear-gradient(135deg, #FFE600 0%, #FFA500 100%)',
+                border: '4px solid #CC0000'
               }}>
-              <span style={{ transform: active ? 'scale(1.1)' : 'scale(1)' }}>
-                {icon}
-              </span>
-              <span className="truncate px-1">{label}</span>
+              <span className="text-3xl">📄</span>
             </Link>
-          )
-        })}
+          </div>
+
+          {/* Right side buttons */}
+          <div className="flex-1 flex">
+            {links.slice(2, 4).map(({ to, icon, label }) => {
+              const active = pathname === to
+              return (
+                <Link key={to} to={to}
+                  className="flex-1 flex flex-col items-center justify-center gap-1 text-xs font-bold transition-all"
+                  style={{ 
+                    color: active ? '#FFE600' : 'rgba(255, 255, 255, 0.7)',
+                  }}>
+                  <span style={{ transform: active ? 'scale(1.2)' : 'scale(1)' }}>
+                    {icon}
+                  </span>
+                  <span className="truncate px-1">{label}</span>
+                </Link>
+              )
+            })}
+          </div>
+        </div>
       </nav>
 
       {/* ── Main content ── */}
-      <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 pt-14 sm:pt-16 pb-24 md:pt-0 md:pb-0">
+      <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 pt-14 sm:pt-16 pb-28 md:pt-0 md:pb-0">
         {children}
       </main>
 
