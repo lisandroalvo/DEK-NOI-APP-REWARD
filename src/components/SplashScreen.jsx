@@ -69,14 +69,14 @@ export default function SplashScreen({ onComplete }) {
 
 
   useEffect(() => {
-    // Ultra fast splash screen (0.8 seconds total) - instant!
-    const timer1 = setTimeout(() => setPhase('enter'), 10)
-    const timer2 = setTimeout(() => setPhase('logo'), 50)
-    const timer3 = setTimeout(() => setPhase('products'), 150)
-    const timer4 = setTimeout(() => setPhase('shine'), 300)
-    const timer5 = setTimeout(() => setPhase('complete'), 450)
-    const timer6 = setTimeout(() => setPhase('fadeOut'), 600)
-    const timer7 = setTimeout(() => onComplete(), 800)
+    // 5 second splash screen - full animation
+    const timer1 = setTimeout(() => setPhase('enter'), 100)
+    const timer2 = setTimeout(() => setPhase('logo'), 500)
+    const timer3 = setTimeout(() => setPhase('products'), 1000)
+    const timer4 = setTimeout(() => setPhase('shine'), 2000)
+    const timer5 = setTimeout(() => setPhase('complete'), 3000)
+    const timer6 = setTimeout(() => setPhase('fadeOut'), 4000)
+    const timer7 = setTimeout(() => onComplete(), 5000)
 
     const progressInterval = setInterval(() => {
       setProgress(prev => {
@@ -84,9 +84,9 @@ export default function SplashScreen({ onComplete }) {
           clearInterval(progressInterval)
           return 100
         }
-        return prev + 3 // Much faster progress
+        return prev + 2 // Smooth progress over 5 seconds
       })
-    }, 30) // Much faster interval
+    }, 100) // Smooth interval
 
     return () => {
       clearTimeout(timer1)

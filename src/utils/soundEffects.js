@@ -70,12 +70,13 @@ export const playSuccessSound = async () => {
     console.log('🔔 Playing notification sound...')
     const audioContext = getAudioContext()
     
-    // Resume if suspended
+    // FORCE resume if suspended
     if (audioContext.state === 'suspended') {
       await audioContext.resume()
+      console.log('Audio context resumed')
     }
     
-    // Subtle notification sound - two tones
+    // LOUD notification sound - three tones
     const playTone = (frequency, startTime, duration, volume) => {
       const oscillator = audioContext.createOscillator()
       const gainNode = audioContext.createGain()
@@ -87,19 +88,20 @@ export const playSuccessSound = async () => {
       oscillator.type = 'sine'
       
       gainNode.gain.setValueAtTime(0, audioContext.currentTime + startTime)
-      gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + startTime + 0.01)
+      gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + startTime + 0.02)
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + startTime + duration)
       
       oscillator.start(audioContext.currentTime + startTime)
       oscillator.stop(audioContext.currentTime + startTime + duration)
     }
     
-    // Gentle "ding-dong" notification
-    playTone(800, 0, 0.15, 0.25)     // First tone
-    playTone(600, 0.12, 0.2, 0.2)    // Second tone (lower)
+    // LOUD "ding-dong-ding" notification - VERY AUDIBLE
+    playTone(1000, 0, 0.2, 0.6)      // First tone - HIGH & LOUD
+    playTone(800, 0.15, 0.2, 0.5)    // Second tone - LOUD
+    playTone(1000, 0.3, 0.25, 0.6)   // Third tone - HIGH & LOUD
     
-    console.log('✅ Notification sound played!')
+    console.log('✅ LOUD notification sound played!')
   } catch (err) {
-    console.error('Audio error:', err)
+    console.error('❌ Audio error:', err)
   }
 }
