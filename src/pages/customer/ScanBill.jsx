@@ -15,24 +15,65 @@ export default function ScanBill() {
   const handleFileSelect = (e) => {
     const file = e.target.files[0]
     if (file) {
-      // Reduce size limit to 2MB for base64 storage
-      if (file.size > 2 * 1024 * 1024) {
-        setError('File size must be less than 2MB')
+      // Allow up to 10MB, will compress if needed
+      if (file.size > 10 * 1024 * 1024) {
+        setError('File size must be less than 10MB')
         return
       }
       
-      // Convert to base64 immediately
+      // Read and compress image
       const reader = new FileReader()
       reader.onloadend = () => {
-        setSelectedFile(file)
-        setPreview(reader.result) // base64 string
-        setError('')
+        compressImage(reader.result, file.type)
       }
       reader.onerror = () => {
         setError('Failed to read file. Please try again.')
       }
       reader.readAsDataURL(file)
     }
+  }
+
+  const compressImage = (base64, fileType) => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      
+      // Calculate new dimensions (max 1920px width)
+      let width = img.width
+      let height = img.height
+      const maxWidth = 1920
+      const maxHeight = 1920
+      
+      if (width > maxWidth || height > maxHeight) {
+        if (width > height) {
+          height = (height / width) * maxWidth
+          width = maxWidth
+        } else {
+          width = (width / height) * maxHeight
+          height = maxHeight
+        }
+      }
+      
+      canvas.width = width
+      canvas.height = height
+      
+      // Draw and compress
+      ctx.drawImage(img, 0, 0, width, height)
+      
+      // Convert to base64 with quality adjustment
+      const compressedBase64 = canvas.toDataURL(fileType || 'image/jpeg', 0.8)
+      
+      setSelectedFile({ name: 'compressed-image.jpg', size: compressedBase64.length })
+      setPreview(compressedBase64)
+      setError('')
+      
+      console.log('Original size:', base64.length, 'Compressed size:', compressedBase64.length)
+    }
+    img.onerror = () => {
+      setError('Failed to process image. Please try again.')
+    }
+    img.src = base64
   }
 
   const handleUpload = async () => {
@@ -158,7 +199,7 @@ export default function ScanBill() {
               <li>Make sure the bill is clearly visible</li>
               <li>Include the total amount and date</li>
               <li>Avoid blurry or dark photos</li>
-              <li>File size must be under 2MB</li>
+              <li>Photos up to 10MB accepted (auto-compressed)</li>
             </ul>
           </div>
         </div>
