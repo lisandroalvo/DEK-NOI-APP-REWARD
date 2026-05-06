@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { doc, updateDoc, collection, query, where, orderBy, onSnapshot } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
-import { User, Mail, Phone, Camera, Save, LogOut, Receipt, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { User, Mail, Phone, Camera, Save, LogOut, Receipt, CheckCircle, XCircle, Clock, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import ImageUploadSimple from '../../components/ImageUploadSimple'
 
@@ -347,6 +347,23 @@ export default function Profile() {
           </div>
         </div>
       )}
+
+      {/* Contact Us - LINE */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+        <h3 className="font-black text-gray-900 flex items-center gap-2 mb-4">
+          <MessageCircle size={20} style={{ color: '#00B900' }} />
+          Contact Us on LINE
+        </h3>
+        <div className="text-center">
+          <img 
+            src={require('../../assets/line-qr.png')} 
+            alt="LINE QR Code" 
+            className="w-48 h-48 mx-auto mb-3 rounded-xl border-2 border-gray-200"
+          />
+          <p className="text-sm text-gray-600 mb-2">Scan to add us on LINE</p>
+          <p className="text-xs text-gray-500">Get support and updates!</p>
+        </div>
+      </div>
 
       {/* Logout Button */}
       <button

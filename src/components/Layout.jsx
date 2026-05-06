@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { LogOut, Star, Gift, Megaphone, Users, LayoutDashboard, ShoppingBag, TrendingUp, Menu, X, User, Receipt } from 'lucide-react'
 import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
+import { usePointsNotification } from '../hooks/usePointsNotification'
 import logo from '../assets/logo.png'
 
 function CompleteProfileModal({ userId }) {
@@ -56,6 +57,9 @@ export default function Layout({ children }) {
   const { pathname } = useLocation()
   const isAdmin = profile?.role === 'admin'
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  // Enable points notification sound for customers
+  usePointsNotification(!isAdmin ? user?.uid : null)
 
   const needsPhone = !isAdmin && profile && !profile.phone
 
