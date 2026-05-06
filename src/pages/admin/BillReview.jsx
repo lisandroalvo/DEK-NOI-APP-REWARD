@@ -128,7 +128,7 @@ export default function BillReview() {
               <div className="flex items-start gap-4">
                 {/* Bill Image Thumbnail */}
                 <img
-                  src={bill.imageUrl}
+                  src={bill.imageData || bill.imageUrl}
                   alt="Bill"
                   className="w-24 h-24 object-cover rounded-lg border-2 border-gray-300 cursor-pointer hover:scale-105 transition-transform"
                   onClick={() => setSelectedBill(bill)}
@@ -183,7 +183,7 @@ export default function BillReview() {
 
               {/* Bill Image */}
               <img
-                src={selectedBill.imageUrl}
+                src={selectedBill.imageData || selectedBill.imageUrl}
                 alt="Bill"
                 className="w-full h-auto rounded-xl border-4 border-red-600 mb-4"
               />

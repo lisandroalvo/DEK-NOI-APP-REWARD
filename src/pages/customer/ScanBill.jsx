@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { db, storage } from '../../lib/firebase'
+import { db } from '../../lib/firebase'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { Camera, Upload, X, CheckCircle } from 'lucide-react'
 
 export default function ScanBill() {
@@ -16,18 +15,28 @@ export default function ScanBill() {
   const handleFileSelect = (e) => {
     const file = e.target.files[0]
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        setError('File size must be less than 5MB')
+      // Reduce size limit to 2MB for base64 storage
+      if (file.size > 2 * 1024 * 1024) {
+        setError('File size must be less than 2MB')
         return
       }
-      setSelectedFile(file)
-      setPreview(URL.createObjectURL(file))
-      setError('')
+      
+      // Convert to base64 immediately
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setSelectedFile(file)
+        setPreview(reader.result) // base64 string
+        setError('')
+      }
+      reader.onerror = () => {
+        setError('Failed to read file. Please try again.')
+      }
+      reader.readAsDataURL(file)
     }
   }
 
   const handleUpload = async () => {
-    if (!selectedFile) return
+    if (!selectedFile || !preview) return
 
     setUploading(true)
     setError('')
@@ -35,25 +44,15 @@ export default function ScanBill() {
     try {
       console.log('Starting upload...', selectedFile.name)
       
-      // Upload image to Firebase Storage
-      const timestamp = Date.now()
-      const fileName = `${timestamp}_${selectedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
-      const storageRef = ref(storage, `bills/${user.uid}/${fileName}`)
-      
-      console.log('Uploading to:', `bills/${user.uid}/${fileName}`)
-      await uploadBytes(storageRef, selectedFile)
-      console.log('Upload complete, getting URL...')
-      
-      const imageUrl = await getDownloadURL(storageRef)
-      console.log('Got URL:', imageUrl)
-
-      // Save bill submission to Firestore
-      console.log('Saving to Firestore...')
+      // Save bill submission directly to Firestore with base64 image
+      console.log('Saving to Firestore with base64 image...')
       await addDoc(collection(db, 'billSubmissions'), {
         userId: user.uid,
         userName: profile?.name || 'Unknown',
         userEmail: profile?.email || '',
-        imageUrl,
+        imageData: preview, // base64 string
+        fileName: selectedFile.name,
+        fileSize: selectedFile.size,
         status: 'pending',
         submittedAt: serverTimestamp(),
         reviewedAt: null,
@@ -61,7 +60,7 @@ export default function ScanBill() {
         pointsAwarded: 0,
         notes: ''
       })
-      console.log('Saved to Firestore successfully!')
+      console.log('✅ Saved to Firestore successfully!')
 
       setSuccess(true)
       setSelectedFile(null)
@@ -73,17 +72,15 @@ export default function ScanBill() {
       }, 3000)
 
     } catch (err) {
-      console.error('Error uploading bill:', err)
+      console.error('❌ Error uploading bill:', err)
       console.error('Error code:', err.code)
       console.error('Error message:', err.message)
       
       let errorMessage = 'Failed to upload bill. '
-      if (err.code === 'storage/unauthorized') {
+      if (err.code === 'permission-denied') {
         errorMessage += 'Permission denied. Please contact support.'
-      } else if (err.code === 'storage/canceled') {
-        errorMessage += 'Upload was canceled.'
-      } else if (err.code === 'storage/unknown') {
-        errorMessage += 'An unknown error occurred.'
+      } else if (err.message.includes('size')) {
+        errorMessage += 'Image too large. Try a smaller image.'
       } else {
         errorMessage += err.message || 'Please try again.'
       }
@@ -161,7 +158,7 @@ export default function ScanBill() {
               <li>Make sure the bill is clearly visible</li>
               <li>Include the total amount and date</li>
               <li>Avoid blurry or dark photos</li>
-              <li>File size must be under 5MB</li>
+              <li>File size must be under 2MB</li>
             </ul>
           </div>
         </div>
