@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { Megaphone, Tag, Coffee, Utensils, ShoppingBag, Sparkles, X, ChevronRight } from 'lucide-react'
-import lineQr from '../../assets/line-qr.png'
+import SupportButton from '../../components/SupportButton'
 import charSnacks from '../../assets/char-snacks.png'
 
 const CATEGORIES = [
@@ -219,32 +219,8 @@ export default function CustomerPromos() {
         </>
       )}
 
-      {/* LINE Contact Support */}
-      <div className="px-4 sm:px-6 mt-8">
-        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl shadow-sm border-2 border-green-200 p-6 max-w-md mx-auto">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-2xl">💬</span>
-            <p className="font-black text-gray-900">Need Help?</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <img src={lineQr} alt="LINE QR" className="w-24 h-24 object-contain rounded-xl shrink-0 bg-white p-2" />
-            <div className="flex-1">
-              <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                Contact our support team on <strong>LINE</strong> for help with promos, rewards, and more!
-              </p>
-              <a
-                href="https://line.me/R/ti/p/@deknoi"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors text-sm"
-              >
-                <span className="text-lg">💬</span>
-                Contact Support
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Support Button */}
+      <SupportButton className="px-4 sm:px-6 mt-12 mb-8" />
 
       {/* Detail Modal */}
       {selectedPromo && (

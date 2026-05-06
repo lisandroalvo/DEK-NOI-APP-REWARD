@@ -4,7 +4,7 @@ import { db } from '../../lib/firebase'
 import { useAuth } from '../../context/AuthContext'
 import { Star, TrendingUp, Gift, Clock, ChevronRight, Megaphone } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import lineQr from '../../assets/line-qr.png'
+import SupportButton from '../../components/SupportButton'
 import charHappy from '../../assets/char-happy.png'
 import Toast from '../../components/Toast'
 import { useRedemptionNotifications } from '../../hooks/useRedemptionNotifications'
@@ -242,16 +242,8 @@ export default function CustomerDashboard() {
         )}
       </div>
 
-      {/* LINE Help */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-5">
-        <img src={lineQr} alt="LINE QR" className="w-20 h-20 object-contain rounded-xl" />
-        <div>
-          <p className="font-black text-gray-900 text-sm mb-0.5">Need help?</p>
-          <p className="text-xs text-gray-500 leading-relaxed">
-            Scan the QR code to contact us on <strong>LINE</strong> for any questions about your points or rewards.
-          </p>
-        </div>
-      </div>
+      {/* Support Button */}
+      <SupportButton className="mt-8" />
     </div>
   )
 }
