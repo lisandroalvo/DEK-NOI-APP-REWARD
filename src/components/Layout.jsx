@@ -8,6 +8,7 @@ import { usePointsNotification } from '../hooks/usePointsNotification'
 import { useBillNotifications } from '../hooks/useBillNotifications'
 import { initAudio } from '../utils/soundEffects'
 import BillNotificationToast from './BillNotificationToast'
+import SupportButton from './SupportButton'
 import logo from '../assets/logo.png'
 
 function CompleteProfileModal({ userId }) {
@@ -273,6 +274,9 @@ export default function Layout({ children }) {
         notification={billNotification} 
         onClose={clearBillNotification} 
       />
+
+      {/* ── Support button (floating) ── */}
+      <SupportButton />
 
       {/* ── Phone number collection for Google sign-in ── */}
       {needsPhone && <CompleteProfileModal userId={user.uid} />}

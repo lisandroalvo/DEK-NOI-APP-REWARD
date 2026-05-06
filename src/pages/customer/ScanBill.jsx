@@ -85,7 +85,9 @@ export default function ScanBill() {
     try {
       console.log('Starting upload...', selectedFile.name)
       
-      // Save bill submission directly to Firestore with base64 image
+      // IMPORTANT: Save bill submission PERMANENTLY to Firestore
+      // Bills are NEVER deleted - they remain for at least 2 months
+      // Users can always see their bill history even after logout
       console.log('Saving to Firestore with base64 image...')
       await addDoc(collection(db, 'billSubmissions'), {
         userId: user.uid,
