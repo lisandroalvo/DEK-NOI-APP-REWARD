@@ -33,25 +33,35 @@ export default function ScanBill() {
     setError('')
 
     try {
+      console.log('Starting upload...', selectedFile.name)
+      
       // Upload image to Firebase Storage
       const timestamp = Date.now()
-      const storageRef = ref(storage, `bills/${user.uid}/${timestamp}_${selectedFile.name}`)
+      const fileName = `${timestamp}_${selectedFile.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
+      const storageRef = ref(storage, `bills/${user.uid}/${fileName}`)
+      
+      console.log('Uploading to:', `bills/${user.uid}/${fileName}`)
       await uploadBytes(storageRef, selectedFile)
+      console.log('Upload complete, getting URL...')
+      
       const imageUrl = await getDownloadURL(storageRef)
+      console.log('Got URL:', imageUrl)
 
       // Save bill submission to Firestore
+      console.log('Saving to Firestore...')
       await addDoc(collection(db, 'billSubmissions'), {
         userId: user.uid,
         userName: profile?.name || 'Unknown',
         userEmail: profile?.email || '',
         imageUrl,
-        status: 'pending', // pending, approved, rejected
+        status: 'pending',
         submittedAt: serverTimestamp(),
         reviewedAt: null,
         reviewedBy: null,
         pointsAwarded: 0,
         notes: ''
       })
+      console.log('Saved to Firestore successfully!')
 
       setSuccess(true)
       setSelectedFile(null)
@@ -64,7 +74,21 @@ export default function ScanBill() {
 
     } catch (err) {
       console.error('Error uploading bill:', err)
-      setError('Failed to upload bill. Please try again.')
+      console.error('Error code:', err.code)
+      console.error('Error message:', err.message)
+      
+      let errorMessage = 'Failed to upload bill. '
+      if (err.code === 'storage/unauthorized') {
+        errorMessage += 'Permission denied. Please contact support.'
+      } else if (err.code === 'storage/canceled') {
+        errorMessage += 'Upload was canceled.'
+      } else if (err.code === 'storage/unknown') {
+        errorMessage += 'An unknown error occurred.'
+      } else {
+        errorMessage += err.message || 'Please try again.'
+      }
+      
+      setError(errorMessage)
     } finally {
       setUploading(false)
     }

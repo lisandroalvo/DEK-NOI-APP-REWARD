@@ -26,6 +26,31 @@ export default function SplashScreen({ onComplete }) {
   const [phase, setPhase] = useState('initial')
   const [rainingProducts, setRainingProducts] = useState([])
 
+  // Play a subtle startup sound using Web Audio API
+  useEffect(() => {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+      const oscillator = audioContext.createOscillator()
+      const gainNode = audioContext.createGain()
+
+      oscillator.connect(gainNode)
+      gainNode.connect(audioContext.destination)
+
+      // Subtle "pop" sound
+      oscillator.frequency.value = 800 // Higher pitch
+      oscillator.type = 'sine' // Smooth sine wave
+
+      // Very quiet and quick
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime) // Start at 10% volume
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15) // Fade out quickly
+
+      oscillator.start(audioContext.currentTime)
+      oscillator.stop(audioContext.currentTime + 0.15) // Very short duration
+    } catch (err) {
+      console.log('Audio not available:', err)
+    }
+  }, [])
+
   // Generate raining products
   useEffect(() => {
     const products = []
