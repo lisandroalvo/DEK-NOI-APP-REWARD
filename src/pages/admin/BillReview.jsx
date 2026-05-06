@@ -10,6 +10,7 @@ export default function BillReview() {
   const [points, setPoints] = useState('')
   const [notes, setNotes] = useState('')
   const [processing, setProcessing] = useState(false)
+  const [filter, setFilter] = useState('pending') // pending, approved, rejected, all
 
   useEffect(() => {
     const q = query(
@@ -110,17 +111,97 @@ export default function BillReview() {
     )
   }
 
+  // Filter bills
+  const filteredBills = filter === 'all' 
+    ? bills 
+    : bills.filter(b => b.status === filter)
+
+  // Statistics
+  const stats = {
+    pending: bills.filter(b => b.status === 'pending').length,
+    approved: bills.filter(b => b.status === 'approved').length,
+    rejected: bills.filter(b => b.status === 'rejected').length,
+    total: bills.length
+  }
+
   return (
     <div className="p-4 sm:p-6 md:p-8 max-w-6xl w-full mx-auto">
-      <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-6">📄 Bill Review</h1>
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">📄 Bill Review</h1>
+        <p className="text-gray-600">Review customer bill submissions and award points</p>
+      </div>
 
-      {bills.length === 0 ? (
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Clock size={18} className="text-yellow-600" />
+            <p className="text-xs font-bold text-yellow-800">PENDING</p>
+          </div>
+          <p className="text-3xl font-black text-yellow-600">{stats.pending}</p>
+        </div>
+        <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <CheckCircle size={18} className="text-green-600" />
+            <p className="text-xs font-bold text-green-800">APPROVED</p>
+          </div>
+          <p className="text-3xl font-black text-green-600">{stats.approved}</p>
+        </div>
+        <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <XCircle size={18} className="text-red-600" />
+            <p className="text-xs font-bold text-red-800">REJECTED</p>
+          </div>
+          <p className="text-3xl font-black text-red-600">{stats.rejected}</p>
+        </div>
+        <div className="bg-gray-50 border-2 border-gray-200 rounded-xl p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Eye size={18} className="text-gray-600" />
+            <p className="text-xs font-bold text-gray-800">TOTAL</p>
+          </div>
+          <p className="text-3xl font-black text-gray-600">{stats.total}</p>
+        </div>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+        {[
+          { id: 'pending', label: 'Pending', count: stats.pending, color: 'yellow' },
+          { id: 'approved', label: 'Approved', count: stats.approved, color: 'green' },
+          { id: 'rejected', label: 'Rejected', count: stats.rejected, color: 'red' },
+          { id: 'all', label: 'All Bills', count: stats.total, color: 'gray' }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setFilter(tab.id)}
+            className={`px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${
+              filter === tab.id
+                ? `bg-${tab.color}-600 text-white shadow-lg`
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+            style={filter === tab.id ? {
+              backgroundColor: tab.color === 'yellow' ? '#CA8A04' : 
+                              tab.color === 'green' ? '#16A34A' :
+                              tab.color === 'red' ? '#DC2626' : '#4B5563'
+            } : {}}
+          >
+            {tab.label} ({tab.count})
+          </button>
+        ))}
+      </div>
+
+      {/* Bills List */}
+      {filteredBills.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-2xl">
-          <p className="text-gray-500 text-lg">No bills submitted yet</p>
+          <p className="text-gray-500 text-lg">No {filter !== 'all' ? filter : ''} bills</p>
+          <p className="text-sm text-gray-400 mt-1">
+            {filter === 'pending' ? 'Waiting for customer submissions' : 'Try selecting a different filter'}
+          </p>
         </div>
       ) : (
         <div className="grid gap-4">
-          {bills.map((bill) => (
+          {filteredBills.map((bill) => (
             <div
               key={bill.id}
               className="bg-white rounded-xl border-2 border-gray-200 p-4 hover:shadow-lg transition-all"
