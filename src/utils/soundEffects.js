@@ -25,16 +25,19 @@ export const initAudio = () => {
 
 export const playPointsAwardedSound = async () => {
   try {
-    console.log('🎵 Attempting to play points sound...')
+    console.log('\ud83c\udfb5 Attempting to play points sound...')
     const audioContext = getAudioContext()
     
-    // Resume audio context if suspended
+    // FORCE resume audio context
     if (audioContext.state === 'suspended') {
       await audioContext.resume()
+      console.log('Audio context resumed from suspended state')
     }
     
-    // Create a pleasant "success" sound with multiple tones
-    const playTone = (frequency, startTime, duration, volume = 0.3) => {
+    console.log('Audio context state:', audioContext.state)
+    
+    // Create a VERY LOUD "success" sound with multiple tones
+    const playTone = (frequency, startTime, duration, volume) => {
       const oscillator = audioContext.createOscillator()
       const gainNode = audioContext.createGain()
       
@@ -45,22 +48,22 @@ export const playPointsAwardedSound = async () => {
       oscillator.type = 'sine'
       
       gainNode.gain.setValueAtTime(0, audioContext.currentTime + startTime)
-      gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + startTime + 0.01)
+      gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + startTime + 0.02)
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + startTime + duration)
       
       oscillator.start(audioContext.currentTime + startTime)
       oscillator.stop(audioContext.currentTime + startTime + duration)
     }
     
-    // Play a cheerful ascending melody (C-E-G chord) - LOUD
-    playTone(523.25, 0, 0.25, 0.4)    // C5
-    playTone(659.25, 0.12, 0.25, 0.4)  // E5
-    playTone(783.99, 0.24, 0.35, 0.5)   // G5
+    // Play a VERY LOUD cheerful ascending melody (C-E-G chord) - MAX VOLUME
+    playTone(523.25, 0, 0.3, 0.8)      // C5 - VERY LOUD
+    playTone(659.25, 0.15, 0.3, 0.8)   // E5 - VERY LOUD
+    playTone(783.99, 0.3, 0.4, 1.0)    // G5 - MAX VOLUME
     
-    console.log('✅ Points awarded sound played successfully!')
+    console.log('\u2705 LOUD Points awarded sound played successfully!')
     return true
   } catch (err) {
-    console.error('❌ Audio error:', err)
+    console.error('\u274c Audio error:', err)
     return false
   }
 }
