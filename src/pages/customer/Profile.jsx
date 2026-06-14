@@ -5,6 +5,7 @@ import { db } from '../../lib/firebase'
 import { User, Mail, Phone, Camera, Save, LogOut, Receipt, CheckCircle, XCircle, Clock, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import ImageUpload from '../../components/ImageUpload'
+import lineQrCode from '../../assets/line-qr.png'
 
 export default function Profile() {
   const { user, profile, logout } = useAuth()
@@ -35,6 +36,10 @@ export default function Profile() {
         ...doc.data()
       }))
       setBills(billsData)
+    }, (error) => {
+      // A missing composite index or a rules change surfaces here; without this
+      // handler the query fails silently and the history just looks empty.
+      console.error('Failed to load bill history:', error)
     })
 
     return () => unsubscribe()
@@ -357,7 +362,7 @@ export default function Profile() {
         </h3>
         <div className="text-center">
           <img 
-            src={require('../../assets/line-qr.png')} 
+            src={lineQrCode}
             alt="LINE QR Code" 
             className="w-48 h-48 mx-auto mb-3 rounded-xl border-2 border-gray-200"
           />
