@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { db } from '../../lib/firebase'
+import { db, storage } from '../../lib/firebase'
+import { uploadImageFile, validateImageFile } from '../../lib/storage'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { Camera, Upload, X, CheckCircle } from 'lucide-react'
 
@@ -14,86 +15,39 @@ export default function ScanBill() {
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0]
-    if (file) {
-      // Allow up to 10MB, will compress if needed
-      if (file.size > 10 * 1024 * 1024) {
-        setError('File size must be less than 10MB')
-        return
-      }
-      
-      // Read and compress image
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        compressImage(reader.result, file.type)
-      }
-      reader.onerror = () => {
-        setError('Failed to read file. Please try again.')
-      }
-      reader.readAsDataURL(file)
-    }
-  }
+    if (!file) return
 
-  const compressImage = (base64, fileType) => {
-    const img = new Image()
-    img.onload = () => {
-      const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')
-      
-      // Calculate new dimensions (max 1920px width)
-      let width = img.width
-      let height = img.height
-      const maxWidth = 1920
-      const maxHeight = 1920
-      
-      if (width > maxWidth || height > maxHeight) {
-        if (width > height) {
-          height = (height / width) * maxWidth
-          width = maxWidth
-        } else {
-          width = (width / height) * maxHeight
-          height = maxHeight
-        }
-      }
-      
-      canvas.width = width
-      canvas.height = height
-      
-      // Draw and compress
-      ctx.drawImage(img, 0, 0, width, height)
-      
-      // Convert to base64 with quality adjustment
-      const compressedBase64 = canvas.toDataURL(fileType || 'image/jpeg', 0.8)
-      
-      setSelectedFile({ name: 'compressed-image.jpg', size: compressedBase64.length })
-      setPreview(compressedBase64)
-      setError('')
-      
-      console.log('Original size:', base64.length, 'Compressed size:', compressedBase64.length)
+    try {
+      validateImageFile(file)
+    } catch (err) {
+      setError(err.message.startsWith('FILE_TOO_LARGE')
+        ? 'File size must be less than 10MB'
+        : 'Please choose an image file')
+      return
     }
-    img.onerror = () => {
-      setError('Failed to process image. Please try again.')
-    }
-    img.src = base64
+
+    if (preview) URL.revokeObjectURL(preview)
+    setSelectedFile(file)
+    setPreview(URL.createObjectURL(file))
+    setError('')
   }
 
   const handleUpload = async () => {
-    if (!selectedFile || !preview) return
+    if (!selectedFile) return
 
     setUploading(true)
     setError('')
 
     try {
-      console.log('Starting upload...', selectedFile.name)
-      
-      // IMPORTANT: Save bill submission PERMANENTLY to Firestore
-      // Bills are NEVER deleted - they remain for at least 2 months
-      // Users can always see their bill history even after logout
-      console.log('Saving to Firestore with base64 image...')
+      // Upload the receipt to Storage; Firestore keeps only the download URL.
+      // Bills are kept permanently so customers always see their history.
+      const imageUrl = await uploadImageFile(storage, selectedFile, `bills/${user.uid}`)
+
       await addDoc(collection(db, 'billSubmissions'), {
         userId: user.uid,
         userName: profile?.name || 'Unknown',
         userEmail: profile?.email || '',
-        imageData: preview, // base64 string
+        imageUrl,
         fileName: selectedFile.name,
         fileSize: selectedFile.size,
         status: 'pending',
@@ -103,8 +57,8 @@ export default function ScanBill() {
         pointsAwarded: 0,
         notes: ''
       })
-      console.log('✅ Saved to Firestore successfully!')
 
+      if (preview) URL.revokeObjectURL(preview)
       setSuccess(true)
       setSelectedFile(null)
       setPreview(null)
@@ -115,19 +69,17 @@ export default function ScanBill() {
       }, 3000)
 
     } catch (err) {
-      console.error('❌ Error uploading bill:', err)
-      console.error('Error code:', err.code)
-      console.error('Error message:', err.message)
-      
+      console.error('Error uploading bill:', err)
+
       let errorMessage = 'Failed to upload bill. '
       if (err.code === 'permission-denied') {
         errorMessage += 'Permission denied. Please contact support.'
-      } else if (err.message.includes('size')) {
+      } else if (err.message?.startsWith('FILE_TOO_LARGE')) {
         errorMessage += 'Image too large. Try a smaller image.'
       } else {
-        errorMessage += err.message || 'Please try again.'
+        errorMessage += 'Please try again.'
       }
-      
+
       setError(errorMessage)
     } finally {
       setUploading(false)
@@ -135,6 +87,7 @@ export default function ScanBill() {
   }
 
   const handleCancel = () => {
+    if (preview) URL.revokeObjectURL(preview)
     setSelectedFile(null)
     setPreview(null)
     setError('')

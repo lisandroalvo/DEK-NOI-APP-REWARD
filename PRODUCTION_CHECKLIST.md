@@ -195,8 +195,8 @@
 ## 📞 **SUPPORT INFORMATION**
 
 **Admin Login:**
-- Email: lisandroalvo2@gmail.com
-- Password: Jira260290
+- Credentials are NOT stored in this repo. Keep them in a private password manager.
+- To grant admin access, set `role: 'admin'` on the user's document in Firestore.
 
 **LINE Support:**
 - URL: https://line.me/R/ti/p/@167fnbxs

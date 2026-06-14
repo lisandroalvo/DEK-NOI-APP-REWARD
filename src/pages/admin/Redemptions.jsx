@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { collection, query, where, getDocs, orderBy, doc, updateDoc, serverTimestamp, addDoc, increment } from 'firebase/firestore'
+import { collection, query, where, getDocs, orderBy, doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
+import { approveRedemption } from '../../lib/points'
 import { useAuth } from '../../context/AuthContext'
 import { CheckCircle, XCircle, Clock, X } from 'lucide-react'
 
@@ -77,17 +78,16 @@ export default function AdminRedemptions() {
     if (!confirm(`Approve "${r.rewardName}" for ${r.userName}?\nThis will deduct ${r.pointsCost} points from their account.`)) return
     setWorking(r.id)
     try {
-      await updateDoc(doc(db, 'redemptions', r.id), { status: 'approved', reviewedAt: serverTimestamp(), reviewedBy: user.uid })
-      await updateDoc(doc(db, 'users', r.userId), { points: increment(-r.pointsCost) })
-      await addDoc(collection(db, 'pointTransactions'), {
-        userId: r.userId,
-        points: -r.pointsCost,
-        reason: `Redeemed: ${r.rewardName}`,
-        addedBy: user.uid,
-        createdAt: serverTimestamp(),
-      })
+      await approveRedemption(db, r, user.uid)
       await load(tab)
       await loadCounts()
+    } catch (err) {
+      if (err.message === 'INSUFFICIENT_POINTS') {
+        alert(`${r.userName} no longer has enough points for this reward. Their balance may have changed since the request.`)
+      } else {
+        console.error('Error approving redemption:', err)
+        alert('Failed to approve redemption. Please try again.')
+      }
     } finally { setWorking(null) }
   }
 

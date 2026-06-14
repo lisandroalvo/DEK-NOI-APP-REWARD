@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { Plus, Pencil, Trash2, X, Gift } from 'lucide-react'
-import ImageUploadSimple from '../../components/ImageUploadSimple'
+import ImageUpload from '../../components/ImageUpload'
 
 const EMPTY = { name: '', description: '', pointsCost: '', emoji: '', available: true, imageUrl: null }
 
@@ -115,10 +115,11 @@ export default function AdminRewards() {
                   />
                 </div>
               ))}
-              <ImageUploadSimple
+              <ImageUpload
                 value={form.imageUrl}
                 onChange={(url) => setForm(f => ({ ...f, imageUrl: url }))}
                 label="Reward Image (optional)"
+                folder="rewards"
               />
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={form.available} onChange={e => setForm(f => ({ ...f, available: e.target.checked }))} className="w-4 h-4" />

@@ -4,7 +4,7 @@ import { doc, updateDoc, collection, query, where, orderBy, onSnapshot } from 'f
 import { db } from '../../lib/firebase'
 import { User, Mail, Phone, Camera, Save, LogOut, Receipt, CheckCircle, XCircle, Clock, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import ImageUploadSimple from '../../components/ImageUploadSimple'
+import ImageUpload from '../../components/ImageUpload'
 
 export default function Profile() {
   const { user, profile, logout } = useAuth()
@@ -118,10 +118,11 @@ export default function Profile() {
               {/* Photo Upload */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Profile Photo</label>
-                <ImageUploadSimple
+                <ImageUpload
                   value={form.photoURL}
                   onChange={(url) => setForm(f => ({ ...f, photoURL: url }))}
                   label="Upload Photo"
+                  folder={`avatars/${user.uid}`}
                 />
               </div>
 

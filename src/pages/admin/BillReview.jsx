@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react'
 import { db } from '../../lib/firebase'
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, increment, serverTimestamp } from 'firebase/firestore'
+import { approveBill } from '../../lib/points'
+import { useAuth } from '../../context/AuthContext'
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { CheckCircle, XCircle, Clock, Eye } from 'lucide-react'
 
 export default function BillReview() {
+  const { user } = useAuth()
   const [bills, setBills] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedBill, setSelectedBill] = useState(null)
@@ -33,22 +36,16 @@ export default function BillReview() {
   const handleApprove = async () => {
     if (!selectedBill || !points) return
 
+    const pointsNum = parseInt(points)
+    if (!(pointsNum > 0)) {
+      alert('Please enter a positive number of points to award')
+      return
+    }
+
     setProcessing(true)
     try {
-      const pointsNum = parseInt(points)
-      
-      // Update bill submission
-      await updateDoc(doc(db, 'billSubmissions', selectedBill.id), {
-        status: 'approved',
-        pointsAwarded: pointsNum,
-        reviewedAt: serverTimestamp(),
-        notes: notes || ''
-      })
-
-      // Add points to user
-      await updateDoc(doc(db, 'users', selectedBill.userId), {
-        points: increment(pointsNum)
-      })
+      // Award points and record the review atomically
+      await approveBill(db, selectedBill, pointsNum, notes, user.uid)
 
       // Reset form
       setSelectedBill(null)

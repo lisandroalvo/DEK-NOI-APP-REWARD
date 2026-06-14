@@ -1,11 +1,13 @@
 rules_version = '2';
 
-// Temporary TEST MODE - Allow all access for development
-// IMPORTANT: Change this before production!
+// Signed-in users may read; writes must be signed-in image files under 10MB.
 service firebase.storage {
   match /b/{bucket}/o {
     match /{allPaths=**} {
-      allow read, write: if true;
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
     }
   }
 }

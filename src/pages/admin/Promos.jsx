@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, orderBy, query } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { Plus, Pencil, Trash2, X, Megaphone } from 'lucide-react'
-import ImageUploadSimple from '../../components/ImageUploadSimple'
+import ImageUpload from '../../components/ImageUpload'
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 const EMPTY = { title: '', description: '', month: '', bonusPoints: '', active: true, imageUrl: null }
@@ -141,10 +141,11 @@ export default function AdminPromos() {
                   className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none"
                   onFocus={e => e.target.style.borderColor = '#CC0000'} onBlur={e => e.target.style.borderColor = '#e5e7eb'} />
               </div>
-              <ImageUploadSimple
+              <ImageUpload
                 value={form.imageUrl}
                 onChange={(url) => setForm(f => ({ ...f, imageUrl: url }))}
                 label="Promo Image (for carousel)"
+                folder="promos"
               />
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={form.active} onChange={e => setForm(f => ({ ...f, active: e.target.checked }))} className="w-4 h-4" />
