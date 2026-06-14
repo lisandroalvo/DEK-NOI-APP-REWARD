@@ -67,6 +67,10 @@ export function useBillNotifications(userId) {
         // Update previous status
         previousBills.current.set(bill.id, bill.status)
       })
+    }, (error) => {
+      // A missing composite index or a rules change surfaces here; without this
+      // handler the listener fails silently and notifications never fire.
+      console.error('Bill notifications listener failed:', error)
     })
 
     return () => unsubscribe()

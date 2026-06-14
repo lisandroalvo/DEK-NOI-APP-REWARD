@@ -84,6 +84,10 @@ export default function AdminRedemptions() {
     } catch (err) {
       if (err.message === 'INSUFFICIENT_POINTS') {
         alert(`${r.userName} no longer has enough points for this reward. Their balance may have changed since the request.`)
+      } else if (err.message === 'ALREADY_REVIEWED') {
+        alert('This redemption has already been reviewed. The list will refresh.')
+        await load(tab)
+        await loadCounts()
       } else {
         console.error('Error approving redemption:', err)
         alert('Failed to approve redemption. Please try again.')

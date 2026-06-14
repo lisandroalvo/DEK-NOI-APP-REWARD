@@ -9,6 +9,12 @@ export async function approveRedemption(db, redemption, adminUid) {
     const userRef = doc(db, 'users', redemption.userId)
     const redemptionRef = doc(db, 'redemptions', redemption.id)
 
+    // Re-read the redemption inside the transaction so a stale list or a
+    // double-click can't approve (and deduct for) the same redemption twice.
+    const redemptionSnap = await tx.get(redemptionRef)
+    if (!redemptionSnap.exists()) throw new Error('Redemption not found')
+    if (redemptionSnap.data().status !== 'pending') throw new Error('ALREADY_REVIEWED')
+
     const userSnap = await tx.get(userRef)
     if (!userSnap.exists()) throw new Error('User not found')
 
@@ -38,6 +44,12 @@ export async function approveBill(db, bill, pointsAwarded, notes, adminUid) {
   await runTransaction(db, async (tx) => {
     const userRef = doc(db, 'users', bill.userId)
     const billRef = doc(db, 'billSubmissions', bill.id)
+
+    // Re-read the bill inside the transaction so a stale list or a double-click
+    // can't approve (and award points for) the same bill twice.
+    const billSnap = await tx.get(billRef)
+    if (!billSnap.exists()) throw new Error('Bill not found')
+    if (billSnap.data().status !== 'pending') throw new Error('ALREADY_REVIEWED')
 
     const userSnap = await tx.get(userRef)
     if (!userSnap.exists()) throw new Error('User not found')

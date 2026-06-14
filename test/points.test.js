@@ -79,6 +79,23 @@ describe('approveRedemption', () => {
 
     expect(await points(ALICE)).toBe(100)
   })
+
+  test('refuses to approve the same redemption twice (no double-deduct)', async () => {
+    await seedRedemption('r3', 40)
+    const redemption = { id: 'r3', userId: ALICE, pointsCost: 40, rewardName: 'Free Coffee' }
+    await approveRedemption(adminDb(), redemption, ADMIN)
+    expect(await points(ALICE)).toBe(60)
+
+    await expect(
+      approveRedemption(adminDb(), redemption, ADMIN)
+    ).rejects.toThrow(/ALREADY_REVIEWED/)
+
+    expect(await points(ALICE)).toBe(60)
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const tx = await getDocs(collection(ctx.firestore(), 'pointTransactions'))
+      expect(tx.size).toBe(1)
+    })
+  })
 })
 
 describe('approveBill', () => {
@@ -102,5 +119,25 @@ describe('approveBill', () => {
     await expect(
       approveBill(adminDb(), { id: 'b1', userId: ALICE }, 0, '', ADMIN)
     ).rejects.toThrow(/INVALID_POINTS/)
+  })
+
+  test('refuses to approve the same bill twice (no double-pay)', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'billSubmissions', 'b2'), {
+        userId: ALICE, status: 'pending', pointsAwarded: 0,
+      })
+    })
+    await approveBill(adminDb(), { id: 'b2', userId: ALICE }, 50, 'Looks good', ADMIN)
+    expect(await points(ALICE)).toBe(150)
+
+    await expect(
+      approveBill(adminDb(), { id: 'b2', userId: ALICE }, 50, 'Looks good', ADMIN)
+    ).rejects.toThrow(/ALREADY_REVIEWED/)
+
+    expect(await points(ALICE)).toBe(150)
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const tx = await getDocs(collection(ctx.firestore(), 'pointTransactions'))
+      expect(tx.size).toBe(1)
+    })
   })
 })

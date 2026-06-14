@@ -52,8 +52,13 @@ export default function BillReview() {
       setPoints('')
       setNotes('')
     } catch (err) {
-      console.error('Error approving bill:', err)
-      alert('Failed to approve bill')
+      if (err.message === 'ALREADY_REVIEWED') {
+        alert('This bill has already been reviewed. Refresh to see its current status.')
+        setSelectedBill(null)
+      } else {
+        console.error('Error approving bill:', err)
+        alert('Failed to approve bill')
+      }
     } finally {
       setProcessing(false)
     }
