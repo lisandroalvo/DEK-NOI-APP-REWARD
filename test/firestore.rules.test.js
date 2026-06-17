@@ -65,6 +65,16 @@ describe('users collection — point/role protection', () => {
     const db = testEnv.authenticatedContext(ADMIN).firestore()
     await assertSucceeds(updateDoc(doc(db, 'users', ALICE), { points: 250 }))
   })
+
+  test('a customer cannot change their own totalSpent', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertFails(updateDoc(doc(db, 'users', ALICE), { totalSpent: 99999 }))
+  })
+
+  test('a customer cannot change their own spendCarry', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertFails(updateDoc(doc(db, 'users', ALICE), { spendCarry: 49 }))
+  })
 })
 
 describe('billSubmissions — no self-approval', () => {
@@ -72,6 +82,24 @@ describe('billSubmissions — no self-approval', () => {
     const db = testEnv.authenticatedContext(ALICE).firestore()
     await assertFails(
       updateDoc(doc(db, 'billSubmissions', 'bill1'), { status: 'approved', pointsAwarded: 500 })
+    )
+  })
+
+  test('a customer can submit a bill with a claimed amount', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertSucceeds(
+      setDoc(doc(db, 'billSubmissions', 'bill2'), {
+        userId: ALICE, status: 'pending', pointsAwarded: 0, amount: 120, ocrAmount: 120,
+      })
+    )
+  })
+
+  test('a customer cannot pre-award points on a new bill', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertFails(
+      setDoc(doc(db, 'billSubmissions', 'bill3'), {
+        userId: ALICE, status: 'pending', pointsAwarded: 500, amount: 120,
+      })
     )
   })
 })

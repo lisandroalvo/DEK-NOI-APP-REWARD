@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { db, storage } from '../../lib/firebase'
 import { uploadImageFile, validateImageFile } from '../../lib/storage'
+import { recognizeReceiptTotal } from '../../lib/ocr'
+import { BAHT_PER_POINT } from '../../lib/points'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { Camera, Upload, X, CheckCircle } from 'lucide-react'
 
@@ -9,11 +11,14 @@ export default function ScanBill() {
   const { user, profile } = useAuth()
   const [selectedFile, setSelectedFile] = useState(null)
   const [preview, setPreview] = useState(null)
+  const [amount, setAmount] = useState('')
+  const [ocrAmount, setOcrAmount] = useState(null)
+  const [recognizing, setRecognizing] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
 
-  const handleFileSelect = (e) => {
+  const handleFileSelect = async (e) => {
     const file = e.target.files[0]
     if (!file) return
 
@@ -29,11 +34,28 @@ export default function ScanBill() {
     if (preview) URL.revokeObjectURL(preview)
     setSelectedFile(file)
     setPreview(URL.createObjectURL(file))
+    setAmount('')
+    setOcrAmount(null)
     setError('')
+
+    // Best-effort: auto-recognize the total to pre-fill the amount field.
+    setRecognizing(true)
+    const recognized = await recognizeReceiptTotal(file)
+    if (recognized != null) {
+      setOcrAmount(recognized)
+      setAmount(String(recognized))
+    }
+    setRecognizing(false)
   }
 
   const handleUpload = async () => {
     if (!selectedFile) return
+
+    const amountNum = parseFloat(amount)
+    if (!(amountNum > 0)) {
+      setError('Please enter the bill amount (฿).')
+      return
+    }
 
     setUploading(true)
     setError('')
@@ -50,6 +72,8 @@ export default function ScanBill() {
         imageUrl,
         fileName: selectedFile.name,
         fileSize: selectedFile.size,
+        amount: amountNum,
+        ocrAmount,
         status: 'pending',
         submittedAt: serverTimestamp(),
         reviewedAt: null,
@@ -62,6 +86,8 @@ export default function ScanBill() {
       setSuccess(true)
       setSelectedFile(null)
       setPreview(null)
+      setAmount('')
+      setOcrAmount(null)
 
       // Reset success message after 3 seconds
       setTimeout(() => {
@@ -90,8 +116,18 @@ export default function ScanBill() {
     if (preview) URL.revokeObjectURL(preview)
     setSelectedFile(null)
     setPreview(null)
+    setAmount('')
+    setOcrAmount(null)
     setError('')
   }
+
+  // Live points estimate for the entered amount, accounting for the customer's
+  // current carried baht (spendCarry). Shown only once an amount is entered.
+  const amountNum = parseFloat(amount) || 0
+  const carry = profile?.spendCarry || 0
+  const pool = carry + amountNum
+  const estEarned = Math.floor(pool / BAHT_PER_POINT)
+  const estToNext = BAHT_PER_POINT - (pool % BAHT_PER_POINT)
 
   return (
     <div className="p-4 sm:p-6 md:p-8 max-w-2xl w-full mx-auto">
@@ -171,10 +207,40 @@ export default function ScanBill() {
             </button>
           </div>
 
+          {/* Bill amount (auto-recognized, editable) */}
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">
+              Bill Amount (฿)
+            </label>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder={recognizing ? 'Reading receipt…' : 'Enter the total'}
+              disabled={recognizing}
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-red-500 focus:outline-none text-lg font-bold disabled:bg-gray-100"
+            />
+            {recognizing && (
+              <p className="text-sm text-gray-500 mt-1">📷 Reading the total from your receipt…</p>
+            )}
+            {!recognizing && ocrAmount != null && (
+              <p className="text-xs text-gray-400 mt-1">Auto-read ฿{ocrAmount} — fix it if that's wrong.</p>
+            )}
+            {amountNum > 0 && (
+              <div className="mt-2 p-3 bg-yellow-50 border-2 border-yellow-300 rounded-xl">
+                <p className="text-sm font-bold text-yellow-900">
+                  ⭐ Earns +{estEarned} {estEarned === 1 ? 'point' : 'points'}
+                  {estToNext < BAHT_PER_POINT && ` — then ฿${estToNext} to your next point!`}
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* Upload Button */}
           <button
             onClick={handleUpload}
-            disabled={uploading}
+            disabled={uploading || recognizing || !(amountNum > 0)}
             className="w-full py-4 rounded-xl font-black text-lg shadow-lg transition-all disabled:opacity-50"
             style={{
               background: uploading ? '#999' : 'linear-gradient(135deg, #CC0000 0%, #FF3333 100%)',

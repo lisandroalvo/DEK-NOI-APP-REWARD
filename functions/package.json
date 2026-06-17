@@ -1,0 +1,14 @@
+{
+  "name": "functions",
+  "description": "Cloud Functions for DEK NOI — receipt-total recognition (Gemini)",
+  "type": "module",
+  "main": "index.js",
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "@google/genai": "^1.0.0",
+    "firebase-functions": "^6.1.0"
+  },
+  "private": true
+}

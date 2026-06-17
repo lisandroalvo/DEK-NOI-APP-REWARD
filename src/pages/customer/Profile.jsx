@@ -277,6 +277,9 @@ export default function Profile() {
                           +{bill.pointsAwarded} pts
                         </span>
                       )}
+                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-300">
+                        ฿{bill.amount != null ? bill.amount : '—'}
+                      </span>
                     </div>
                     <p className="text-xs text-gray-600">
                       {bill.submittedAt?.toDate().toLocaleDateString()} at {bill.submittedAt?.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

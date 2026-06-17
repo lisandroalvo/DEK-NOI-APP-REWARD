@@ -33,6 +33,8 @@ export function AuthProvider({ children }) {
               phone: '',
               role: 'customer',
               points: 0,
+              totalSpent: 0,
+              spendCarry: 0,
               createdAt: serverTimestamp(),
             }
             await setDoc(ref, data)
@@ -61,7 +63,7 @@ export function AuthProvider({ children }) {
 
   const register = async (email, password, name, phone) => {
     const cred = await createUserWithEmailAndPassword(auth, email, password)
-    const data = { name, phone, email, role: 'customer', points: 0, createdAt: serverTimestamp() }
+    const data = { name, phone, email, role: 'customer', points: 0, totalSpent: 0, spendCarry: 0, createdAt: serverTimestamp() }
     await setDoc(doc(db, 'users', cred.user.uid), data)
     return cred
   }

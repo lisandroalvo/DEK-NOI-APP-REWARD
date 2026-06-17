@@ -107,7 +107,7 @@ export default function AdminCustomers() {
         <table className="w-full text-sm">
           <thead style={{ background: '#FFF0F0' }}>
             <tr>
-              {['Member', 'Email', 'Phone', 'Points', 'Actions'].map(h => (
+              {['Member', 'Email', 'Phone', 'Points', 'Spent', 'Actions'].map(h => (
                 <th key={h} className="text-left px-4 py-3 text-xs font-black uppercase tracking-wide" style={{ color: '#CC0000' }}>{h}</th>
               ))}
             </tr>
@@ -127,6 +127,7 @@ export default function AdminCustomers() {
                     <Star size={13} fill="currentColor" /> {(c.points ?? 0).toLocaleString()}
                   </div>
                 </td>
+                <td className="px-4 py-3 text-gray-600 font-bold text-sm">฿{(c.totalSpent ?? 0).toLocaleString()}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1.5">
                     <button onClick={() => openPoints(c, 'add')}
@@ -144,7 +145,7 @@ export default function AdminCustomers() {
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-10 text-center text-gray-400">No members found.</td></tr>
+              <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-400">No members found.</td></tr>
             )}
           </tbody>
         </table>

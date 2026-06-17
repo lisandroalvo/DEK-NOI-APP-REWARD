@@ -18,11 +18,15 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow create: if request.auth != null && request.auth.uid == userId;
       // Owners may edit their own profile (name/phone/photo) but NOT their
-      // points balance or role. Only admins can change points and role.
+      // points balance, role, or spend totals. Only admins (via the approval
+      // transaction) can change points, role, totalSpent, and spendCarry.
+      // .get(_, 0) lets legacy docs without the spend fields compare cleanly.
       allow update: if isAdmin() ||
                        (isOwner(userId)
                         && request.resource.data.points == resource.data.points
-                        && request.resource.data.role == resource.data.role);
+                        && request.resource.data.role == resource.data.role
+                        && request.resource.data.get('totalSpent', 0) == resource.data.get('totalSpent', 0)
+                        && request.resource.data.get('spendCarry', 0) == resource.data.get('spendCarry', 0));
       allow delete: if false; // Never allow user deletion
     }
     
@@ -30,8 +34,11 @@ service cloud.firestore {
     match /billSubmissions/{billId} {
       allow read: if request.auth != null && 
                      (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if request.auth != null && 
-                       request.resource.data.userId == request.auth.uid;
+      // Customers submit their own bills with a claimed amount, but can never
+      // pre-award themselves points — points are set only by admin approval.
+      allow create: if request.auth != null &&
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.pointsAwarded == 0;
       allow update: if isAdmin(); // Only admins can update (approve/reject)
       allow delete: if false; // NEVER DELETE BILLS - Keep for 2+ months minimum
     }
