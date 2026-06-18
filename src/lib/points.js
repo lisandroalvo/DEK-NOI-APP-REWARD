@@ -7,6 +7,11 @@ import { doc, collection, runTransaction, serverTimestamp } from 'firebase/fires
 // approval, so no spend is ever wasted. Change here to retune the whole app.
 export const BAHT_PER_POINT = 50
 
+// Round to satang (2 decimals). Receipts are usually whole baht but sometimes carry
+// satang; rounding each stored money value keeps floating-point drift out of the
+// running spendCarry / totalSpent totals.
+const toSatang = (n) => Math.round(n * 100) / 100
+
 // Approve a redemption: deduct its cost from the user, but only if the
 // current balance covers it (prevents negative balances and double-spends).
 export async function approveRedemption(db, redemption, adminUid) {
@@ -47,6 +52,7 @@ export async function approveRedemption(db, redemption, adminUid) {
 // banked in spendCarry for next time, and the full amount adds to lifetime totalSpent.
 export async function approveBill(db, bill, amount, notes, adminUid) {
   if (!(amount > 0)) throw new Error('INVALID_AMOUNT')
+  const amt = toSatang(amount)
 
   await runTransaction(db, async (tx) => {
     const userRef = doc(db, 'users', bill.userId)
@@ -66,13 +72,13 @@ export async function approveBill(db, bill, amount, notes, adminUid) {
     const carryBefore = data.spendCarry || 0
     const totalSpentBefore = data.totalSpent || 0
 
-    const pool = carryBefore + amount
+    const pool = carryBefore + amt
     const earned = Math.floor(pool / BAHT_PER_POINT)
-    const carry = pool % BAHT_PER_POINT
+    const carry = toSatang(pool % BAHT_PER_POINT)
 
     tx.update(billRef, {
       status: 'approved',
-      amount,
+      amount: amt,
       pointsAwarded: earned,
       reviewedAt: serverTimestamp(),
       reviewedBy: adminUid,
@@ -81,12 +87,12 @@ export async function approveBill(db, bill, amount, notes, adminUid) {
     tx.update(userRef, {
       points: currentPoints + earned,
       spendCarry: carry,
-      totalSpent: totalSpentBefore + amount,
+      totalSpent: toSatang(totalSpentBefore + amt),
     })
     tx.set(doc(collection(db, 'pointTransactions')), {
       userId: bill.userId,
       points: earned,
-      amount,
+      amount: amt,
       reason: 'Bill approved',
       addedBy: adminUid,
       createdAt: serverTimestamp(),

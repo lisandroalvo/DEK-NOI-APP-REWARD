@@ -102,6 +102,15 @@ describe('billSubmissions — no self-approval', () => {
       })
     )
   })
+
+  test('a customer cannot create a bill with a non-numeric amount', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertFails(
+      setDoc(doc(db, 'billSubmissions', 'bill4'), {
+        userId: ALICE, status: 'pending', pointsAwarded: 0, amount: 'lots',
+      })
+    )
+  })
 })
 
 describe('storage — must be authenticated', () => {

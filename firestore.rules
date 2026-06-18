@@ -34,11 +34,12 @@ service cloud.firestore {
     match /billSubmissions/{billId} {
       allow read: if request.auth != null && 
                      (resource.data.userId == request.auth.uid || isAdmin());
-      // Customers submit their own bills with a claimed amount, but can never
-      // pre-award themselves points — points are set only by admin approval.
+      // Customers submit their own bills with a numeric claimed amount, but can
+      // never pre-award themselves points — points are set only by admin approval.
       allow create: if request.auth != null &&
                        request.resource.data.userId == request.auth.uid &&
-                       request.resource.data.pointsAwarded == 0;
+                       request.resource.data.pointsAwarded == 0 &&
+                       request.resource.data.amount is number;
       allow update: if isAdmin(); // Only admins can update (approve/reject)
       allow delete: if false; // NEVER DELETE BILLS - Keep for 2+ months minimum
     }

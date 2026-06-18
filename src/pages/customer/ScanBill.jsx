@@ -51,7 +51,7 @@ export default function ScanBill() {
   const handleUpload = async () => {
     if (!selectedFile) return
 
-    const amountNum = parseFloat(amount)
+    const amountNum = Math.round(parseFloat(amount) * 100) / 100
     if (!(amountNum > 0)) {
       setError('Please enter the bill amount (฿).')
       return

@@ -168,6 +168,16 @@ describe('approveBill', () => {
     expect(u.totalSpent).toBe(110)
   })
 
+  test('preserves satang (2-decimal amounts) without floating-point drift', async () => {
+    await seedBill('b1')
+    await approveBill(adminDb(), { id: 'b1', userId: ALICE }, 50.10, '', ADMIN)
+
+    const u = await userDoc(ALICE)
+    expect(u.points).toBe(101)      // 100 + floor(50.10/50)=1
+    expect(u.spendCarry).toBe(0.1)  // 50.10 % 50 = 0.10 exactly, not 0.0999…
+    expect(u.totalSpent).toBe(50.1)
+  })
+
   test('rejects a non-positive amount and leaves state unchanged', async () => {
     await seedBill('b1')
     await expect(
