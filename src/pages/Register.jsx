@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { authErrorMessage, passwordError } from '../lib/authForm'
 import logo from '../assets/logo.png'
 import charHappy from '../assets/char-happy.png'
 
@@ -28,12 +29,14 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    const pwError = passwordError(form.password)
+    if (pwError) { setError(pwError); return }
     setLoading(true)
     try {
       await register(form.email, form.password, form.name, form.phone)
       navigate('/dashboard')
     } catch (err) {
-      setError(err.message || 'Registration failed.')
+      setError(authErrorMessage(err.code, 'Registration failed.'))
     } finally {
       setLoading(false)
     }

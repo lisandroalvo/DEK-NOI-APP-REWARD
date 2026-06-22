@@ -7,11 +7,12 @@ import {
   assertFails,
   assertSucceeds,
 } from '@firebase/rules-unit-testing'
-import { doc, setDoc, updateDoc } from 'firebase/firestore'
+import { doc, setDoc, updateDoc, getDoc, getDocs, collection, query, where } from 'firebase/firestore'
 import { ref, uploadString } from 'firebase/storage'
 
 const PROJECT_ID = 'demo-dek-noi'
 const ALICE = 'alice'
+const BOB = 'bob'
 const ADMIN = 'admin1'
 
 let testEnv
@@ -35,6 +36,9 @@ beforeEach(async () => {
     const db = ctx.firestore()
     await setDoc(doc(db, 'users', ALICE), {
       name: 'Alice', phone: '', email: 'alice@example.com', role: 'customer', points: 100,
+    })
+    await setDoc(doc(db, 'users', BOB), {
+      name: 'Bob', phone: '', email: 'bob@example.com', role: 'customer', points: 50,
     })
     await setDoc(doc(db, 'users', ADMIN), {
       name: 'Admin', phone: '', email: 'admin@example.com', role: 'admin', points: 0,
@@ -74,6 +78,33 @@ describe('users collection — point/role protection', () => {
   test('a customer cannot change their own spendCarry', async () => {
     const db = testEnv.authenticatedContext(ALICE).firestore()
     await assertFails(updateDoc(doc(db, 'users', ALICE), { spendCarry: 49 }))
+  })
+})
+
+describe('users collection — read protection (PII)', () => {
+  test('a customer can read their own profile', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertSucceeds(getDoc(doc(db, 'users', ALICE)))
+  })
+
+  test('a customer cannot read another customer profile', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertFails(getDoc(doc(db, 'users', BOB)))
+  })
+
+  test('a customer cannot list all users (harvest PII)', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertFails(getDocs(query(collection(db, 'users'), where('role', '==', 'customer'))))
+  })
+
+  test('an admin can read any user profile', async () => {
+    const db = testEnv.authenticatedContext(ADMIN).firestore()
+    await assertSucceeds(getDoc(doc(db, 'users', ALICE)))
+  })
+
+  test('an admin can list the customer roster', async () => {
+    const db = testEnv.authenticatedContext(ADMIN).firestore()
+    await assertSucceeds(getDocs(query(collection(db, 'users'), where('role', '==', 'customer'))))
   })
 })
 
