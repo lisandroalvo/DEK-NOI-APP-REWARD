@@ -1,16 +1,27 @@
 import { useState, useEffect } from 'react'
 import { db } from '../../lib/firebase'
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, increment, serverTimestamp } from 'firebase/firestore'
+import { approveBill, BAHT_PER_POINT } from '../../lib/points'
+import { useAuth } from '../../context/AuthContext'
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { CheckCircle, XCircle, Clock, Eye } from 'lucide-react'
 
 export default function BillReview() {
+  const { user } = useAuth()
   const [bills, setBills] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedBill, setSelectedBill] = useState(null)
-  const [points, setPoints] = useState('')
+  const [amount, setAmount] = useState('')
   const [notes, setNotes] = useState('')
   const [processing, setProcessing] = useState(false)
   const [filter, setFilter] = useState('pending') // pending, approved, rejected, all
+
+  // Open the review modal for a bill, pre-filling the amount with the customer's
+  // claimed value so the admin only has to confirm or correct it.
+  const openReview = (bill) => {
+    setSelectedBill(bill)
+    setAmount(bill.amount != null ? String(bill.amount) : '')
+    setNotes('')
+  }
 
   useEffect(() => {
     const q = query(
@@ -25,38 +36,42 @@ export default function BillReview() {
       }))
       setBills(billsData)
       setLoading(false)
+    }, (error) => {
+      // A permission failure (e.g. the account isn't really an admin) surfaces here;
+      // without this handler the page just sits on "Loading bills…" with no clue why.
+      console.error('Failed to load bills:', error)
+      setLoading(false)
     })
 
     return () => unsubscribe()
   }, [])
 
   const handleApprove = async () => {
-    if (!selectedBill || !points) return
+    if (!selectedBill) return
+
+    const amountNum = parseFloat(amount)
+    if (!(amountNum > 0)) {
+      alert('Please enter the bill amount (฿).')
+      return
+    }
 
     setProcessing(true)
     try {
-      const pointsNum = parseInt(points)
-      
-      // Update bill submission
-      await updateDoc(doc(db, 'billSubmissions', selectedBill.id), {
-        status: 'approved',
-        pointsAwarded: pointsNum,
-        reviewedAt: serverTimestamp(),
-        notes: notes || ''
-      })
-
-      // Add points to user
-      await updateDoc(doc(db, 'users', selectedBill.userId), {
-        points: increment(pointsNum)
-      })
+      // Convert spend to points and record the review atomically.
+      await approveBill(db, selectedBill, amountNum, notes, user.uid)
 
       // Reset form
       setSelectedBill(null)
-      setPoints('')
+      setAmount('')
       setNotes('')
     } catch (err) {
-      console.error('Error approving bill:', err)
-      alert('Failed to approve bill')
+      if (err.message === 'ALREADY_REVIEWED') {
+        alert('This bill has already been reviewed. Refresh to see its current status.')
+        setSelectedBill(null)
+      } else {
+        console.error('Error approving bill:', err)
+        alert('Failed to approve bill')
+      }
     } finally {
       setProcessing(false)
     }
@@ -75,7 +90,7 @@ export default function BillReview() {
       })
 
       setSelectedBill(null)
-      setPoints('')
+      setAmount('')
       setNotes('')
     } catch (err) {
       console.error('Error rejecting bill:', err)
@@ -212,7 +227,7 @@ export default function BillReview() {
                   src={bill.imageData || bill.imageUrl}
                   alt="Bill"
                   className="w-24 h-24 object-cover rounded-lg border-2 border-gray-300 cursor-pointer hover:scale-105 transition-transform"
-                  onClick={() => setSelectedBill(bill)}
+                  onClick={() => openReview(bill)}
                 />
 
                 {/* Bill Info */}
@@ -242,7 +257,7 @@ export default function BillReview() {
                 {/* Action Button */}
                 {bill.status === 'pending' && (
                   <button
-                    onClick={() => setSelectedBill(bill)}
+                    onClick={() => openReview(bill)}
                     className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 flex items-center gap-2"
                   >
                     <Eye size={16} />
@@ -278,18 +293,29 @@ export default function BillReview() {
                 </p>
               </div>
 
-              {/* Points Input */}
+              {/* Amount Input */}
               <div className="mb-4">
                 <label className="block text-sm font-bold text-gray-700 mb-2">
-                  Points to Award
+                  Bill Amount (฿)
                 </label>
                 <input
                   type="number"
-                  value={points}
-                  onChange={(e) => setPoints(e.target.value)}
-                  placeholder="Enter points"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-red-500 focus:outline-none"
+                  inputMode="decimal"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="Enter the total"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-red-500 focus:outline-none text-lg font-bold"
                 />
+                <div className="flex items-center gap-3 mt-1.5 text-xs">
+                  {selectedBill.ocrAmount != null && (
+                    <span className="text-gray-400">Scanned: ฿{selectedBill.ocrAmount}</span>
+                  )}
+                  {parseFloat(amount) > 0 && (
+                    <span className="font-bold text-yellow-700">
+                      ≈ {Math.floor(parseFloat(amount) / BAHT_PER_POINT)} points
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Notes Input */}
@@ -310,7 +336,7 @@ export default function BillReview() {
               <div className="flex gap-3">
                 <button
                   onClick={handleApprove}
-                  disabled={!points || processing}
+                  disabled={!amount || processing}
                   className="flex-1 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   <CheckCircle size={20} />
@@ -327,7 +353,7 @@ export default function BillReview() {
                 <button
                   onClick={() => {
                     setSelectedBill(null)
-                    setPoints('')
+                    setAmount('')
                     setNotes('')
                   }}
                   className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300"

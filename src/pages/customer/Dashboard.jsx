@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
+import { BAHT_PER_POINT } from '../../lib/points'
 import { useAuth } from '../../context/AuthContext'
 import { Star, TrendingUp, Gift, Clock, ChevronRight, Megaphone } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -52,6 +53,11 @@ export default function CustomerDashboard() {
   const pts = profile?.points ?? 0
   const earned = transactions.filter(t => t.points > 0).reduce((a, t) => a + t.points, 0)
   const redeemed = Math.abs(transactions.filter(t => t.points < 0).reduce((a, t) => a + t.points, 0))
+
+  // Progress toward the next point from carried-over spend (spendCarry is 0..BAHT_PER_POINT-1).
+  const carry = profile?.spendCarry ?? 0
+  const toNextPoint = BAHT_PER_POINT - carry
+  const carryPct = (carry / BAHT_PER_POINT) * 100
 
   return (
     <div className="p-4 sm:p-6 md:p-8 max-w-2xl w-full mx-auto">
@@ -144,6 +150,21 @@ export default function CustomerDashboard() {
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Progress toward the next point (spend-based) */}
+      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-5">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-sm font-black text-gray-900">🎯 ฿{toNextPoint} to your next point</p>
+          <span className="text-xs font-bold text-gray-400">{carry}/{BAHT_PER_POINT}฿</span>
+        </div>
+        <div className="bg-gray-100 rounded-full h-3 overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-700 ease-out"
+            style={{ width: `${carryPct}%`, background: 'linear-gradient(90deg, #CC0000 0%, #FF3333 100%)' }}
+          />
+        </div>
+        <p className="text-xs text-gray-500 mt-2">Every ฿{BAHT_PER_POINT} you spend earns 1 point — keep going!</p>
       </div>
 
       {/* Stats */}

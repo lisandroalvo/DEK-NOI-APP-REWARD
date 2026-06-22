@@ -49,6 +49,10 @@ export function useRedemptionNotifications(userId) {
           }
         }
       })
+    }, (error) => {
+      // A missing composite index or a rules change surfaces here; without this
+      // handler the listener fails silently and notifications never fire.
+      console.error('Redemption notifications listener failed:', error)
     })
 
     return () => unsubscribe()

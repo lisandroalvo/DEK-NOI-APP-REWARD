@@ -4,7 +4,8 @@ import { doc, updateDoc, collection, query, where, orderBy, onSnapshot } from 'f
 import { db } from '../../lib/firebase'
 import { User, Mail, Phone, Camera, Save, LogOut, Receipt, CheckCircle, XCircle, Clock, MessageCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import ImageUploadSimple from '../../components/ImageUploadSimple'
+import ImageUpload from '../../components/ImageUpload'
+import lineQrCode from '../../assets/line-qr.png'
 
 export default function Profile() {
   const { user, profile, logout } = useAuth()
@@ -35,6 +36,10 @@ export default function Profile() {
         ...doc.data()
       }))
       setBills(billsData)
+    }, (error) => {
+      // A missing composite index or a rules change surfaces here; without this
+      // handler the query fails silently and the history just looks empty.
+      console.error('Failed to load bill history:', error)
     })
 
     return () => unsubscribe()
@@ -118,10 +123,11 @@ export default function Profile() {
               {/* Photo Upload */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Profile Photo</label>
-                <ImageUploadSimple
+                <ImageUpload
                   value={form.photoURL}
                   onChange={(url) => setForm(f => ({ ...f, photoURL: url }))}
                   label="Upload Photo"
+                  folder={`avatars/${user.uid}`}
                 />
               </div>
 
@@ -271,6 +277,9 @@ export default function Profile() {
                           +{bill.pointsAwarded} pts
                         </span>
                       )}
+                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-300">
+                        ฿{bill.amount != null ? bill.amount : '—'}
+                      </span>
                     </div>
                     <p className="text-xs text-gray-600">
                       {bill.submittedAt?.toDate().toLocaleDateString()} at {bill.submittedAt?.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -356,7 +365,7 @@ export default function Profile() {
         </h3>
         <div className="text-center">
           <img 
-            src={require('../../assets/line-qr.png')} 
+            src={lineQrCode}
             alt="LINE QR Code" 
             className="w-48 h-48 mx-auto mb-3 rounded-xl border-2 border-gray-200"
           />
