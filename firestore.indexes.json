@@ -1,6 +1,20 @@
 {
   "indexes": [
     {
+      "collectionGroup": "pointTransactions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "billSubmissions",
       "queryScope": "COLLECTION",
       "fields": [

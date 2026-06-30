@@ -14,6 +14,7 @@ import PromoCarousel from '../../components/PromoCarousel'
 export default function CustomerDashboard() {
   const { user, profile } = useAuth()
   const [transactions, setTransactions] = useState([])
+  const [txError, setTxError] = useState(false)
   const [pendingCount, setPendingCount] = useState(0)
   const [promos, setPromos] = useState([])
   const { notification, clearNotification } = useRedemptionNotifications(user?.uid)
@@ -21,7 +22,13 @@ export default function CustomerDashboard() {
   useEffect(() => {
     if (!user) return
     getDocs(query(collection(db, 'pointTransactions'), where('userId', '==', user.uid), orderBy('createdAt', 'desc')))
-      .then(snap => setTransactions(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+      .then(snap => { setTxError(false); setTransactions(snap.docs.map(d => ({ id: d.id, ...d.data() }))) })
+      .catch(err => {
+        // Surface the failure instead of silently rendering zeros — a failed query
+        // here (e.g. a missing composite index) must not look like "no activity".
+        console.error('Failed to load point transactions:', err)
+        setTxError(true)
+      })
     getDocs(query(collection(db, 'redemptions'), where('userId', '==', user.uid), where('status', '==', 'pending')))
       .then(snap => setPendingCount(snap.size))
     // Load active promos (without orderBy to avoid index requirement)
@@ -171,12 +178,12 @@ export default function CustomerDashboard() {
       <div className="grid grid-cols-2 gap-4 mb-5">
         <div className="bg-white rounded-2xl p-4 shadow-sm border-l-4" style={{ borderColor: '#CC0000' }}>
           <TrendingUp size={20} className="mb-2" style={{ color: '#CC0000' }} />
-          <p className="text-2xl font-black text-gray-900">{earned.toLocaleString()}</p>
+          <p className="text-2xl font-black text-gray-900">{txError ? '—' : earned.toLocaleString()}</p>
           <p className="text-xs text-gray-500 font-medium">Points Earned</p>
         </div>
         <div className="bg-white rounded-2xl p-4 shadow-sm border-l-4" style={{ borderColor: '#FFE600' }}>
           <Gift size={20} className="mb-2" style={{ color: '#CC7700' }} />
-          <p className="text-2xl font-black text-gray-900">{redeemed.toLocaleString()}</p>
+          <p className="text-2xl font-black text-gray-900">{txError ? '—' : redeemed.toLocaleString()}</p>
           <p className="text-xs text-gray-500 font-medium">Points Redeemed</p>
         </div>
       </div>
@@ -241,7 +248,12 @@ export default function CustomerDashboard() {
           <Clock size={16} className="text-gray-400" />
           <h2 className="font-black text-gray-700">Recent Activity</h2>
         </div>
-        {transactions.length === 0 ? (
+        {txError ? (
+          <div className="p-8 text-center text-gray-400">
+            <Star size={32} className="mx-auto mb-2 opacity-20" />
+            <p className="text-sm">Couldn't load your activity right now. Please try again later.</p>
+          </div>
+        ) : transactions.length === 0 ? (
           <div className="p-8 text-center text-gray-400">
             <Star size={32} className="mx-auto mb-2 opacity-20" />
             <p className="text-sm">No activity yet. Start shopping to earn points!</p>
