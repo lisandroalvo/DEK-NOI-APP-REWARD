@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { collection, query, where, getDocs, orderBy, doc, updateDoc, addDoc, increment, serverTimestamp } from 'firebase/firestore'
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
+import { adjustPoints } from '../../lib/points'
 import { useAuth } from '../../context/AuthContext'
 import { Search, Plus, Minus, Star, X, CheckCircle, Clock, ChevronDown, ChevronUp } from 'lucide-react'
 
@@ -43,17 +44,19 @@ export default function AdminCustomers() {
     setSaving(true)
     const pts = parseInt(points) * (modal.mode === 'subtract' ? -1 : 1)
     try {
-      await updateDoc(doc(db, 'users', modal.customer.id), { points: increment(pts) })
-      await addDoc(collection(db, 'pointTransactions'), {
-        userId: modal.customer.id,
-        points: pts,
-        reason: reason.trim() || (pts > 0 ? 'Points added by admin' : 'Points deducted by admin'),
-        addedBy: user.uid,
-        createdAt: serverTimestamp(),
-      })
+      // One atomic transaction updates the balance and logs the audit entry, so
+      // the two can never diverge and a deduction can't push the balance negative.
+      await adjustPoints(db, modal.customer.id, pts, reason, user.uid)
       showToast(`${pts > 0 ? '+' : ''}${pts} pts ${pts > 0 ? 'added to' : 'removed from'} ${modal.customer.name}`)
       setModal(null)
       load()
+    } catch (err) {
+      if (err.message === 'INSUFFICIENT_POINTS') {
+        showToast(`${modal.customer.name} only has ${(modal.customer.points ?? 0).toLocaleString()} pts — can't deduct that many.`)
+      } else {
+        console.error('Error adjusting points:', err)
+        showToast('Something went wrong. Please try again.')
+      }
     } finally { setSaving(false) }
   }
 

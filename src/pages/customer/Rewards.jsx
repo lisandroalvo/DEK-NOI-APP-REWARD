@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { collection, getDocs, query, where, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../context/AuthContext'
-import { Gift, Star, CheckCircle, Lock } from 'lucide-react'
+import { Star, CheckCircle, Lock } from 'lucide-react'
 import charSitting from '../../assets/char-sitting.png'
 
 export default function CustomerRewards() {
@@ -77,11 +77,11 @@ export default function CustomerRewards() {
             const canAfford = pts >= r.pointsCost
             const ptsNeeded = r.pointsCost - pts
             return (
-              <div key={r.id} 
+              <div key={r.id}
                 onClick={() => setDetailsModal(r)}
-                className="bg-white rounded-2xl shadow-sm overflow-hidden border-2 transition-all cursor-pointer hover:shadow-lg"
+                className="bg-white rounded-2xl shadow-sm overflow-hidden border-2 transition-all cursor-pointer hover:shadow-lg flex flex-col h-full"
                 style={{ borderColor: canAfford ? '#CC0000' : '#e5e7eb' }}>
-                <div className="h-40 flex flex-col items-center justify-center gap-1 relative overflow-hidden" 
+                <div className="h-40 shrink-0 flex flex-col items-center justify-center gap-1 relative overflow-hidden"
                   style={{ background: canAfford ? '#FFF0F0' : '#f9fafb' }}>
                   {r.imageUrl ? (
                     <img 
@@ -100,10 +100,10 @@ export default function CustomerRewards() {
                     </div>
                   )}
                 </div>
-                <div className="p-4">
+                <div className="p-4 flex flex-col flex-1">
                   <h3 className="font-black text-gray-900">{r.name}</h3>
                   <p className="text-sm text-gray-500 mt-1 mb-4 leading-relaxed">{r.description}</p>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between mt-auto">
                     <div className="flex items-center gap-1 font-black text-sm" style={{ color: '#CC0000' }}>
                       <Star size={13} fill="currentColor" /> {r.pointsCost.toLocaleString()} pts
                     </div>

@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import { beforeAll, afterAll, beforeEach, describe, test, expect } from 'vitest'
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'
 import { doc, setDoc, getDoc, getDocs, collection } from 'firebase/firestore'
-import { approveRedemption, approveBill } from '../src/lib/points.js'
+import { approveRedemption, approveBill, adjustPoints } from '../src/lib/points.js'
 
 const PROJECT_ID = 'demo-dek-noi-points'
 const ALICE = 'alice'
@@ -112,6 +112,50 @@ describe('approveRedemption', () => {
       const tx = await getDocs(collection(ctx.firestore(), 'pointTransactions'))
       expect(tx.size).toBe(1)
     })
+  })
+})
+
+describe('adjustPoints (admin backfill / manual correction)', () => {
+  // Alice starts with points:100 (see beforeEach).
+
+  test('adds points and logs a matching transaction atomically', async () => {
+    await adjustPoints(adminDb(), ALICE, 250, 'Backfill: LINE receipt ฿12,500', ADMIN)
+
+    expect(await points(ALICE)).toBe(350)
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const tx = await getDocs(collection(ctx.firestore(), 'pointTransactions'))
+      expect(tx.size).toBe(1)
+      expect(tx.docs[0].data().points).toBe(250)
+      expect(tx.docs[0].data().reason).toBe('Backfill: LINE receipt ฿12,500')
+    })
+  })
+
+  test('deducts points and logs the negative transaction', async () => {
+    await adjustPoints(adminDb(), ALICE, -40, 'Correction', ADMIN)
+
+    expect(await points(ALICE)).toBe(60)
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const tx = await getDocs(collection(ctx.firestore(), 'pointTransactions'))
+      expect(tx.docs[0].data().points).toBe(-40)
+    })
+  })
+
+  test('refuses a deduction that would push the balance negative and leaves state unchanged', async () => {
+    await expect(
+      adjustPoints(adminDb(), ALICE, -150, 'Correction', ADMIN)
+    ).rejects.toThrow(/INSUFFICIENT_POINTS/)
+
+    expect(await points(ALICE)).toBe(100)
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const tx = await getDocs(collection(ctx.firestore(), 'pointTransactions'))
+      expect(tx.size).toBe(0)
+    })
+  })
+
+  test('rejects a zero or non-integer delta', async () => {
+    await expect(adjustPoints(adminDb(), ALICE, 0, '', ADMIN)).rejects.toThrow(/INVALID_DELTA/)
+    await expect(adjustPoints(adminDb(), ALICE, 1.5, '', ADMIN)).rejects.toThrow(/INVALID_DELTA/)
+    expect(await points(ALICE)).toBe(100)
   })
 })
 

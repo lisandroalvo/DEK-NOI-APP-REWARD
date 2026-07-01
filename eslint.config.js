@@ -18,4 +18,9 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  {
+    // Node scripts (e.g. the rewards seeder) run under node, not the browser.
+    files: ['scripts/**/*.js'],
+    languageOptions: { globals: globals.node },
+  },
 ])

@@ -11,7 +11,6 @@ import Register from './pages/Register'
 import CustomerDashboard from './pages/customer/Dashboard'
 import CustomerRewards from './pages/customer/Rewards'
 import MyRedemptions from './pages/customer/MyRedemptions'
-import CustomerPromos from './pages/customer/Promos'
 import Profile from './pages/customer/Profile'
 import ScanBill from './pages/customer/ScanBill'
 
@@ -20,7 +19,6 @@ import AdminDashboard from './pages/admin/Dashboard'
 import AdminCustomers from './pages/admin/Customers'
 import AdminRewards from './pages/admin/Rewards'
 import AdminRedemptions from './pages/admin/Redemptions'
-import AdminPromos from './pages/admin/Promos'
 import AdminActivity from './pages/admin/Activity'
 import BillReview from './pages/admin/BillReview'
 
@@ -74,7 +72,6 @@ function AppContent() {
       <Route path="/dashboard" element={<RequireAuth><Layout><CustomerDashboard /></Layout></RequireAuth>} />
       <Route path="/rewards" element={<RequireAuth><Layout><CustomerRewards /></Layout></RequireAuth>} />
       <Route path="/my-redemptions" element={<RequireAuth><Layout><MyRedemptions /></Layout></RequireAuth>} />
-      <Route path="/promos" element={<RequireAuth><Layout><CustomerPromos /></Layout></RequireAuth>} />
       <Route path="/profile" element={<RequireAuth><Layout><Profile /></Layout></RequireAuth>} />
       <Route path="/scan-bill" element={<RequireAuth><Layout><ScanBill /></Layout></RequireAuth>} />
 
@@ -83,7 +80,6 @@ function AppContent() {
       <Route path="/admin/customers" element={<RequireAuth adminOnly><Layout><AdminCustomers /></Layout></RequireAuth>} />
       <Route path="/admin/rewards" element={<RequireAuth adminOnly><Layout><AdminRewards /></Layout></RequireAuth>} />
       <Route path="/admin/redemptions" element={<RequireAuth adminOnly><Layout><AdminRedemptions /></Layout></RequireAuth>} />
-      <Route path="/admin/promos" element={<RequireAuth adminOnly><Layout><AdminPromos /></Layout></RequireAuth>} />
       <Route path="/admin/activity" element={<RequireAuth adminOnly><Layout><AdminActivity /></Layout></RequireAuth>} />
       <Route path="/admin/bills" element={<RequireAuth adminOnly><Layout><BillReview /></Layout></RequireAuth>} />
 

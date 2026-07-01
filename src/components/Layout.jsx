@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { LogOut, Star, Gift, Megaphone, Users, LayoutDashboard, ShoppingBag, TrendingUp, Menu, X, User, Receipt } from 'lucide-react'
+import { LogOut, Star, Gift, Users, LayoutDashboard, ShoppingBag, TrendingUp, Menu, X, User, Receipt } from 'lucide-react'
 import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { usePointsNotification } from '../hooks/usePointsNotification'
@@ -93,7 +93,6 @@ export default function Layout({ children }) {
     { to: '/admin/customers',    icon: <Users size={18} />,           label: 'Customers' },
     { to: '/admin/rewards',      icon: <Gift size={18} />,            label: 'Rewards' },
     { to: '/admin/redemptions',  icon: <ShoppingBag size={18} />,     label: 'Redemptions' },
-    { to: '/admin/promos',       icon: <Megaphone size={18} />,       label: 'Promos' },
     { to: '/admin/activity',     icon: <TrendingUp size={18} />,      label: 'Activity Log' },
   ]
 
@@ -101,7 +100,6 @@ export default function Layout({ children }) {
     { to: '/dashboard',      icon: <Star size={22} />,        label: 'My Points' },
     { to: '/rewards',        icon: <Gift size={22} />,        label: 'Rewards' },
     { to: '/my-redemptions', icon: <ShoppingBag size={22} />, label: 'My Orders' },
-    { to: '/promos',         icon: <Megaphone size={22} />,   label: 'Promos' },
     { to: '/profile',        icon: <User size={22} />,        label: 'Profile' },
   ]
 
