@@ -12,7 +12,8 @@ export default function AdminRewards() {
   const [form, setForm] = useState(EMPTY)
   const [saving, setSaving] = useState(false)
 
-  const load = () => getDocs(collection(db, 'rewards')).then(snap => setRewards(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+  const load = () => getDocs(collection(db, 'rewards')).then(snap => setRewards(snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => a.pointsCost - b.pointsCost)))
   useEffect(() => { load() }, [])
 
   const open = (r = null) => {
@@ -45,10 +46,10 @@ export default function AdminRewards() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {rewards.map(r => (
-          <div key={r.id} className={`bg-white rounded-2xl shadow-sm border-2 overflow-hidden ${!r.available ? 'opacity-50' : ''}`}
+          <div key={r.id} className={`bg-white rounded-2xl shadow-sm border-2 overflow-hidden flex flex-col h-full ${!r.available ? 'opacity-50' : ''}`}
             style={{ borderColor: r.available ? '#CC0000' : '#e5e7eb' }}>
             {/* Image or Emoji Header */}
-            <div className="h-32 flex items-center justify-center relative" style={{ background: '#FFF0F0' }}>
+            <div className="h-32 shrink-0 flex items-center justify-center relative" style={{ background: '#FFF0F0' }}>
               {r.imageUrl ? (
                 <img src={r.imageUrl} alt={r.name} className="w-full h-full object-cover" />
               ) : (
@@ -63,10 +64,10 @@ export default function AdminRewards() {
                 </button>
               </div>
             </div>
-            <div className="p-4">
+            <div className="p-4 flex flex-col flex-1">
               <h3 className="font-black text-gray-900">{r.name}</h3>
               <p className="text-xs text-gray-500 mt-1 mb-3 line-clamp-2">{r.description}</p>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mt-auto">
                 <span className="font-black text-sm" style={{ color: '#CC0000' }}>⭐ {r.pointsCost} pts</span>
                 <button onClick={() => toggle(r)} className="text-xs px-2.5 py-1 rounded-full font-black"
                   style={r.available ? { background: '#FFE600', color: '#CC0000' } : { background: '#f3f4f6', color: '#666' }}>

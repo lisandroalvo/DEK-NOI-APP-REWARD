@@ -3,51 +3,36 @@ import { collection, query, where, orderBy, getDocs } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { BAHT_PER_POINT } from '../../lib/points'
 import { useAuth } from '../../context/AuthContext'
-import { Star, TrendingUp, Gift, Clock, ChevronRight, Megaphone } from 'lucide-react'
+import { Star, TrendingUp, Gift, Clock, ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import SupportButton from '../../components/SupportButton'
 import charHappy from '../../assets/char-happy.png'
 import Toast from '../../components/Toast'
 import { useRedemptionNotifications } from '../../hooks/useRedemptionNotifications'
-import PromoCarousel from '../../components/PromoCarousel'
+import WelcomeBanner from '../../components/WelcomeBanner'
 
 export default function CustomerDashboard() {
   const { user, profile } = useAuth()
   const [transactions, setTransactions] = useState([])
+  const [txError, setTxError] = useState(false)
   const [pendingCount, setPendingCount] = useState(0)
-  const [promos, setPromos] = useState([])
+  const [rewards, setRewards] = useState([])
   const { notification, clearNotification } = useRedemptionNotifications(user?.uid)
 
   useEffect(() => {
     if (!user) return
     getDocs(query(collection(db, 'pointTransactions'), where('userId', '==', user.uid), orderBy('createdAt', 'desc')))
-      .then(snap => setTransactions(snap.docs.map(d => ({ id: d.id, ...d.data() }))))
+      .then(snap => { setTxError(false); setTransactions(snap.docs.map(d => ({ id: d.id, ...d.data() }))) })
+      .catch(err => {
+        // Surface the failure instead of silently rendering zeros — a failed query
+        // here (e.g. a missing composite index) must not look like "no activity".
+        console.error('Failed to load point transactions:', err)
+        setTxError(true)
+      })
     getDocs(query(collection(db, 'redemptions'), where('userId', '==', user.uid), where('status', '==', 'pending')))
       .then(snap => setPendingCount(snap.size))
-    // Load active promos (without orderBy to avoid index requirement)
-    getDocs(query(collection(db, 'promos'), where('active', '==', true)))
-      .then(snap => {
-        const promosData = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-          .sort((a, b) => {
-            // Sort by createdAt in memory (newest first)
-            const aTime = a.createdAt?.toMillis?.() || 0
-            const bTime = b.createdAt?.toMillis?.() || 0
-            return bTime - aTime
-          })
-        console.log('📢 Loaded promos for carousel:', promosData)
-        console.log('📢 Number of active promos:', promosData.length)
-        setPromos(promosData)
-      })
-      .catch(error => {
-        console.error('❌ Error loading promos:', error)
-        // Fallback: try loading all promos without filter
-        getDocs(collection(db, 'promos'))
-          .then(snap => {
-            const allPromos = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-            console.log('📢 Loaded all promos (fallback):', allPromos)
-            setPromos(allPromos)
-          })
-      })
+    getDocs(query(collection(db, 'rewards'), where('available', '==', true)))
+      .then(snap => setRewards(snap.docs.map(d => d.data()).sort((a, b) => a.pointsCost - b.pointsCost)))
   }, [user])
 
   const pts = profile?.points ?? 0
@@ -58,6 +43,18 @@ export default function CustomerDashboard() {
   const carry = profile?.spendCarry ?? 0
   const toNextPoint = BAHT_PER_POINT - carry
   const carryPct = (carry / BAHT_PER_POINT) * 100
+
+  // Next reward to unlock: the cheapest available reward the customer can't yet
+  // afford. The bar runs from the last reward they've cleared to that next one, so
+  // earning always moves it forward and redeeming never pushes it backward.
+  const affordable = rewards.filter(r => r.pointsCost <= pts)
+  const nextReward = rewards.find(r => r.pointsCost > pts) || null
+  const prevThreshold = affordable.length ? affordable[affordable.length - 1].pointsCost : 0
+  const rewardPct = rewards.length === 0
+    ? 0
+    : nextReward
+      ? Math.min(((pts - prevThreshold) / (nextReward.pointsCost - prevThreshold)) * 100, 100)
+      : 100
 
   return (
     <div className="p-4 sm:p-6 md:p-8 max-w-2xl w-full mx-auto">
@@ -84,8 +81,8 @@ export default function CustomerDashboard() {
         <h1 className="text-xl sm:text-2xl font-black text-gray-900">Hi, {profile?.name?.split(' ')[0]} 👋</h1>
       </div>
 
-      {/* Promo Carousel */}
-      <PromoCarousel promos={promos} />
+      {/* Welcome banner (promos carousel hidden pre-MVP) */}
+      <WelcomeBanner />
 
       {/* Game-like Points Card */}
       <div className="rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white mb-4 sm:mb-6 shadow-2xl relative overflow-hidden" 
@@ -127,8 +124,8 @@ export default function CustomerDashboard() {
           <div className="bg-white/20 rounded-full h-3 mb-3 overflow-hidden backdrop-blur-sm">
             <div 
               className="h-full rounded-full transition-all duration-1000 ease-out relative overflow-hidden"
-              style={{ 
-                width: `${Math.min((pts % 1000) / 10, 100)}%`,
+              style={{
+                width: `${rewardPct}%`,
                 background: 'linear-gradient(90deg, #FFE600 0%, #FFF200 100%)',
                 boxShadow: '0 0 10px rgba(255, 230, 0, 0.5)'
               }}>
@@ -140,14 +137,20 @@ export default function CustomerDashboard() {
             </div>
           </div>
           
-          {/* Next Milestone */}
-          <div className="flex items-center justify-between text-xs">
+          {/* Progress toward the next reward the customer can unlock */}
+          <div className="flex items-center justify-between gap-2 text-xs">
             <span className="font-bold text-white/80">
-              {pts < 1000 ? `${1000 - pts} pts to next milestone` : 'Milestone reached! 🎉'}
+              {rewards.length === 0
+                ? 'Earn points to unlock rewards'
+                : nextReward
+                  ? `${(nextReward.pointsCost - pts).toLocaleString()} pts to unlock ${nextReward.emoji || '🎁'} ${nextReward.name}`
+                  : 'You can redeem any reward! 🎉'}
             </span>
-            <span className="font-black px-2 py-0.5 rounded-full text-xs" style={{ background: '#FFE600', color: '#CC0000' }}>
-              ⭐ VIP Member
-            </span>
+            {affordable.length > 0 && (
+              <span className="font-black px-2 py-0.5 rounded-full text-xs whitespace-nowrap" style={{ background: '#FFE600', color: '#CC0000' }}>
+                ⭐ {affordable.length} reward{affordable.length > 1 ? 's' : ''} ready
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -171,12 +174,12 @@ export default function CustomerDashboard() {
       <div className="grid grid-cols-2 gap-4 mb-5">
         <div className="bg-white rounded-2xl p-4 shadow-sm border-l-4" style={{ borderColor: '#CC0000' }}>
           <TrendingUp size={20} className="mb-2" style={{ color: '#CC0000' }} />
-          <p className="text-2xl font-black text-gray-900">{earned.toLocaleString()}</p>
+          <p className="text-2xl font-black text-gray-900">{txError ? '—' : earned.toLocaleString()}</p>
           <p className="text-xs text-gray-500 font-medium">Points Earned</p>
         </div>
         <div className="bg-white rounded-2xl p-4 shadow-sm border-l-4" style={{ borderColor: '#FFE600' }}>
           <Gift size={20} className="mb-2" style={{ color: '#CC7700' }} />
-          <p className="text-2xl font-black text-gray-900">{redeemed.toLocaleString()}</p>
+          <p className="text-2xl font-black text-gray-900">{txError ? '—' : redeemed.toLocaleString()}</p>
           <p className="text-xs text-gray-500 font-medium">Points Redeemed</p>
         </div>
       </div>
@@ -221,18 +224,6 @@ export default function CustomerDashboard() {
           </div>
           <ChevronRight size={18} className="text-gray-400" />
         </Link>
-        <Link to="/promos" className="flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: '#FFF0F0' }}>
-              <Megaphone size={20} style={{ color: '#CC0000' }} />
-            </div>
-            <div>
-              <p className="font-black text-gray-900 text-sm">Monthly Promos</p>
-              <p className="text-xs text-gray-500">Earn bonus points this month</p>
-            </div>
-          </div>
-          <ChevronRight size={18} className="text-gray-400" />
-        </Link>
       </div>
 
       {/* Transaction history */}
@@ -241,7 +232,12 @@ export default function CustomerDashboard() {
           <Clock size={16} className="text-gray-400" />
           <h2 className="font-black text-gray-700">Recent Activity</h2>
         </div>
-        {transactions.length === 0 ? (
+        {txError ? (
+          <div className="p-8 text-center text-gray-400">
+            <Star size={32} className="mx-auto mb-2 opacity-20" />
+            <p className="text-sm">Couldn't load your activity right now. Please try again later.</p>
+          </div>
+        ) : transactions.length === 0 ? (
           <div className="p-8 text-center text-gray-400">
             <Star size={32} className="mx-auto mb-2 opacity-20" />
             <p className="text-sm">No activity yet. Start shopping to earn points!</p>

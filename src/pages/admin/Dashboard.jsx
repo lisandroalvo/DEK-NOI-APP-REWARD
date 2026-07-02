@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
-import { Users, Gift, ShoppingBag, Star, TrendingUp, Clock, ChevronRight } from 'lucide-react'
+import { Users, Gift, ShoppingBag, Star, TrendingUp, ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 export default function AdminDashboard() {

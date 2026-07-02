@@ -3,17 +3,18 @@ import { collection, query, where, getDocs, orderBy, doc, updateDoc, serverTimes
 import { db } from '../../lib/firebase'
 import { approveRedemption } from '../../lib/points'
 import { useAuth } from '../../context/AuthContext'
-import { CheckCircle, XCircle, Clock, X } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, X, RotateCcw } from 'lucide-react'
 
 const STATUS_STYLE = {
-  approved: { bg: '#F0FFF4', color: '#16a34a', label: '✅ Approved' },
-  rejected: { bg: '#FFF0F0', color: '#CC0000', label: '❌ Rejected' },
+  approved:  { bg: '#F0FFF4', color: '#16a34a', label: '✅ Approved' },
+  collected: { bg: '#EEF6FF', color: '#1d4ed8', label: '🛍️ Collected' },
+  rejected:  { bg: '#FFF0F0', color: '#CC0000', label: '❌ Rejected' },
 }
 
 export default function AdminRedemptions() {
   const { user } = useAuth()
   const [items, setItems] = useState([])
-  const [counts, setCounts] = useState({ pending: 0, approved: 0, rejected: 0 })
+  const [counts, setCounts] = useState({ pending: 0, approved: 0, collected: 0, rejected: 0 })
   const [tab, setTab] = useState('pending')
   const [rejectModal, setRejectModal] = useState(null)
   const [rejectNote, setRejectNote] = useState('')
@@ -57,19 +58,22 @@ export default function AdminRedemptions() {
 
   const loadCounts = async () => {
     try {
-      const [p, a, r] = await Promise.all([
+      const [p, a, c, r] = await Promise.all([
         getDocs(query(collection(db, 'redemptions'), where('status', '==', 'pending'))),
         getDocs(query(collection(db, 'redemptions'), where('status', '==', 'approved'))),
+        getDocs(query(collection(db, 'redemptions'), where('status', '==', 'collected'))),
         getDocs(query(collection(db, 'redemptions'), where('status', '==', 'rejected'))),
       ])
-      console.log('Counts:', { pending: p.size, approved: a.size, rejected: r.size })
-      setCounts({ pending: p.size, approved: a.size, rejected: r.size })
+      setCounts({ pending: p.size, approved: a.size, collected: c.size, rejected: r.size })
     } catch (error) {
       console.error('Error loading counts:', error)
     }
   }
 
-  useEffect(() => { 
+  useEffect(() => {
+    // load()/loadCounts() are async data fetches; load()'s synchronous setLoading(true)
+    // is the intended per-tab loading indicator, not a cascading-render bug.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load(tab)
     loadCounts()
   }, [tab])
@@ -95,6 +99,46 @@ export default function AdminRedemptions() {
     } finally { setWorking(null) }
   }
 
+  // Mark an already-approved redemption as handed over to the customer. This closes
+  // the loop so a customer can't present the same approved reward twice — points were
+  // already deducted at approval, so this only advances the status.
+  const markCollected = async (r) => {
+    if (!confirm(`Mark "${r.rewardName}" as collected by ${r.userName}?`)) return
+    setWorking(r.id)
+    try {
+      await updateDoc(doc(db, 'redemptions', r.id), {
+        status: 'collected',
+        collectedAt: serverTimestamp(),
+        collectedBy: user.uid,
+      })
+      await load(tab)
+      await loadCounts()
+    } catch (err) {
+      console.error('Error marking redemption collected:', err)
+      alert('Failed to mark as collected. Please try again.')
+    } finally { setWorking(null) }
+  }
+
+  // Reverse an accidental "mark collected": move the redemption back to approved and
+  // clear the collection stamps. Points were never touched at collection, so there is
+  // nothing to refund here.
+  const undoCollected = async (r) => {
+    if (!confirm(`Undo collection of "${r.rewardName}"? This moves it back to Approved.`)) return
+    setWorking(r.id)
+    try {
+      await updateDoc(doc(db, 'redemptions', r.id), {
+        status: 'approved',
+        collectedAt: null,
+        collectedBy: null,
+      })
+      await load(tab)
+      await loadCounts()
+    } catch (err) {
+      console.error('Error undoing collection:', err)
+      alert('Failed to undo. Please try again.')
+    } finally { setWorking(null) }
+  }
+
   const openReject = (r) => { setRejectModal(r); setRejectNote('') }
 
   const confirmReject = async () => {
@@ -116,6 +160,7 @@ export default function AdminRedemptions() {
   const tabs = [
     { key: 'pending', label: 'Pending', count: counts.pending },
     { key: 'approved', label: 'Approved', count: counts.approved },
+    { key: 'collected', label: 'Collected', count: counts.collected },
     { key: 'rejected', label: 'Rejected', count: counts.rejected },
   ]
 
@@ -193,11 +238,25 @@ export default function AdminRedemptions() {
                   </button>
                 </div>
               ) : (
-                <div className="shrink-0 text-right">
+                <div className="shrink-0 text-right flex flex-col items-end gap-2">
                   <span className="text-xs font-black px-3 py-1.5 rounded-full"
                     style={STATUS_STYLE[r.status] ? { background: STATUS_STYLE[r.status].bg, color: STATUS_STYLE[r.status].color } : {}}>
                     {STATUS_STYLE[r.status]?.label}
                   </span>
+                  {r.status === 'approved' && (
+                    <button onClick={() => markCollected(r)} disabled={working === r.id}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-black transition-colors disabled:opacity-50"
+                      style={{ background: '#EEF6FF', color: '#1d4ed8' }}>
+                      <CheckCircle size={15} /> Mark collected
+                    </button>
+                  )}
+                  {r.status === 'collected' && (
+                    <button onClick={() => undoCollected(r)} disabled={working === r.id}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-black transition-colors disabled:opacity-50"
+                      style={{ background: '#F3F4F6', color: '#4b5563' }}>
+                      <RotateCcw size={15} /> Undo
+                    </button>
+                  )}
                   {r.rejectNote && (
                     <p className="text-xs text-gray-400 mt-1 max-w-32">Note: {r.rejectNote}</p>
                   )}

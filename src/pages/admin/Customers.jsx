@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { collection, query, where, getDocs, orderBy, doc, updateDoc, addDoc, increment, serverTimestamp } from 'firebase/firestore'
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
+import { adjustPoints, BAHT_PER_POINT } from '../../lib/points'
 import { useAuth } from '../../context/AuthContext'
 import { Search, Plus, Minus, Star, X, CheckCircle, Clock, ChevronDown, ChevronUp } from 'lucide-react'
 
@@ -15,6 +16,8 @@ export default function AdminCustomers() {
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [points, setPoints] = useState('')
   const [reason, setReason] = useState('')
+  const [addSpend, setAddSpend] = useState(false)
+  const [spendAmount, setSpendAmount] = useState('')
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState('')
 
@@ -36,24 +39,32 @@ export default function AdminCustomers() {
     setModal({ customer: c, mode })
     setPoints('')
     setReason('')
+    setAddSpend(false)
+    setSpendAmount('')
   }
 
   const submitPoints = async () => {
     if (!points || isNaN(points) || parseInt(points) <= 0) return
     setSaving(true)
     const pts = parseInt(points) * (modal.mode === 'subtract' ? -1 : 1)
+    // Only add-mode grants can carry spend; an empty field falls back to points × ฿50.
+    const spend = modal.mode === 'add' && addSpend
+      ? (spendAmount === '' ? parseInt(points) * BAHT_PER_POINT : parseFloat(spendAmount))
+      : 0
     try {
-      await updateDoc(doc(db, 'users', modal.customer.id), { points: increment(pts) })
-      await addDoc(collection(db, 'pointTransactions'), {
-        userId: modal.customer.id,
-        points: pts,
-        reason: reason.trim() || (pts > 0 ? 'Points added by admin' : 'Points deducted by admin'),
-        addedBy: user.uid,
-        createdAt: serverTimestamp(),
-      })
-      showToast(`${pts > 0 ? '+' : ''}${pts} pts ${pts > 0 ? 'added to' : 'removed from'} ${modal.customer.name}`)
+      // One atomic transaction updates the balance and logs the audit entry, so
+      // the two can never diverge and a deduction can't push the balance negative.
+      await adjustPoints(db, modal.customer.id, pts, reason, user.uid, spend)
+      showToast(`${pts > 0 ? '+' : ''}${pts} pts ${pts > 0 ? 'added to' : 'removed from'} ${modal.customer.name}${spend > 0 ? ` (+฿${spend.toLocaleString()} spend)` : ''}`)
       setModal(null)
       load()
+    } catch (err) {
+      if (err.message === 'INSUFFICIENT_POINTS') {
+        showToast(`${modal.customer.name} only has ${(modal.customer.points ?? 0).toLocaleString()} pts — can't deduct that many.`)
+      } else {
+        console.error('Error adjusting points:', err)
+        showToast('Something went wrong. Please try again.')
+      }
     } finally { setSaving(false) }
   }
 
@@ -187,6 +198,35 @@ export default function AdminCustomers() {
                   onBlur={e => e.target.style.borderColor = '#e5e7eb'}
                 />
               </div>
+              {modal.mode === 'add' && (
+                <div>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={addSpend}
+                      onChange={e => {
+                        const on = e.target.checked
+                        setAddSpend(on)
+                        // Prefill with the derived default so backfilling from receipts is one click.
+                        if (on && spendAmount === '') setSpendAmount(String((parseInt(points) || 0) * BAHT_PER_POINT))
+                      }}
+                      className="w-4 h-4" />
+                    <span className="text-sm font-semibold text-gray-700">Also add to spend total</span>
+                  </label>
+                  {addSpend && (
+                    <div className="mt-2">
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">฿</span>
+                        <input type="number" min="0" value={spendAmount} onChange={e => setSpendAmount(e.target.value)}
+                          placeholder={String((parseInt(points) || 0) * BAHT_PER_POINT)}
+                          className="w-full border-2 border-gray-200 rounded-xl pl-8 pr-4 py-3 text-sm focus:outline-none"
+                          onFocus={e => e.target.style.borderColor = '#CC0000'}
+                          onBlur={e => e.target.style.borderColor = '#e5e7eb'}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-400 mt-1">Defaults to points × ฿{BAHT_PER_POINT}. Edit to match the exact receipt total.</p>
+                    </div>
+                  )}
+                </div>
+              )}
               {points && !isNaN(points) && parseInt(points) > 0 && (
                 <p className="text-xs text-center text-gray-500">
                   New balance: <strong style={{ color: '#CC0000' }}>

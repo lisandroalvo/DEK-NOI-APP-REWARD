@@ -25,6 +25,9 @@ export default function AdminActivity() {
     setLoading(false)
   }, [])
 
+  // loadPage() is an async fetch; its synchronous setLoading(true) is the intended
+  // loading indicator, not a cascading-render bug.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadPage() }, [loadPage])
 
   const filtered = allTx.filter(t =>

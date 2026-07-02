@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { LogOut, Star, Gift, Megaphone, Users, LayoutDashboard, ShoppingBag, TrendingUp, Menu, X, User, Receipt } from 'lucide-react'
+import { LogOut, Star, Gift, Users, LayoutDashboard, ShoppingBag, TrendingUp, Menu, X, User, Receipt } from 'lucide-react'
 import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { usePointsNotification } from '../hooks/usePointsNotification'
@@ -93,7 +93,6 @@ export default function Layout({ children }) {
     { to: '/admin/customers',    icon: <Users size={18} />,           label: 'Customers' },
     { to: '/admin/rewards',      icon: <Gift size={18} />,            label: 'Rewards' },
     { to: '/admin/redemptions',  icon: <ShoppingBag size={18} />,     label: 'Redemptions' },
-    { to: '/admin/promos',       icon: <Megaphone size={18} />,       label: 'Promos' },
     { to: '/admin/activity',     icon: <TrendingUp size={18} />,      label: 'Activity Log' },
   ]
 
@@ -101,7 +100,6 @@ export default function Layout({ children }) {
     { to: '/dashboard',      icon: <Star size={22} />,        label: 'My Points' },
     { to: '/rewards',        icon: <Gift size={22} />,        label: 'Rewards' },
     { to: '/my-redemptions', icon: <ShoppingBag size={22} />, label: 'My Orders' },
-    { to: '/promos',         icon: <Megaphone size={22} />,   label: 'Promos' },
     { to: '/profile',        icon: <User size={22} />,        label: 'Profile' },
   ]
 
@@ -109,7 +107,9 @@ export default function Layout({ children }) {
 
   const doLogout = async () => { await logout(); navigate('/login') }
 
-  const SidebarContent = ({ onLinkClick }) => (
+  // A render helper rather than a nested component: called inline below so React
+  // doesn't remount it (and reset any future state) on every Layout render.
+  const renderSidebar = (onLinkClick) => (
     <>
       {/* Logo + Profile */}
       <div className="p-4 border-b-2 shrink-0" style={{ borderColor: '#FFE600' }}>
@@ -175,7 +175,7 @@ export default function Layout({ children }) {
 
       {/* ── Desktop sidebar ── */}
       <aside className="hidden md:flex w-60 flex-col shrink-0 bg-white border-r-4" style={{ borderColor: '#CC0000' }}>
-        <SidebarContent onLinkClick={() => {}} />
+        {renderSidebar(() => {})}
       </aside>
 
       {/* ── Mobile header bar ── */}
@@ -203,7 +203,7 @@ export default function Layout({ children }) {
               className="absolute top-3 right-3 p-1 rounded-lg hover:bg-gray-100">
               <X size={20} className="text-gray-500" />
             </button>
-            <SidebarContent onLinkClick={() => setMobileOpen(false)} />
+            {renderSidebar(() => setMobileOpen(false))}
           </aside>
         </div>
       )}

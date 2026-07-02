@@ -144,6 +144,29 @@ describe('billSubmissions — no self-approval', () => {
   })
 })
 
+describe('redemptions — only admins fulfil', () => {
+  // Seed an approved redemption owned by Alice, bypassing rules.
+  async function seedApproved() {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'redemptions', 'red1'), {
+        userId: ALICE, rewardName: 'Free Coffee', pointsCost: 100, status: 'approved',
+      })
+    })
+  }
+
+  test('an admin can mark an approved redemption as collected', async () => {
+    await seedApproved()
+    const db = testEnv.authenticatedContext(ADMIN).firestore()
+    await assertSucceeds(updateDoc(doc(db, 'redemptions', 'red1'), { status: 'collected' }))
+  })
+
+  test('a customer cannot mark their own redemption collected', async () => {
+    await seedApproved()
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertFails(updateDoc(doc(db, 'redemptions', 'red1'), { status: 'collected' }))
+  })
+})
+
 describe('storage — must be authenticated', () => {
   test('an unauthenticated user cannot write to storage', async () => {
     const storage = testEnv.unauthenticatedContext().storage()

@@ -47,6 +47,45 @@ export async function approveRedemption(db, redemption, adminUid) {
   })
 }
 
+// Adjust a customer's balance by a signed whole-number delta (admin backfill of
+// LINE-submitted receipts, or a manual correction). The balance change and its
+// pointTransactions log entry are written in one transaction so they can never
+// diverge, and a deduction that would push the balance below zero is refused.
+//
+// spendAmount is optional: when backfilling points from real receipts, pass the
+// baht total so lifetime totalSpent grows alongside the balance. Leave it 0 for
+// grants that shouldn't count as spend (e.g. a double-points promo). It never
+// touches spendCarry — these points are granted outright, not earned via carry.
+export async function adjustPoints(db, userId, delta, reason, adminUid, spendAmount = 0) {
+  if (!Number.isInteger(delta) || delta === 0) throw new Error('INVALID_DELTA')
+  if (!(spendAmount >= 0)) throw new Error('INVALID_AMOUNT')
+  const spend = toSatang(spendAmount)
+
+  await runTransaction(db, async (tx) => {
+    const userRef = doc(db, 'users', userId)
+    const userSnap = await tx.get(userRef)
+    if (!userSnap.exists()) throw new Error('User not found')
+
+    const data = userSnap.data()
+    const current = data.points || 0
+    if (current + delta < 0) throw new Error('INSUFFICIENT_POINTS')
+
+    const userUpdate = { points: current + delta }
+    if (spend > 0) userUpdate.totalSpent = toSatang((data.totalSpent || 0) + spend)
+    tx.update(userRef, userUpdate)
+
+    const log = {
+      userId,
+      points: delta,
+      reason: reason?.trim() || (delta > 0 ? 'Points added by admin' : 'Points deducted by admin'),
+      addedBy: adminUid,
+      createdAt: serverTimestamp(),
+    }
+    if (spend > 0) log.amount = spend
+    tx.set(doc(collection(db, 'pointTransactions')), log)
+  })
+}
+
 // Approve a bill: convert the spent baht into points and record the bill review.
 // Points earned = floor((carried baht + amount) / BAHT_PER_POINT); the remainder is
 // banked in spendCarry for next time, and the full amount adds to lifetime totalSpent.
