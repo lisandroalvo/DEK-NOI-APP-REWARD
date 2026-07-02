@@ -157,6 +157,49 @@ describe('adjustPoints (admin backfill / manual correction)', () => {
     await expect(adjustPoints(adminDb(), ALICE, 1.5, '', ADMIN)).rejects.toThrow(/INVALID_DELTA/)
     expect(await points(ALICE)).toBe(100)
   })
+
+  test('also increments totalSpent and records the amount when a spend amount is given', async () => {
+    await adjustPoints(adminDb(), ALICE, 250, 'Backfill: LINE receipt ฿12,530', ADMIN, 12530)
+
+    const u = await userDoc(ALICE)
+    expect(u.points).toBe(350)
+    expect(u.totalSpent).toBe(12530)
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const tx = await getDocs(collection(ctx.firestore(), 'pointTransactions'))
+      expect(tx.docs[0].data().points).toBe(250)
+      expect(tx.docs[0].data().amount).toBe(12530)
+    })
+  })
+
+  test('leaves totalSpent untouched and logs no amount when no spend amount is given', async () => {
+    await adjustPoints(adminDb(), ALICE, 100, 'Double points promo', ADMIN)
+
+    const u = await userDoc(ALICE)
+    expect(u.points).toBe(200)
+    expect(u.totalSpent ?? 0).toBe(0)
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const tx = await getDocs(collection(ctx.firestore(), 'pointTransactions'))
+      expect(tx.docs[0].data().amount ?? null).toBe(null)
+    })
+  })
+
+  test('accumulates spend across successive backfills', async () => {
+    await adjustPoints(adminDb(), ALICE, 2, 'Backfill 1', ADMIN, 100)
+    await adjustPoints(adminDb(), ALICE, 3, 'Backfill 2', ADMIN, 150)
+    expect((await userDoc(ALICE)).totalSpent).toBe(250)
+  })
+
+  test('preserves satang on the spend amount without floating-point drift', async () => {
+    await adjustPoints(adminDb(), ALICE, 1, 'Backfill', ADMIN, 50.1)
+    expect((await userDoc(ALICE)).totalSpent).toBe(50.1)
+  })
+
+  test('rejects a negative spend amount and leaves state unchanged', async () => {
+    await expect(adjustPoints(adminDb(), ALICE, 100, 'Backfill', ADMIN, -5)).rejects.toThrow(/INVALID_AMOUNT/)
+    const u = await userDoc(ALICE)
+    expect(u.points).toBe(100)
+    expect(u.totalSpent ?? 0).toBe(0)
+  })
 })
 
 describe('approveBill', () => {

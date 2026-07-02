@@ -3,7 +3,7 @@ import { collection, query, where, getDocs, orderBy, doc, updateDoc, serverTimes
 import { db } from '../../lib/firebase'
 import { approveRedemption } from '../../lib/points'
 import { useAuth } from '../../context/AuthContext'
-import { CheckCircle, XCircle, Clock, X } from 'lucide-react'
+import { CheckCircle, XCircle, Clock, X, RotateCcw } from 'lucide-react'
 
 const STATUS_STYLE = {
   approved:  { bg: '#F0FFF4', color: '#16a34a', label: '✅ Approved' },
@@ -70,7 +70,10 @@ export default function AdminRedemptions() {
     }
   }
 
-  useEffect(() => { 
+  useEffect(() => {
+    // load()/loadCounts() are async data fetches; load()'s synchronous setLoading(true)
+    // is the intended per-tab loading indicator, not a cascading-render bug.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load(tab)
     loadCounts()
   }, [tab])
@@ -113,6 +116,26 @@ export default function AdminRedemptions() {
     } catch (err) {
       console.error('Error marking redemption collected:', err)
       alert('Failed to mark as collected. Please try again.')
+    } finally { setWorking(null) }
+  }
+
+  // Reverse an accidental "mark collected": move the redemption back to approved and
+  // clear the collection stamps. Points were never touched at collection, so there is
+  // nothing to refund here.
+  const undoCollected = async (r) => {
+    if (!confirm(`Undo collection of "${r.rewardName}"? This moves it back to Approved.`)) return
+    setWorking(r.id)
+    try {
+      await updateDoc(doc(db, 'redemptions', r.id), {
+        status: 'approved',
+        collectedAt: null,
+        collectedBy: null,
+      })
+      await load(tab)
+      await loadCounts()
+    } catch (err) {
+      console.error('Error undoing collection:', err)
+      alert('Failed to undo. Please try again.')
     } finally { setWorking(null) }
   }
 
@@ -225,6 +248,13 @@ export default function AdminRedemptions() {
                       className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-black transition-colors disabled:opacity-50"
                       style={{ background: '#EEF6FF', color: '#1d4ed8' }}>
                       <CheckCircle size={15} /> Mark collected
+                    </button>
+                  )}
+                  {r.status === 'collected' && (
+                    <button onClick={() => undoCollected(r)} disabled={working === r.id}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-black transition-colors disabled:opacity-50"
+                      style={{ background: '#F3F4F6', color: '#4b5563' }}>
+                      <RotateCcw size={15} /> Undo
                     </button>
                   )}
                   {r.rejectNote && (

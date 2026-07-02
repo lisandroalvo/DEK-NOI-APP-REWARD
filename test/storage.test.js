@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs'
 import { beforeAll, afterAll, describe, test, expect } from 'vitest'
 import { initializeTestEnvironment, assertFails } from '@firebase/rules-unit-testing'
-import { ref, uploadBytes, uploadString, getDownloadURL, listAll } from 'firebase/storage'
+import { ref, uploadString, listAll } from 'firebase/storage'
 import { validateImageFile, uploadImageBlob } from '../src/lib/storage.js'
 
 const PROJECT_ID = 'demo-dek-noi-storage'

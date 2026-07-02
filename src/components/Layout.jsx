@@ -107,7 +107,9 @@ export default function Layout({ children }) {
 
   const doLogout = async () => { await logout(); navigate('/login') }
 
-  const SidebarContent = ({ onLinkClick }) => (
+  // A render helper rather than a nested component: called inline below so React
+  // doesn't remount it (and reset any future state) on every Layout render.
+  const renderSidebar = (onLinkClick) => (
     <>
       {/* Logo + Profile */}
       <div className="p-4 border-b-2 shrink-0" style={{ borderColor: '#FFE600' }}>
@@ -173,7 +175,7 @@ export default function Layout({ children }) {
 
       {/* ── Desktop sidebar ── */}
       <aside className="hidden md:flex w-60 flex-col shrink-0 bg-white border-r-4" style={{ borderColor: '#CC0000' }}>
-        <SidebarContent onLinkClick={() => {}} />
+        {renderSidebar(() => {})}
       </aside>
 
       {/* ── Mobile header bar ── */}
@@ -201,7 +203,7 @@ export default function Layout({ children }) {
               className="absolute top-3 right-3 p-1 rounded-lg hover:bg-gray-100">
               <X size={20} className="text-gray-500" />
             </button>
-            <SidebarContent onLinkClick={() => setMobileOpen(false)} />
+            {renderSidebar(() => setMobileOpen(false))}
           </aside>
         </div>
       )}
