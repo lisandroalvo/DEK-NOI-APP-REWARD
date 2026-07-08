@@ -29,6 +29,20 @@
       ]
     },
     {
+      "collectionGroup": "billSubmissions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "imageHash",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "redemptions",
       "queryScope": "COLLECTION",
       "fields": [
