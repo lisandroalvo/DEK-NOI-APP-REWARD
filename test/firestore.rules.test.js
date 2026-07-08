@@ -180,3 +180,20 @@ describe('storage — must be authenticated', () => {
     )
   })
 })
+
+describe('receiptHashes lock collection', () => {
+  test('an admin may create and read a lock doc', async () => {
+    const db = testEnv.authenticatedContext(ADMIN).firestore()
+    await assertSucceeds(setDoc(doc(db, 'receiptHashes', 'h1'), { billId: 'b1', userId: ALICE }))
+    await assertSucceeds(getDoc(doc(db, 'receiptHashes', 'h1')))
+  })
+
+  test('a customer may neither read nor write a lock doc', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'receiptHashes', 'h1'), { billId: 'b1', userId: ALICE })
+    })
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertFails(getDoc(doc(db, 'receiptHashes', 'h1')))
+    await assertFails(setDoc(doc(db, 'receiptHashes', 'h2'), { billId: 'b2', userId: ALICE }))
+  })
+})

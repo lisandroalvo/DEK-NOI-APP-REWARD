@@ -294,3 +294,47 @@ describe('approveBill', () => {
     })
   })
 })
+
+describe('approveBill duplicate-receipt guard', () => {
+  async function seedBill(id, { imageHash = null, status = 'pending' } = {}) {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'billSubmissions', id), {
+        userId: ALICE, status, amount: 100, pointsAwarded: 0, imageHash,
+      })
+    })
+  }
+
+  async function lockCount() {
+    let n = 0
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      const snap = await getDocs(collection(ctx.firestore(), 'receiptHashes'))
+      n = snap.size
+    })
+    return n
+  }
+
+  test('rejects a second bill that shares an image hash and awards no points', async () => {
+    await seedBill('b1', { imageHash: 'hash-xyz' })
+    await seedBill('b2', { imageHash: 'hash-xyz' })
+    await approveBill(adminDb(), { id: 'b1', userId: ALICE, imageHash: 'hash-xyz' }, 100, '', ADMIN)
+    const afterFirst = await points(ALICE)
+    await expect(
+      approveBill(adminDb(), { id: 'b2', userId: ALICE, imageHash: 'hash-xyz' }, 100, '', ADMIN)
+    ).rejects.toThrow('DUPLICATE_RECEIPT')
+    expect(await points(ALICE)).toBe(afterFirst)
+  })
+
+  test('allows two bills with different image hashes', async () => {
+    await seedBill('b1', { imageHash: 'hash-a' })
+    await seedBill('b2', { imageHash: 'hash-b' })
+    await approveBill(adminDb(), { id: 'b1', userId: ALICE, imageHash: 'hash-a' }, 100, '', ADMIN)
+    await approveBill(adminDb(), { id: 'b2', userId: ALICE, imageHash: 'hash-b' }, 100, '', ADMIN)
+    expect(await lockCount()).toBe(2)
+  })
+
+  test('a bill with no image hash approves and writes no lock', async () => {
+    await seedBill('b1', { imageHash: null })
+    await approveBill(adminDb(), { id: 'b1', userId: ALICE, imageHash: null }, 100, '', ADMIN)
+    expect(await lockCount()).toBe(0)
+  })
+})
