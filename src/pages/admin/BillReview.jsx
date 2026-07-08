@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { db } from '../../lib/firebase'
 import { approveBill, BAHT_PER_POINT } from '../../lib/points'
+import { duplicateFlagsFor } from '../../lib/billDedup'
 import { useAuth } from '../../context/AuthContext'
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { CheckCircle, XCircle, Clock, Eye } from 'lucide-react'
@@ -65,7 +66,10 @@ export default function BillReview() {
       setAmount('')
       setNotes('')
     } catch (err) {
-      if (err.message === 'ALREADY_REVIEWED') {
+      if (err.message === 'DUPLICATE_RECEIPT') {
+        alert('This receipt image was already approved on another bill. No points were awarded.')
+        setSelectedBill(null)
+      } else if (err.message === 'ALREADY_REVIEWED') {
         alert('This bill has already been reviewed. Refresh to see its current status.')
         setSelectedBill(null)
       } else {
@@ -216,7 +220,10 @@ export default function BillReview() {
         </div>
       ) : (
         <div className="grid gap-4">
-          {filteredBills.map((bill) => (
+          {filteredBills.map((bill) => {
+            const flags = duplicateFlagsFor(bill, bills)
+            const flagged = bill.status === 'pending' && (flags.exactImage || flags.sameAmountDay)
+            return (
             <div
               key={bill.id}
               className="bg-white rounded-xl border-2 border-gray-200 p-4 hover:shadow-lg transition-all"
@@ -240,6 +247,11 @@ export default function BillReview() {
                     {bill.pointsAwarded > 0 && (
                       <span className="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 border-2 border-yellow-300">
                         +{bill.pointsAwarded} pts
+                      </span>
+                    )}
+                    {flagged && (
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-800 border-2 border-orange-300">
+                        ⚠️ {flags.exactImage ? 'Duplicate image' : 'Same amount & day'}
                       </span>
                     )}
                   </div>
@@ -266,7 +278,7 @@ export default function BillReview() {
                 )}
               </div>
             </div>
-          ))}
+          )})}
         </div>
       )}
 
