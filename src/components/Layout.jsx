@@ -6,6 +6,7 @@ import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { usePointsNotification } from '../hooks/usePointsNotification'
 import { useBillNotifications } from '../hooks/useBillNotifications'
+import { usePendingBillCount } from '../hooks/usePendingBillCount'
 import { initAudio } from '../utils/soundEffects'
 import BillNotificationToast from './BillNotificationToast'
 import logo from '../assets/logo.png'
@@ -85,11 +86,14 @@ export default function Layout({ children }) {
   // Enable bill status notifications for customers
   const { notification: billNotification, clearNotification: clearBillNotification } = useBillNotifications(!isAdmin ? user?.uid : null)
 
+  // Live count of bills awaiting review — badge on the admin Bill Review nav item.
+  const pendingBills = usePendingBillCount(isAdmin)
+
   const needsPhone = !isAdmin && profile && !profile.phone
 
   const adminLinks = [
     { to: '/admin',              icon: <LayoutDashboard size={18} />, label: 'Dashboard' },
-    { to: '/admin/bills',        icon: <Receipt size={18} />,         label: 'Bill Review' },
+    { to: '/admin/bills',        icon: <Receipt size={18} />,         label: 'Bill Review', badge: pendingBills },
     { to: '/admin/customers',    icon: <Users size={18} />,           label: 'Customers' },
     { to: '/admin/rewards',      icon: <Gift size={18} />,            label: 'Rewards' },
     { to: '/admin/redemptions',  icon: <ShoppingBag size={18} />,     label: 'Redemptions' },
@@ -141,7 +145,7 @@ export default function Layout({ children }) {
 
       {/* Nav */}
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {links.map(({ to, icon, label }) => {
+        {links.map(({ to, icon, label, badge }) => {
           const active = pathname === to
           return (
             <Link key={to} to={to} onClick={onLinkClick}
@@ -150,7 +154,13 @@ export default function Layout({ children }) {
               onMouseEnter={e => { if (!active) e.currentTarget.style.background = '#FFF0F0' }}
               onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}>
               {icon}
-              {label}
+              <span className="flex-1">{label}</span>
+              {badge > 0 && (
+                <span className="min-w-5 h-5 px-1.5 rounded-full bg-red-600 text-white text-xs font-black flex items-center justify-center"
+                  style={active ? { background: '#fff', color: '#CC0000' } : {}}>
+                  {badge}
+                </span>
+              )}
             </Link>
           )
         })}
@@ -213,18 +223,21 @@ export default function Layout({ children }) {
         <div className="relative flex h-full">
           {/* Left side buttons */}
           <div className="flex-1 flex">
-            {links.slice(0, 2).map(({ to, icon, label }) => {
+            {links.slice(0, 2).map(({ to, icon, label, badge }) => {
               const active = pathname === to
               return (
                 <Link key={to} to={to}
-                  className="flex-1 flex flex-col items-center justify-center gap-1 text-xs font-bold transition-all"
-                  style={{ 
-                    color: active ? '#FFE600' : 'rgba(255, 255, 255, 0.7)',
-                  }}>
+                  className="relative flex-1 flex flex-col items-center justify-center gap-1 text-xs font-bold transition-all"
+                  style={{ color: active ? '#FFE600' : 'rgba(255, 255, 255, 0.7)' }}>
                   <span style={{ transform: active ? 'scale(1.2)' : 'scale(1)' }}>
                     {icon}
                   </span>
                   <span className="truncate px-1">{label}</span>
+                  {badge > 0 && (
+                    <span className="absolute top-1 right-1/4 min-w-4 h-4 px-1 rounded-full bg-yellow-400 text-red-800 text-[10px] font-black flex items-center justify-center">
+                      {badge}
+                    </span>
+                  )}
                 </Link>
               )
             })}
