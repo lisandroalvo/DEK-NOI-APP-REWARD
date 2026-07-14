@@ -92,6 +92,14 @@ export default function Register() {
             {gLoading ? 'Signing up…' : 'Sign up with Google'}
           </button>
 
+          <p className="text-[11px] text-gray-400 text-center mb-4 -mt-1 leading-snug">
+            By continuing with Google, you agree to our{' '}
+            <Link to="/privacy" target="_blank" className="font-bold hover:underline" style={{ color: '#CC0000' }}>
+              Privacy Policy
+            </Link>
+            {' '}/ เมื่อดำเนินการต่อ ถือว่าคุณยอมรับนโยบายความเป็นส่วนตัว
+          </p>
+
           <div className="flex items-center gap-3 mb-4">
             <div className="flex-1 h-px bg-gray-200" />
             <span className="text-xs text-gray-400 font-medium">or fill in manually</span>

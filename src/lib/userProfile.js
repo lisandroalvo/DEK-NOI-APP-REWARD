@@ -1,6 +1,7 @@
 // ABOUTME: Bootstraps a user's Firestore profile document on first sign-in.
 // ABOUTME: Non-destructive — a transaction re-checks existence so it never clobbers registration data.
 import { doc, runTransaction, serverTimestamp } from 'firebase/firestore'
+import { PRIVACY_POLICY_VERSION } from './privacy'
 
 // Create the profile for `firebaseUser` if it does not already exist. Runs in a
 // transaction so a profile written concurrently by register() always wins over
@@ -19,6 +20,8 @@ export async function ensureUserProfile(db, firebaseUser) {
       totalSpent: 0,
       spendCarry: 0,
       createdAt: serverTimestamp(),
+      privacyConsentAt: serverTimestamp(),
+      privacyConsentVersion: PRIVACY_POLICY_VERSION,
     })
   })
 }
