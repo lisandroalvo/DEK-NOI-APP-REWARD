@@ -8,10 +8,7 @@ export function usePendingBillCount(enabled) {
   const [count, setCount] = useState(0)
 
   useEffect(() => {
-    if (!enabled) {
-      setCount(0)
-      return
-    }
+    if (!enabled) return
     const q = query(collection(db, 'billSubmissions'), where('status', '==', 'pending'))
     const unsubscribe = onSnapshot(
       q,
@@ -25,5 +22,5 @@ export function usePendingBillCount(enabled) {
     return () => unsubscribe()
   }, [enabled])
 
-  return count
+  return enabled ? count : 0
 }
