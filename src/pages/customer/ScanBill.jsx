@@ -3,8 +3,9 @@ import { useAuth } from '../../context/AuthContext'
 import { db, storage } from '../../lib/firebase'
 import { uploadImageFile, validateImageFile } from '../../lib/storage'
 import { recognizeReceiptTotal } from '../../lib/ocr'
+import { hashImageFile } from '../../lib/billDedup'
 import { BAHT_PER_POINT } from '../../lib/points'
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore'
 import { Camera, Upload, X, CheckCircle } from 'lucide-react'
 
 export default function ScanBill() {
@@ -61,6 +62,23 @@ export default function ScanBill() {
     setError('')
 
     try {
+      // Fingerprint the image so the same receipt can't be turned into points twice.
+      const imageHash = await hashImageFile(selectedFile)
+
+      // Block re-submitting a receipt the customer already has pending or approved.
+      // A previously rejected one is allowed through so a mistaken rejection can be fixed.
+      const dupSnap = await getDocs(query(
+        collection(db, 'billSubmissions'),
+        where('userId', '==', user.uid),
+        where('imageHash', '==', imageHash),
+      ))
+      const alreadyActive = dupSnap.docs.some(d => ['pending', 'approved'].includes(d.data().status))
+      if (alreadyActive) {
+        setError('คุณส่งใบเสร็จนี้ไปแล้ว / You have already submitted this receipt.')
+        setUploading(false)
+        return
+      }
+
       // Upload the receipt to Storage; Firestore keeps only the download URL.
       // Bills are kept permanently so customers always see their history.
       const imageUrl = await uploadImageFile(storage, selectedFile, `bills/${user.uid}`)
@@ -70,6 +88,7 @@ export default function ScanBill() {
         userName: profile?.name || 'Unknown',
         userEmail: profile?.email || '',
         imageUrl,
+        imageHash,
         fileName: selectedFile.name,
         fileSize: selectedFile.size,
         amount: amountNum,

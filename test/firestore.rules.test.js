@@ -180,3 +180,38 @@ describe('storage — must be authenticated', () => {
     )
   })
 })
+
+describe('privacy consent fields', () => {
+  test('an owner may create their profile with consent fields', async () => {
+    const db = testEnv.authenticatedContext('carol').firestore()
+    await assertSucceeds(setDoc(doc(db, 'users', 'carol'), {
+      name: 'Carol', phone: '', email: 'carol@example.com', role: 'customer',
+      points: 0, totalSpent: 0, spendCarry: 0,
+      privacyConsentAt: new Date(), privacyConsentVersion: 1,
+    }))
+  })
+
+  test('an owner may add consent fields to their own profile via update', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertSucceeds(updateDoc(doc(db, 'users', ALICE), {
+      privacyConsentAt: new Date(), privacyConsentVersion: 1,
+    }))
+  })
+})
+
+describe('receiptHashes lock collection', () => {
+  test('an admin may create and read a lock doc', async () => {
+    const db = testEnv.authenticatedContext(ADMIN).firestore()
+    await assertSucceeds(setDoc(doc(db, 'receiptHashes', 'h1'), { billId: 'b1', userId: ALICE }))
+    await assertSucceeds(getDoc(doc(db, 'receiptHashes', 'h1')))
+  })
+
+  test('a customer may neither read nor write a lock doc', async () => {
+    await testEnv.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'receiptHashes', 'h1'), { billId: 'b1', userId: ALICE })
+    })
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertFails(getDoc(doc(db, 'receiptHashes', 'h1')))
+    await assertFails(setDoc(doc(db, 'receiptHashes', 'h2'), { billId: 'b2', userId: ALICE }))
+  })
+})

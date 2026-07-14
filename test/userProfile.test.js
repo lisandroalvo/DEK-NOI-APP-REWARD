@@ -5,6 +5,7 @@ import { beforeAll, afterAll, beforeEach, describe, test, expect } from 'vitest'
 import { initializeTestEnvironment } from '@firebase/rules-unit-testing'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { ensureUserProfile } from '../src/lib/userProfile.js'
+import { PRIVACY_POLICY_VERSION } from '../src/lib/privacy.js'
 
 const PROJECT_ID = 'demo-dek-noi-profile'
 const ALICE = 'alice'
@@ -86,5 +87,13 @@ describe('ensureUserProfile', () => {
     const p = await profile(ALICE)
     expect(p.name).toBe('Member')
     expect(p.email).toBe('')
+  })
+
+  test('records PDPA consent at profile creation', async () => {
+    await ensureUserProfile(aliceDb(), { uid: ALICE, displayName: 'Alice Smith', email: 'alice@example.com' })
+
+    const p = await profile(ALICE)
+    expect(p.privacyConsentVersion).toBe(PRIVACY_POLICY_VERSION)
+    expect(p.privacyConsentAt).not.toBeNull()
   })
 })

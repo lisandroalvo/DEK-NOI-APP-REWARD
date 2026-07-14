@@ -6,6 +6,7 @@ import SplashScreen from './components/SplashScreen'
 import ErrorBoundary from './components/ErrorBoundary'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import Privacy from './pages/Privacy'
 
 // Customer pages
 import CustomerDashboard from './pages/customer/Dashboard'
@@ -67,6 +68,7 @@ function AppContent() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/privacy" element={<Privacy />} />
 
       {/* Customer routes */}
       <Route path="/dashboard" element={<RequireAuth><Layout><CustomerDashboard /></Layout></RequireAuth>} />

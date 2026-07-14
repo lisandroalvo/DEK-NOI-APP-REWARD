@@ -50,6 +50,12 @@ These fixes exist in code but are **not live in production** until deployed.
 - [ ] **Confirm/record admin bootstrap.** `role` is only ever set to `customer` in code;
       the first admin is hand-set in the Firebase console. Verify the admin account exists
       and note the procedure somewhere durable.
+- [ ] **Deploy the new index** — `firebase deploy --only firestore:indexes`
+      (adds `billSubmissions (userId, imageHash)` for duplicate-receipt lookup).
+- [ ] **Deploy updated rules** — `firebase deploy --only firestore:rules`
+      (adds the `receiptHashes` dedup-lock collection).
+- [ ] **Legal review of the privacy policy** (`/privacy`) — confirm the permanent
+      receipt-retention clause and fill in Dek Noi's registered legal entity name.
 
 ## 5. Verification before launch
 
@@ -64,3 +70,12 @@ These fixes exist in code but are **not live in production** until deployed.
 
 Promos carousel content, email-verification enforcement, route code-splitting,
 pagination, prod `console.log` cleanup, eslint cleanup.
+
+## Known limitations
+
+- **Duplicate-receipt hard block is client-trust bounded.** The receipt fingerprint
+  (`imageHash`) is computed in the browser, so the same-account submit guard and the
+  `approveBill` cross-account lock both hold against the normal app flow, shared
+  screenshots, and accidental re-submits — but a modified client that omits or
+  randomizes the hash can defeat them. The same-amount/same-day admin soft-flag plus
+  human review are the backstop. Server-side/OCR-based dedup was deliberately deferred.
