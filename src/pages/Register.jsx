@@ -21,6 +21,7 @@ export default function Register() {
   const [error, setError]       = useState('')
   const [loading, setLoading]   = useState(false)
   const [gLoading, setGLoading] = useState(false)
+  const [agreed, setAgreed] = useState(false)
   const { register, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
 
@@ -29,6 +30,7 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    if (!agreed) { setError('Please agree to the Privacy Policy to continue. / กรุณายอมรับนโยบายความเป็นส่วนตัว'); return }
     const pwError = passwordError(form.password)
     if (pwError) { setError(pwError); return }
     setLoading(true)
@@ -84,7 +86,7 @@ export default function Register() {
           )}
 
           {/* Google button */}
-          <button onClick={handleGoogle} disabled={gLoading}
+          <button onClick={handleGoogle} disabled={gLoading || !agreed}
             className="w-full flex items-center justify-center gap-3 py-3 rounded-xl border-2 border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors mb-4 disabled:opacity-60">
             <GoogleIcon />
             {gLoading ? 'Signing up…' : 'Sign up with Google'}
@@ -107,7 +109,18 @@ export default function Register() {
                 />
               </div>
             ))}
-            <button type="submit" disabled={loading}
+            <label className="flex items-start gap-2 text-xs text-gray-600 pt-1">
+              <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}
+                className="mt-0.5 shrink-0" />
+              <span>
+                I agree to the{' '}
+                <Link to="/privacy" target="_blank" className="font-bold hover:underline" style={{ color: '#CC0000' }}>
+                  Privacy Policy
+                </Link>{' '}
+                / ฉันยอมรับนโยบายความเป็นส่วนตัว
+              </span>
+            </label>
+            <button type="submit" disabled={loading || !agreed}
               className="w-full py-3 rounded-xl text-sm font-black text-white disabled:opacity-60 mt-1"
               style={{ background: '#CC0000' }}>
               {loading ? 'Creating account…' : 'Create My Account'}

@@ -3,6 +3,7 @@ import { onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWith
 import { doc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore'
 import { auth, db } from '../lib/firebase'
 import { ensureUserProfile } from '../lib/userProfile'
+import { PRIVACY_POLICY_VERSION } from '../lib/privacy'
 
 const AuthContext = createContext(null)
 
@@ -69,7 +70,11 @@ export function AuthProvider({ children }) {
 
   const register = async (email, password, name, phone) => {
     const cred = await createUserWithEmailAndPassword(auth, email, password)
-    const data = { name, phone, email, role: 'customer', points: 0, totalSpent: 0, spendCarry: 0, createdAt: serverTimestamp() }
+    const data = {
+      name, phone, email, role: 'customer', points: 0, totalSpent: 0, spendCarry: 0,
+      privacyConsentAt: serverTimestamp(), privacyConsentVersion: PRIVACY_POLICY_VERSION,
+      createdAt: serverTimestamp(),
+    }
     await setDoc(doc(db, 'users', cred.user.uid), data)
     // Send a verification email, but never fail signup if it can't be sent.
     try {
