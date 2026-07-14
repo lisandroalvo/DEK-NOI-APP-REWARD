@@ -70,3 +70,12 @@ These fixes exist in code but are **not live in production** until deployed.
 
 Promos carousel content, email-verification enforcement, route code-splitting,
 pagination, prod `console.log` cleanup, eslint cleanup.
+
+## Known limitations
+
+- **Duplicate-receipt hard block is client-trust bounded.** The receipt fingerprint
+  (`imageHash`) is computed in the browser, so the same-account submit guard and the
+  `approveBill` cross-account lock both hold against the normal app flow, shared
+  screenshots, and accidental re-submits — but a modified client that omits or
+  randomizes the hash can defeat them. The same-amount/same-day admin soft-flag plus
+  human review are the backstop. Server-side/OCR-based dedup was deliberately deferred.
