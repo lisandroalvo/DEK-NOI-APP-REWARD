@@ -50,6 +50,12 @@ These fixes exist in code but are **not live in production** until deployed.
 - [ ] **Confirm/record admin bootstrap.** `role` is only ever set to `customer` in code;
       the first admin is hand-set in the Firebase console. Verify the admin account exists
       and note the procedure somewhere durable.
+- [ ] **Deploy the new index** — `firebase deploy --only firestore:indexes`
+      (adds `billSubmissions (userId, imageHash)` for duplicate-receipt lookup).
+- [ ] **Deploy updated rules** — `firebase deploy --only firestore:rules`
+      (adds the `receiptHashes` dedup-lock collection).
+- [ ] **Legal review of the privacy policy** (`/privacy`) — confirm the permanent
+      receipt-retention clause and fill in Dek Noi's registered legal entity name.
 
 ## 5. Verification before launch
 
