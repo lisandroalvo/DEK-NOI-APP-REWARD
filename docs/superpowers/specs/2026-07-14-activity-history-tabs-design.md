@@ -104,14 +104,19 @@ there is **no React component testing infrastructure** (no jsdom, no
 behavior-preserving move of existing components plus nav/route renames — it
 introduces no new business logic.
 
-Open decision for the plan: either (a) add a component-test stack
-(jsdom + @testing-library/react) to cover the tab-shell's default-tab and
-tab-switching behavior and each tab body's list/empty rendering, or (b) verify
-manually in the running app (nav label/icon, `/activity` loads on Receipts,
-switching tabs, bills appear under Receipts, redemptions under Rewards,
-Profile no longer shows bills). Given CLAUDE.md's testing mandate, (a) is
-preferred unless the user opts into manual verification. To be resolved before
-implementation.
+**Decision (2026-07-14):** Option (b) — **manual verification**, explicitly
+authorized by the user for this behavior-preserving move. No component-test
+stack is added. Verify in the running app:
+
+- Nav item reads **Activity** with the **Receipt** icon, in the same slot.
+- `/activity` loads with the **Receipts** tab active by default.
+- Switching to **Rewards** shows redemptions (Pending / History) and the
+  status toast still fires.
+- Receipts tab lists submitted bills and the detail modal opens.
+- Profile no longer shows any Bill History card or bill modal, and still
+  renders cleanly (no unused-import/lint errors).
+- `/my-redemptions` no longer routes anywhere stale (old links land on the
+  `Root` redirect).
 
 ## Out of scope
 
