@@ -103,7 +103,7 @@ export default function Layout({ children }) {
   const customerLinks = [
     { to: '/dashboard',      icon: <Star size={22} />,        label: 'My Points' },
     { to: '/rewards',        icon: <Gift size={22} />,        label: 'Rewards' },
-    { to: '/my-redemptions', icon: <ShoppingBag size={22} />, label: 'My Orders' },
+    { to: '/activity',       icon: <Receipt size={22} />,     label: 'Activity' },
     { to: '/profile',        icon: <User size={22} />,        label: 'Profile' },
   ]
 
