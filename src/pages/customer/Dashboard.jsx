@@ -186,7 +186,7 @@ export default function CustomerDashboard() {
 
       {/* Pending alert */}
       {pendingCount > 0 && (
-        <Link to="/my-redemptions" className="flex items-center justify-between mb-5 p-4 rounded-2xl border-2" style={{ background: '#FFF9E0', borderColor: '#FFE600' }}>
+        <Link to="/activity" className="flex items-center justify-between mb-5 p-4 rounded-2xl border-2" style={{ background: '#FFF9E0', borderColor: '#FFE600' }}>
           <div className="flex items-center gap-3">
             <span className="text-xl">⏳</span>
             <div>
@@ -212,7 +212,7 @@ export default function CustomerDashboard() {
           </div>
           <ChevronRight size={18} className="text-gray-400" />
         </Link>
-        <Link to="/my-redemptions" className="flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+        <Link to="/activity" className="flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#F0FFF4' }}>
               <Gift size={20} style={{ color: '#16a34a' }} />
