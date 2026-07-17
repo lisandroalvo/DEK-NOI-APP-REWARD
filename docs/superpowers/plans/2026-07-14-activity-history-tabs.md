@@ -631,6 +631,64 @@ Report pass/fail per checklist item with any console output. If all pass, the fe
 
 ---
 
+### Task 6: Deep-link Activity tabs via `?tab=` (added post-review)
+
+Added after the final whole-branch review flagged that the two redemption-oriented Dashboard entry points now land on the default Receipts tab. Make the Activity page's active tab driven by a `?tab=` query param, and point those two Dashboard links at `/activity?tab=rewards`.
+
+**Files:**
+- Modify: `src/pages/customer/History.jsx`
+- Modify: `src/pages/customer/Dashboard.jsx:189` (pending-redemptions alert), `:215` ("My Redemptions" card)
+
+**Interfaces:**
+- Consumes: `History` (Task 3), react-router-dom `useSearchParams`.
+- Produces: `/activity` reads `?tab=receipts|rewards` (default `receipts` when absent/invalid); switcher updates the param.
+
+- [ ] **Step 1: Drive the active tab from the query param in `History.jsx`**
+
+Replace the `useState` import + tab state with `useSearchParams`. Change the top of the file:
+
+```jsx
+import { useSearchParams } from 'react-router-dom'
+import ReceiptsTab from './history/ReceiptsTab'
+import RewardsTab from './history/RewardsTab'
+import lineQr from '../../assets/line-qr.png'
+
+const TABS = [
+  { key: 'receipts', label: 'Receipts' },
+  { key: 'rewards',  label: 'Rewards' },
+]
+
+export default function History() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab = searchParams.get('tab') === 'rewards' ? 'rewards' : 'receipts'
+  // Receipts is the default, so clear the param for a clean URL; keep ?tab=rewards otherwise.
+  const setTab = (key) => setSearchParams(key === 'rewards' ? { tab: 'rewards' } : {}, { replace: true })
+```
+
+The `useState` import line (`import { useState } from 'react'`) is removed. The rest of the component body is unchanged — the switcher already calls `setTab(key)` and reads `tab`.
+
+- [ ] **Step 2: Point the two Dashboard links at the Rewards tab**
+
+In `src/pages/customer/Dashboard.jsx`, change both redemption-oriented links from `to="/activity"` to `to="/activity?tab=rewards"`:
+- The pending-redemptions alert `<Link>` (the `⏳ ... redemptions pending approval` one).
+- The "My Redemptions" quick-action card `<Link>`.
+
+Change only the `to` attribute value on those two links. Do not touch the "Rewards Store" link (`to="/rewards"`) or anything else.
+
+- [ ] **Step 3: Lint**
+
+Run: `npm run lint`
+Expected: PASS, no unused-var error for the removed `useState` import.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add src/pages/customer/History.jsx src/pages/customer/Dashboard.jsx
+git commit -m "feat: deep-link Activity tabs via ?tab and point Dashboard redemption links at Rewards"
+```
+
+---
+
 ## Self-Review
 
 **Spec coverage:**
