@@ -1,6 +1,6 @@
 // ABOUTME: Customer Activity page — a two-tab history of Receipts (bills) and Rewards (redemptions).
 // ABOUTME: Holds the active-tab state and renders one tab body plus a shared LINE help card.
-import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import ReceiptsTab from './history/ReceiptsTab'
 import RewardsTab from './history/RewardsTab'
 import lineQr from '../../assets/line-qr.png'
@@ -11,7 +11,10 @@ const TABS = [
 ]
 
 export default function History() {
-  const [tab, setTab] = useState('receipts')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab = searchParams.get('tab') === 'rewards' ? 'rewards' : 'receipts'
+  // Receipts is the default, so clear the param for a clean URL; keep ?tab=rewards otherwise.
+  const setTab = (key) => setSearchParams(key === 'rewards' ? { tab: 'rewards' } : {}, { replace: true })
 
   return (
     <div className="p-4 sm:p-6 md:p-8 max-w-lg">
