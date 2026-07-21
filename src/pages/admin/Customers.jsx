@@ -114,7 +114,44 @@ export default function AdminCustomers() {
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      {/* Mobile: stacked cards (the table clips on narrow screens) */}
+      <div className="md:hidden space-y-3">
+        {filtered.map(c => (
+          <div key={c.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <button onClick={() => openDetail(c)} className="font-black text-gray-800 hover:underline text-left min-w-0 break-words">
+                {c.name}
+              </button>
+              <div className="flex items-center gap-1 font-black text-sm shrink-0" style={{ color: '#CC0000' }}>
+                <Star size={13} fill="currentColor" /> {(c.points ?? 0).toLocaleString()}
+              </div>
+            </div>
+            <div className="space-y-0.5 mb-3 text-xs text-gray-500">
+              <p className="break-all">{c.email}</p>
+              <p>{c.phone || '—'}</p>
+              <p className="font-bold text-gray-600">Spent: ฿{(c.totalSpent ?? 0).toLocaleString()}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => openPoints(c, 'add')}
+                className="flex-1 flex items-center justify-center gap-1 text-xs font-black px-3 py-2 rounded-xl"
+                style={{ background: '#FFE600', color: '#CC0000' }}>
+                <Plus size={12} /> Add
+              </button>
+              <button onClick={() => openPoints(c, 'subtract')}
+                className="flex-1 flex items-center justify-center gap-1 text-xs font-black px-3 py-2 rounded-xl"
+                style={{ background: '#FFF0F0', color: '#CC0000' }}>
+                <Minus size={12} /> Deduct
+              </button>
+            </div>
+          </div>
+        ))}
+        {filtered.length === 0 && (
+          <div className="bg-white rounded-2xl border border-gray-100 px-4 py-10 text-center text-gray-400">No members found.</div>
+        )}
+      </div>
+
+      {/* Desktop: table */}
+      <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <table className="w-full text-sm">
           <thead style={{ background: '#FFF0F0' }}>
             <tr>

@@ -184,7 +184,7 @@ export default function BillReview() {
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+      <div className="flex flex-wrap gap-2 mb-6">
         {[
           { id: 'pending', label: 'Pending', count: stats.pending, color: 'yellow' },
           { id: 'approved', label: 'Approved', count: stats.approved, color: 'green' },
@@ -228,49 +228,51 @@ export default function BillReview() {
               key={bill.id}
               className="bg-white rounded-xl border-2 border-gray-200 p-4 hover:shadow-lg transition-all"
             >
-              <div className="flex items-start gap-4">
-                {/* Bill Image Thumbnail */}
-                <img
-                  src={bill.imageData || bill.imageUrl}
-                  alt="Bill"
-                  className="w-24 h-24 object-cover rounded-lg border-2 border-gray-300 cursor-pointer hover:scale-105 transition-transform"
-                  onClick={() => openReview(bill)}
-                />
+              <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+                <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+                  {/* Bill Image Thumbnail */}
+                  <img
+                    src={bill.imageData || bill.imageUrl}
+                    alt="Bill"
+                    className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg border-2 border-gray-300 cursor-pointer hover:scale-105 transition-transform shrink-0"
+                    onClick={() => openReview(bill)}
+                  />
 
-                {/* Bill Info */}
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold border-2 flex items-center gap-1 ${getStatusColor(bill.status)}`}>
-                      {getStatusIcon(bill.status)}
-                      {bill.status.toUpperCase()}
-                    </span>
-                    {bill.pointsAwarded > 0 && (
-                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 border-2 border-yellow-300">
-                        +{bill.pointsAwarded} pts
+                  {/* Bill Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold border-2 flex items-center gap-1 ${getStatusColor(bill.status)}`}>
+                        {getStatusIcon(bill.status)}
+                        {bill.status.toUpperCase()}
                       </span>
-                    )}
-                    {flagged && (
-                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-800 border-2 border-orange-300">
-                        ⚠️ {flags.exactImage ? 'Duplicate image' : 'Same amount & day'}
-                      </span>
+                      {bill.pointsAwarded > 0 && (
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 border-2 border-yellow-300">
+                          +{bill.pointsAwarded} pts
+                        </span>
+                      )}
+                      {flagged && (
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-800 border-2 border-orange-300">
+                          ⚠️ {flags.exactImage ? 'Duplicate image' : 'Same amount & day'}
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="font-bold text-gray-900 break-words">{bill.userName}</p>
+                    <p className="text-sm text-gray-600 break-all">{bill.userEmail}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Submitted: {bill.submittedAt?.toDate().toLocaleString()}
+                    </p>
+                    {bill.notes && (
+                      <p className="text-sm text-gray-700 mt-2 italic break-words">Note: {bill.notes}</p>
                     )}
                   </div>
-                  
-                  <p className="font-bold text-gray-900">{bill.userName}</p>
-                  <p className="text-sm text-gray-600">{bill.userEmail}</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Submitted: {bill.submittedAt?.toDate().toLocaleString()}
-                  </p>
-                  {bill.notes && (
-                    <p className="text-sm text-gray-700 mt-2 italic">Note: {bill.notes}</p>
-                  )}
                 </div>
 
                 {/* Action Button */}
                 {bill.status === 'pending' && (
                   <button
                     onClick={() => openReview(bill)}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 flex items-center gap-2"
+                    className="w-full sm:w-auto px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 flex items-center justify-center gap-2 shrink-0"
                   >
                     <Eye size={16} />
                     Review
