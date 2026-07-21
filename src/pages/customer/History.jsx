@@ -1,9 +1,14 @@
 // ABOUTME: Customer Activity page — a two-tab history of Receipts (bills) and Rewards (redemptions).
 // ABOUTME: Holds the active-tab state and renders one tab body plus a shared LINE help card.
 import { useSearchParams } from 'react-router-dom'
+import { ChevronRight } from 'lucide-react'
 import ReceiptsTab from './history/ReceiptsTab'
 import RewardsTab from './history/RewardsTab'
-import lineQr from '../../assets/line-qr.png'
+import lineChar from '../../assets/line-qr.png'
+
+// Opening our LINE official account: chats for existing followers, and shows
+// LINE's own add-friend screen (with QR) for anyone who hasn't followed yet.
+const LINE_URL = 'https://line.me/R/ti/p/@167fnbxs'
 
 const TABS = [
   { key: 'receipts', label: 'Receipts' },
@@ -40,13 +45,19 @@ export default function History() {
       {tab === 'receipts' ? <ReceiptsTab /> : <RewardsTab />}
 
       {/* LINE help */}
-      <div className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4">
-        <img src={lineQr} alt="LINE QR" className="w-16 h-16 object-contain rounded-xl shrink-0" />
-        <div>
+      <a
+        href={LINE_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4 hover:shadow-md hover:border-gray-200 transition-all active:scale-[0.99]"
+      >
+        <img src={lineChar} alt="" className="w-16 h-16 object-contain rounded-xl shrink-0" />
+        <div className="min-w-0">
           <p className="font-black text-gray-900 text-sm mb-0.5">Have a question?</p>
-          <p className="text-xs text-gray-500 leading-relaxed">Scan to contact us on <strong>LINE</strong> for help with your rewards.</p>
+          <p className="text-xs text-gray-500 leading-relaxed">Tap to chat with us on <strong>LINE</strong> for help with your rewards.</p>
         </div>
-      </div>
+        <ChevronRight size={18} className="text-gray-400 shrink-0 ml-auto" />
+      </a>
     </div>
   )
 }
