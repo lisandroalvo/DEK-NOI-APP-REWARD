@@ -2,10 +2,14 @@ import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import { doc, updateDoc } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
-import { User, Mail, Phone, Camera, Save, LogOut, MessageCircle } from 'lucide-react'
+import { User, Mail, Phone, Camera, Save, LogOut, MessageCircle, ChevronRight } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import ImageUpload from '../../components/ImageUpload'
-import lineQrCode from '../../assets/line-qr.png'
+import lineChar from '../../assets/line-qr.png'
+
+// Opening our LINE official account: chats for existing followers, and shows
+// LINE's own add-friend screen for anyone who hasn't followed yet.
+const LINE_URL = 'https://line.me/R/ti/p/@167fnbxs'
 
 export default function Profile() {
   const { user, profile, logout } = useAuth()
@@ -189,21 +193,25 @@ export default function Profile() {
       )}
 
       {/* Contact Us - LINE */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+      <a
+        href={LINE_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 hover:shadow-md hover:border-gray-200 transition-all active:scale-[0.99]"
+      >
         <h3 className="font-black text-gray-900 flex items-center gap-2 mb-4">
           <MessageCircle size={20} style={{ color: '#00B900' }} />
           Contact Us on LINE
         </h3>
-        <div className="text-center">
-          <img 
-            src={lineQrCode}
-            alt="LINE QR Code" 
-            className="w-48 h-48 mx-auto mb-3 rounded-xl border-2 border-gray-200"
-          />
-          <p className="text-sm text-gray-600 mb-2">Scan to add us on LINE</p>
-          <p className="text-xs text-gray-500">Get support and updates!</p>
+        <div className="flex items-center gap-4">
+          <img src={lineChar} alt="" className="w-20 h-20 object-contain shrink-0" />
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-gray-700">Tap to chat with us on LINE</p>
+            <p className="text-xs text-gray-500 mt-0.5">Get support and updates!</p>
+          </div>
+          <ChevronRight size={18} className="text-gray-400 shrink-0 ml-auto" />
         </div>
-      </div>
+      </a>
 
       {/* Logout Button */}
       <button
