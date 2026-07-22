@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { db, storage } from '../../lib/firebase'
 import { uploadImageFile, validateImageFile } from '../../lib/storage'
@@ -10,6 +11,7 @@ import { Camera, Upload, X, CheckCircle } from 'lucide-react'
 
 export default function ScanBill() {
   const { user, profile } = useAuth()
+  const navigate = useNavigate()
   const [selectedFile, setSelectedFile] = useState(null)
   const [preview, setPreview] = useState(null)
   const [amount, setAmount] = useState('')
@@ -108,10 +110,11 @@ export default function ScanBill() {
       setAmount('')
       setOcrAmount(null)
 
-      // Reset success message after 3 seconds
+      // Briefly show the success banner, then take the customer to their bill
+      // history — the new submission appears at the top of the Receipts tab.
       setTimeout(() => {
-        setSuccess(false)
-      }, 3000)
+        navigate('/activity')
+      }, 1200)
 
     } catch (err) {
       console.error('Error uploading bill:', err)
