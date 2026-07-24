@@ -1,22 +1,24 @@
-// ABOUTME: Starter rewards catalog (Tiers 1-3) priced at ~1 point per baht of shelf value.
+// ABOUTME: Starter rewards catalog (Tiers 1-3) priced at ~2 points per baht of shelf value.
 // ABOUTME: Pure data + a validator; consumed by seed-rewards.js and its test.
 
 // Each item mirrors the reward doc shape written by the admin UI: the "up to ฿X"
 // ceiling lives in the description so staff know exactly which SKUs qualify.
+// Costs are set against the ฿25-per-point earning rate (see BAHT_PER_POINT); the
+// spend required for each reward — and thus the % return — matches the old ฿50 rate.
 export const REWARDS_CATALOG = [
   // Tier 1 — Quick Wins (the hook: cheap first redemptions)
-  { name: 'Free bottled water', description: 'One free bottle of water (up to ฿10).', pointsCost: 10, emoji: '💧' },
-  { name: 'Free candy or small treat', description: 'One free candy or small treat (up to ฿12).', pointsCost: 15, emoji: '🍬' },
-  { name: 'Free bag of chips', description: 'One free bag of chips or a snack (up to ฿20).', pointsCost: 25, emoji: '🍟' },
+  { name: 'Free bottled water', description: 'One free bottle of water (up to ฿10).', pointsCost: 20, emoji: '💧' },
+  { name: 'Free candy or small treat', description: 'One free candy or small treat (up to ฿12).', pointsCost: 30, emoji: '🍬' },
+  { name: 'Free bag of chips', description: 'One free bag of chips or a snack (up to ฿20).', pointsCost: 50, emoji: '🍟' },
 
   // Tier 2 — Everyday Favorites (the core of the program)
-  { name: 'Free cup noodles', description: 'One free cup of instant noodles (up to ฿15).', pointsCost: 30, emoji: '🍜' },
-  { name: 'Free soft drink', description: 'One free soft drink or soda (up to ฿20).', pointsCost: 35, emoji: '🥤' },
-  { name: 'Free ice cream', description: 'One free ice cream (up to ฿30).', pointsCost: 40, emoji: '🍦' },
+  { name: 'Free cup noodles', description: 'One free cup of instant noodles (up to ฿15).', pointsCost: 60, emoji: '🍜' },
+  { name: 'Free soft drink', description: 'One free soft drink or soda (up to ฿20).', pointsCost: 70, emoji: '🥤' },
+  { name: 'Free ice cream', description: 'One free ice cream (up to ฿30).', pointsCost: 80, emoji: '🍦' },
 
   // Tier 3 — Treat Bundles (bigger "spend my stash" moments)
-  { name: 'Pick any 3 snacks', description: 'Choose any 3 snacks, total up to ฿55.', pointsCost: 100, emoji: '🎉' },
-  { name: 'Snack + drink combo box', description: 'A snack and drink combo box (up to ฿75).', pointsCost: 130, emoji: '📦' },
+  { name: 'Pick any 3 snacks', description: 'Choose any 3 snacks, total up to ฿55.', pointsCost: 200, emoji: '🎉' },
+  { name: 'Snack + drink combo box', description: 'A snack and drink combo box (up to ฿75).', pointsCost: 260, emoji: '📦' },
 ]
 
 // Fields the admin UI defaults; applied to every seeded reward so the docs are

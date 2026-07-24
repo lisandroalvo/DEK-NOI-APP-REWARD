@@ -5,7 +5,7 @@ import { doc, collection, runTransaction, serverTimestamp } from 'firebase/fires
 // Earning rate: this many baht of approved spend equals one point. Leftover baht
 // below this threshold is banked in the user's spendCarry and rolls into the next
 // approval, so no spend is ever wasted. Change here to retune the whole app.
-export const BAHT_PER_POINT = 50
+export const BAHT_PER_POINT = 25
 
 // Round to satang (2 decimals). Receipts are usually whole baht but sometimes carry
 // satang; rounding each stored money value keeps floating-point drift out of the

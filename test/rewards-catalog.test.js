@@ -12,14 +12,14 @@ describe('rewards catalog', () => {
     const costs = Object.fromEntries(REWARDS_CATALOG.map(r => [r.name, r.pointsCost]))
     expect(REWARDS_CATALOG).toHaveLength(8)
     expect(costs).toEqual({
-      'Free bottled water': 10,
-      'Free candy or small treat': 15,
-      'Free bag of chips': 25,
-      'Free cup noodles': 30,
-      'Free soft drink': 35,
-      'Free ice cream': 40,
-      'Pick any 3 snacks': 100,
-      'Snack + drink combo box': 130,
+      'Free bottled water': 20,
+      'Free candy or small treat': 30,
+      'Free bag of chips': 50,
+      'Free cup noodles': 60,
+      'Free soft drink': 70,
+      'Free ice cream': 80,
+      'Pick any 3 snacks': 200,
+      'Snack + drink combo box': 260,
     })
   })
 
