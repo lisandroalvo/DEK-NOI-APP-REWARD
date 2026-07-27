@@ -9,7 +9,6 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "seed:rewards": "node --env-file=.env scripts/seed-rewards.js",
-    "migrate:reward-points": "node --env-file=.env scripts/double-reward-points.js",
     "test:rules": "firebase emulators:exec --project demo-dek-noi --only firestore,storage \"vitest run\""
   },
   "dependencies": {
