@@ -33,14 +33,32 @@ describe('rewards catalog', () => {
   })
 
   test('validator rejects a non-integer point cost', () => {
-    expect(() => validateCatalog([{ name: 'x', description: 'y', pointsCost: 1.5, emoji: '💧' }])).toThrow()
+    expect(() => validateCatalog([{ name: 'x', description: 'y', pointsCost: 1.5, maxValue: 10, emoji: '💧' }])).toThrow()
   })
 
   test('validator rejects a duplicate name', () => {
     const dup = [
-      { name: 'x', description: 'y', pointsCost: 10, emoji: '💧' },
-      { name: 'x', description: 'z', pointsCost: 20, emoji: '🍬' },
+      { name: 'x', description: 'y', pointsCost: 10, maxValue: 10, emoji: '💧' },
+      { name: 'x', description: 'z', pointsCost: 20, maxValue: 20, emoji: '🍬' },
     ]
     expect(() => validateCatalog(dup)).toThrow(/Duplicate/)
+  })
+
+  test('every reward has a positive-integer maxValue (baht ceiling)', () => {
+    const maxValues = Object.fromEntries(REWARDS_CATALOG.map(r => [r.name, r.maxValue]))
+    expect(maxValues).toEqual({
+      'Free bottled water': 10,
+      'Free candy or small treat': 12,
+      'Free bag of chips': 20,
+      'Free cup noodles': 15,
+      'Free soft drink': 20,
+      'Free ice cream': 30,
+      'Pick any 3 snacks': 55,
+      'Snack + drink combo box': 75,
+    })
+  })
+
+  test('validator rejects a non-integer maxValue', () => {
+    expect(() => validateCatalog([{ name: 'x', description: 'y', pointsCost: 10, maxValue: 1.5, emoji: '💧' }])).toThrow()
   })
 })
