@@ -15,8 +15,19 @@ export default function BarcodeScanner({ onDetected, onCancel }) {
   const [manual, setManual] = useState('')
   const [cameraError, setCameraError] = useState('')
   // Guards onDetected so it fires at most once from this component, whether
-  // triggered by a camera scan or the manual "Use" button.
+  // triggered by a camera scan or the manual "Use" button. A ref (not state)
+  // so the check/set is synchronous and safe to call from the camera decode
+  // callback without going through a setState updater — StrictMode
+  // double-invokes updaters in dev, which would otherwise double-fire it.
+  const firedRef = useRef(false)
   const [submitted, setSubmitted] = useState(false)
+
+  const fireOnce = (code) => {
+    if (firedRef.current) return
+    firedRef.current = true
+    setSubmitted(true)
+    onDetectedRef.current(code)
+  }
 
   useEffect(() => {
     const reader = new BrowserMultiFormatReader()
@@ -30,11 +41,7 @@ export default function BarcodeScanner({ onDetected, onCancel }) {
         if (result) {
           stopped = true
           ctrls.stop()
-          setSubmitted((already) => {
-            if (already) return already
-            onDetectedRef.current(result.getText())
-            return true
-          })
+          fireOnce(result.getText())
         }
       })
       .then((ctrls) => { controls = ctrls; if (stopped) ctrls.stop() })
@@ -51,12 +58,8 @@ export default function BarcodeScanner({ onDetected, onCancel }) {
   }, [])
 
   const submitManual = () => {
-    if (submitted) return
     const code = manual.trim()
-    if (code) {
-      setSubmitted(true)
-      onDetected(code)
-    }
+    if (code) fireOnce(code)
   }
 
   return (
