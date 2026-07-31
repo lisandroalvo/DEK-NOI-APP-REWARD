@@ -23,14 +23,14 @@ export default function BarcodeScanner({ onDetected, onCancel }) {
     reader
       .decodeFromVideoDevice(undefined, videoRef.current, (result, _err, ctrls) => {
         controls = ctrls
-        if (stopped) return
+        if (stopped) { ctrls?.stop(); return }
         if (result) {
           stopped = true
           ctrls.stop()
           onDetectedRef.current(result.getText())
         }
       })
-      .then((ctrls) => { controls = ctrls })
+      .then((ctrls) => { controls = ctrls; if (stopped) ctrls.stop() })
       .catch((e) => {
         // No camera / permission denied — the manual field below still works.
         console.warn('Barcode camera unavailable:', e)
