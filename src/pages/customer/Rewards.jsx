@@ -4,6 +4,7 @@ import { db } from '../../lib/firebase'
 import { useAuth } from '../../context/AuthContext'
 import { Star, CheckCircle, Lock } from 'lucide-react'
 import charSitting from '../../assets/char-sitting.png'
+import BarcodeScanner from '../../components/BarcodeScanner'
 
 export default function CustomerRewards() {
   const { user, profile } = useAuth()
@@ -12,6 +13,7 @@ export default function CustomerRewards() {
   const [redeeming, setRedeeming] = useState(null)
   const [showModal, setShowModal] = useState(null)
   const [detailsModal, setDetailsModal] = useState(null)
+  const [scanFor, setScanFor] = useState(null)
 
   useEffect(() => {
     getDocs(query(collection(db, 'rewards'), where('available', '==', true)))
@@ -19,7 +21,7 @@ export default function CustomerRewards() {
         .sort((a, b) => a.pointsCost - b.pointsCost)))
   }, [])
 
-  const redeem = async (reward) => {
+  const redeem = async (reward, barcode) => {
     setRedeeming(reward.id)
     try {
       await addDoc(collection(db, 'redemptions'), {
@@ -30,11 +32,13 @@ export default function CustomerRewards() {
         rewardName: reward.name,
         rewardEmoji: reward.emoji || '🎁',
         pointsCost: reward.pointsCost,
+        maxValue: reward.maxValue ?? null,
+        barcode,
         status: 'pending',
         requestedAt: serverTimestamp(),
       })
-      setShowModal(null)
-      setSuccess(`Request for "${reward.name}" submitted! The admin will approve it shortly.`)
+      setScanFor(null)
+      setSuccess(`Redemption for "${reward.name}" submitted! The admin will confirm it shortly.`)
       setTimeout(() => setSuccess(''), 6000)
     } finally {
       setRedeeming(null)
@@ -152,13 +156,13 @@ export default function CustomerRewards() {
               </p>
             </div>
             <p className="text-xs text-gray-400 text-center mb-5">
-              Your request will be sent to the admin for approval. Points are deducted once approved.
+              Next, scan the barcode of the item you're taking. Points are deducted once the admin confirms it.
             </p>
             <div className="flex gap-3">
               <button onClick={() => setShowModal(null)} className="flex-1 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-600">
                 Cancel
               </button>
-              <button onClick={() => redeem(showModal)} disabled={redeeming === showModal.id}
+              <button onClick={() => { setScanFor(showModal); setShowModal(null) }} disabled={redeeming === showModal.id}
                 className="flex-1 py-3 rounded-xl text-sm font-black text-white disabled:opacity-60"
                 style={{ background: '#CC0000' }}>
                 {redeeming === showModal.id ? 'Submitting…' : 'Confirm Redeem'}
@@ -236,6 +240,14 @@ export default function CustomerRewards() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Barcode capture */}
+      {scanFor && (
+        <BarcodeScanner
+          onDetected={(barcode) => redeem(scanFor, barcode)}
+          onCancel={() => setScanFor(null)}
+        />
       )}
     </div>
   )
