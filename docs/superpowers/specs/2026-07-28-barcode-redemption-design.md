@@ -52,13 +52,14 @@ Customer app ──(barcode + rewardId)──▶ Cloud Function ──▶ Invent
 
 ## Inventory API contract (owner implements this endpoint)
 
-`POST /reward-redemptions`, auth `Authorization: Bearer <REWARDS_API_KEY>`
-(server-to-server key, held only in the Cloud Function).
+`POST /api/reward-redemptions` (path confirmed by the API team), auth
+`Authorization: Bearer <REWARDS_API_KEY>` (server-to-server key, held only in
+the Cloud Function).
 
 Request:
 ```jsonc
 {
-  "idempotencyKey": "rdm_8f3c1a...",   // = our redemption id; retries reuse it
+  "idempotencyKey": "aB3xK9mP2qR7sT1uV5wY",   // = the Firestore redemption doc id; retries reuse it
   "barcode": "8850999320005",           // scanned or typed EAN/UPC
   "maxValue": 20,                       // ฿ ceiling from the redeemed reward
   "reward":   { "id": "rwd_softdrink", "name": "Soft Drink" },
@@ -66,6 +67,17 @@ Request:
   "requestedAt": "2026-07-28T09:15:00Z" // ISO 8601, for the audit log
 }
 ```
+
+**Idempotency key format & mapping (confirmed with the API team):**
+- The key is the **Firestore redemption document id** — 20 chars matching
+  `^[A-Za-z0-9]{20}$`, well within the API's `[A-Za-z0-9_-]`, ≤128-char rule.
+- The API does **not** fingerprint the request body, so a key is treated as
+  immutable per redemption. We guarantee **key ⇄ redemption ⇄ barcode is 1:1
+  and immutable**: the key IS the redemption id; `barcode` is written once at
+  creation and never mutated; a different barcode means a **new** redemption
+  (new id → new key). Retries reuse the same key AND re-read the same barcode.
+- **Operational rule for Phase 2:** retry the same call; never re-issue a call
+  for an existing redemption with a swapped barcode.
 
 Success:
 ```jsonc
@@ -176,6 +188,7 @@ wiring is replaced.
 
 ## Open items to resolve before Phase 2
 
-- Final inventory API base URL, auth token, and any field-name tweaks.
+- Inventory API **base URL/host** and the **auth token** value (path
+  `/api/reward-redemptions` and idempotency-key format are confirmed).
 - Confirm the product-price unit (baht integer vs. satang) for the `maxValue`
   comparison.
