@@ -14,6 +14,9 @@ export default function BarcodeScanner({ onDetected, onCancel }) {
 
   const [manual, setManual] = useState('')
   const [cameraError, setCameraError] = useState('')
+  // Guards onDetected so it fires at most once from this component, whether
+  // triggered by a camera scan or the manual "Use" button.
+  const [submitted, setSubmitted] = useState(false)
 
   useEffect(() => {
     const reader = new BrowserMultiFormatReader()
@@ -27,7 +30,11 @@ export default function BarcodeScanner({ onDetected, onCancel }) {
         if (result) {
           stopped = true
           ctrls.stop()
-          onDetectedRef.current(result.getText())
+          setSubmitted((already) => {
+            if (already) return already
+            onDetectedRef.current(result.getText())
+            return true
+          })
         }
       })
       .then((ctrls) => { controls = ctrls; if (stopped) ctrls.stop() })
@@ -44,8 +51,12 @@ export default function BarcodeScanner({ onDetected, onCancel }) {
   }, [])
 
   const submitManual = () => {
+    if (submitted) return
     const code = manual.trim()
-    if (code) onDetected(code)
+    if (code) {
+      setSubmitted(true)
+      onDetected(code)
+    }
   }
 
   return (
@@ -81,7 +92,7 @@ export default function BarcodeScanner({ onDetected, onCancel }) {
               onBlur={e => e.target.style.borderColor = '#e5e7eb'}
               onKeyDown={e => e.key === 'Enter' && submitManual()}
             />
-            <button onClick={submitManual} disabled={!manual.trim()}
+            <button onClick={submitManual} disabled={submitted || !manual.trim()}
               className="px-4 py-2.5 rounded-xl text-sm font-black text-white disabled:opacity-50"
               style={{ background: '#CC0000' }}>
               Use
