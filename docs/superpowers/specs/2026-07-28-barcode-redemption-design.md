@@ -186,9 +186,14 @@ wiring is replaced.
 - Auto-refund of an inventory deduction if the Firestore points write fails
   permanently — handled by idempotent retry + admin exception review.
 
-## Open items to resolve before Phase 2
+## Phase 2 integration facts (resolved)
 
-- Inventory API **base URL/host** and the **auth token** value (path
-  `/api/reward-redemptions` and idempotency-key format are confirmed).
-- Confirm the product-price unit (baht integer vs. satang) for the `maxValue`
-  comparison.
+- Endpoint: `https://dek-noi-dashboard.vercel.app/api/reward-redemptions`.
+- Auth: `REWARDS_API_KEY` set in Firebase Secret Manager; the callable binds it
+  via `defineSecret('REWARDS_API_KEY')`. Never in the client bundle.
+- Full contract (request/response, error codes, retry rules) lives at
+  `docs/api/reward-redemptions.md`.
+- Price unit is not our concern: the API does the `price ≤ maxValue` comparison
+  server-side; we send our integer `maxValue` (THB). Retryable codes:
+  `IN_PROGRESS`, `UPSTREAM_ERROR`, `INTERNAL_ERROR` (same key). Non-retryable
+  replay verbatim.
