@@ -126,6 +126,9 @@ function RedemptionCard({ r }) {
             <p className="text-xs text-gray-400">
               {r.requestedAt?.toDate?.()?.toLocaleDateString() ?? '—'} · <span className="font-bold" style={{ color: '#CC0000' }}>⭐ {r.pointsCost} pts</span>
             </p>
+            {r.barcode && (
+              <p className="text-[11px] text-gray-400 mt-0.5 font-mono break-all">🔖 {r.barcode}</p>
+            )}
           </div>
         </div>
         <span className="text-xs font-black px-3 py-1.5 rounded-full shrink-0" style={{ background: s.bg, color: s.color }}>

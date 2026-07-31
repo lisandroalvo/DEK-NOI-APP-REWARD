@@ -221,6 +221,12 @@ export default function AdminRedemptions() {
                     <span className="font-black" style={{ color: '#CC0000' }}>⭐ {r.pointsCost} pts</span>
                     <span className="text-gray-400"> · {r.requestedAt?.toDate?.()?.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) ?? '—'}</span>
                   </p>
+                  {r.barcode && (
+                    <p className="text-xs mt-1 font-mono text-gray-600 break-all">
+                      🔖 {r.barcode}
+                      {r.maxValue != null && <span className="text-gray-400"> · max ฿{r.maxValue}</span>}
+                    </p>
+                  )}
                 </div>
               </div>
 
