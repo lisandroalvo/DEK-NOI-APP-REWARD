@@ -1,6 +1,6 @@
 // ABOUTME: Unit tests for the pure reward-redemption API result classifier.
 import { describe, test, expect } from 'vitest'
-import { classifyRedemptionResult } from '../functions/rewardApi.js'
+import { classifyRedemptionResult, postRewardRedemption } from '../functions/rewardApi.js'
 
 describe('classifyRedemptionResult', () => {
   test('200 ok -> complete with product', () => {
@@ -24,5 +24,15 @@ describe('classifyRedemptionResult', () => {
   })
   test('missing code -> reject (never an infinite retry)', () => {
     expect(classifyRedemptionResult(418, { ok: false }).action).toBe('reject')
+  })
+})
+
+describe('postRewardRedemption', () => {
+  test('a network failure becomes a retryable INTERNAL_ERROR (real unreachable host)', async () => {
+    // Port 1 refuses immediately — a real fetch failure, not a mock.
+    const { status, body } = await postRewardRedemption('http://127.0.0.1:1/x', 'k', { a: 1 })
+    expect(status).toBe(0)
+    expect(body.code).toBe('INTERNAL_ERROR')
+    expect(classifyRedemptionResult(status, body).action).toBe('retry')
   })
 })
