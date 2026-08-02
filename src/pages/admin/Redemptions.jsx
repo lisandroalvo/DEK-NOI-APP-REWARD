@@ -227,6 +227,12 @@ export default function AdminRedemptions() {
                       {r.maxValue != null && <span className="text-gray-400"> · max ฿{r.maxValue}</span>}
                     </p>
                   )}
+                  {r.product?.name && (
+                    <p className="text-xs mt-0.5 text-gray-600">📦 {r.product.name}{r.product.price != null && <span className="text-gray-400"> · ฿{r.product.price}</span>}</p>
+                  )}
+                  {r.status === 'rejected' && r.failureCode && (
+                    <p className="text-xs mt-0.5 font-bold" style={{ color: '#CC0000' }}>⚠ {r.failureCode}{r.failureMessage ? `: ${r.failureMessage}` : ''}</p>
+                  )}
                 </div>
               </div>
 

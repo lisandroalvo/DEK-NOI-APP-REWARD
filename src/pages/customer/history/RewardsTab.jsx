@@ -129,6 +129,9 @@ function RedemptionCard({ r }) {
             {r.barcode && (
               <p className="text-[11px] text-gray-400 mt-0.5 font-mono break-all">🔖 {r.barcode}</p>
             )}
+            {r.product?.name && (
+              <p className="text-[11px] text-gray-500 mt-0.5">📦 {r.product.name}</p>
+            )}
           </div>
         </div>
         <span className="text-xs font-black px-3 py-1.5 rounded-full shrink-0" style={{ background: s.bg, color: s.color }}>
