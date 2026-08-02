@@ -39,9 +39,14 @@ export default function CustomerRewards() {
       } else {
         setResult({ ok: false, code: res?.code, message: CODE_MESSAGES[res?.code] || res?.message || 'This redemption could not be completed.', reward })
       }
-    } catch {
-      // Transient — keep the SAME redemptionId so Try again reuses this redemption (never a new key).
-      setResult({ ok: false, retry: true, redemptionId, reward, message: 'The store system is busy. Please try again in a moment.' })
+    } catch (err) {
+      if (err?.code === 'functions/unavailable') {
+        // Transient — keep the SAME redemptionId so Try again reuses this redemption (never a new key).
+        setResult({ ok: false, retry: true, redemptionId, reward, message: 'The store system is busy. Please try again in a moment.' })
+      } else {
+        // Permanent — drop redemptionId so Try again re-scans a fresh doc instead of re-calling the same failed id.
+        setResult({ ok: false, reward, message: 'This reward can’t be redeemed right now. Please try a different item or contact support.' })
+      }
     } finally {
       setRedeeming(null)
     }
@@ -170,11 +175,11 @@ export default function CustomerRewards() {
               <p className="text-sm text-gray-600">This will use</p>
               <p className="text-2xl font-black" style={{ color: '#CC0000' }}>⭐ {showModal.pointsCost.toLocaleString()} points</p>
               <p className="text-xs text-gray-400 mt-1">
-                You'll have <strong>{(pts - showModal.pointsCost).toLocaleString()} pts</strong> remaining after approval
+                You'll have <strong>{(pts - showModal.pointsCost).toLocaleString()} pts</strong> remaining after redeeming
               </p>
             </div>
             <p className="text-xs text-gray-400 text-center mb-5">
-              Next, scan the barcode of the item you're taking. Points are deducted once the admin confirms it.
+              Next, scan the barcode of the item you're taking — your points are used right away.
             </p>
             <div className="flex gap-3">
               <button onClick={() => setShowModal(null)} className="flex-1 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-600">

@@ -11,7 +11,8 @@ import { useRedemptionNotifications } from '../../../hooks/useRedemptionNotifica
 
 const STATUS = {
   pending:   { bg: '#FFF9E0', color: '#CC7700', label: '⏳ Pending Approval', desc: 'Admin will review your request shortly.' },
-  approved:  { bg: '#F0FFF4', color: '#16a34a', label: '✅ Approved',         desc: 'Visit the store to collect your reward!' },
+  reserving: { bg: '#FFF9E0', color: '#CC7700', label: '⏳ Processing', desc: 'Finishing your redemption…' },
+  approved:  { bg: '#F0FFF4', color: '#16a34a', label: '✅ Approved',         desc: 'Enjoy — your reward is yours!' },
   collected: { bg: '#EEF6FF', color: '#1d4ed8', label: '🛍️ Collected',       desc: 'Enjoy your reward — thanks for collecting!' },
   rejected:  { bg: '#FFF0F0', color: '#CC0000', label: '❌ Not Approved',     desc: 'Contact us on LINE if you have questions.' },
 }

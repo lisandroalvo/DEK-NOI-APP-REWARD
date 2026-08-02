@@ -118,14 +118,15 @@ export const redeemReward = onCall(
       await db.runTransaction(async (tx) => {
         const rSnap = await tx.get(redemptionRef)
         if (rSnap.data()?.status !== 'reserving') return
+        const refundAmount = rSnap.data()?.reservedPoints ?? pointsCost
         const balance = (await tx.get(userRef)).data()?.points ?? 0
-        tx.update(userRef, { points: balance + pointsCost })
+        tx.update(userRef, { points: balance + refundAmount })
         tx.update(redemptionRef, {
           status: 'rejected', failureCode: result.code, failureMessage: result.message ?? null,
           product: result.product ?? null, reviewedAt: FieldValue.serverTimestamp(), reviewedBy: 'system',
         })
         tx.set(db.collection('pointTransactions').doc(), {
-          userId: uid, points: pointsCost, reason: `Refund: ${reward.name ?? 'reward'} (${result.code})`,
+          userId: uid, points: refundAmount, reason: `Refund: ${reward.name ?? 'reward'} (${result.code})`,
           addedBy: 'system', createdAt: FieldValue.serverTimestamp(),
         })
       })

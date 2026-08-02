@@ -46,7 +46,6 @@ export default function AdminRedemptions() {
         return bTime - aTime
       })
       
-      console.log(`Loaded ${data.length} ${status} redemptions:`, data)
       setItems(data)
     } catch (error) {
       console.error('Error loading redemptions:', error)

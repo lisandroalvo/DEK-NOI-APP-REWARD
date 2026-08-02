@@ -22,6 +22,7 @@ export default function AdminRewards() {
   }
 
   const save = async () => {
+    if (!(parseInt(form.maxValue) > 0)) { alert('Please set a Max value (฿) greater than 0.'); return }
     setSaving(true)
     const data = { ...form, pointsCost: parseInt(form.pointsCost) || 0, maxValue: parseInt(form.maxValue) || 0, updatedAt: serverTimestamp() }
     try {
