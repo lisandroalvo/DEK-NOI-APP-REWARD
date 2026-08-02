@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { collection, query, where, getDocs, orderBy, doc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
-import { approveRedemption } from '../../lib/points'
+import { adjustPoints } from '../../lib/points'
 import { useAuth } from '../../context/AuthContext'
 import { CheckCircle, XCircle, Clock, X, RotateCcw } from 'lucide-react'
 
@@ -9,12 +9,13 @@ const STATUS_STYLE = {
   approved:  { bg: '#F0FFF4', color: '#16a34a', label: '✅ Approved' },
   collected: { bg: '#EEF6FF', color: '#1d4ed8', label: '🛍️ Collected' },
   rejected:  { bg: '#FFF0F0', color: '#CC0000', label: '❌ Rejected' },
+  reserving: { bg: '#FFF9E0', color: '#CC7700', label: '⏳ Stuck' },
 }
 
 export default function AdminRedemptions() {
   const { user } = useAuth()
   const [items, setItems] = useState([])
-  const [counts, setCounts] = useState({ pending: 0, approved: 0, collected: 0, rejected: 0 })
+  const [counts, setCounts] = useState({ pending: 0, approved: 0, collected: 0, rejected: 0, reserving: 0 })
   const [tab, setTab] = useState('pending')
   const [rejectModal, setRejectModal] = useState(null)
   const [rejectNote, setRejectNote] = useState('')
@@ -58,13 +59,14 @@ export default function AdminRedemptions() {
 
   const loadCounts = async () => {
     try {
-      const [p, a, c, r] = await Promise.all([
+      const [p, a, c, r, s] = await Promise.all([
         getDocs(query(collection(db, 'redemptions'), where('status', '==', 'pending'))),
         getDocs(query(collection(db, 'redemptions'), where('status', '==', 'approved'))),
         getDocs(query(collection(db, 'redemptions'), where('status', '==', 'collected'))),
         getDocs(query(collection(db, 'redemptions'), where('status', '==', 'rejected'))),
+        getDocs(query(collection(db, 'redemptions'), where('status', '==', 'reserving'))),
       ])
-      setCounts({ pending: p.size, approved: a.size, collected: c.size, rejected: r.size })
+      setCounts({ pending: p.size, approved: a.size, collected: c.size, rejected: r.size, reserving: s.size })
     } catch (error) {
       console.error('Error loading counts:', error)
     }
@@ -78,24 +80,26 @@ export default function AdminRedemptions() {
     loadCounts()
   }, [tab])
 
-  const approve = async (r) => {
-    if (!confirm(`Approve "${r.rewardName}" for ${r.userName}?\nThis will deduct ${r.pointsCost} points from their account.`)) return
+  // Refund a redemption stuck in 'reserving' (points deducted but the API call never
+  // resolved, e.g. it went down and the customer never retried). Credits back exactly
+  // what was reserved and closes the redemption as rejected.
+  const refund = async (r) => {
+    if (!confirm(`Refund ${r.reservedPoints || 0} points to ${r.userName} for the stuck "${r.rewardName}" request?`)) return
     setWorking(r.id)
     try {
-      await approveRedemption(db, r, user.uid)
+      await adjustPoints(db, r.userId, r.reservedPoints || 0, 'Refund: stuck redemption', user.uid)
+      await updateDoc(doc(db, 'redemptions', r.id), {
+        status: 'rejected',
+        failureCode: 'REFUNDED',
+        failureMessage: 'Refunded a stuck redemption.',
+        reviewedAt: serverTimestamp(),
+        reviewedBy: user.uid,
+      })
       await load(tab)
       await loadCounts()
     } catch (err) {
-      if (err.message === 'INSUFFICIENT_POINTS') {
-        alert(`${r.userName} no longer has enough points for this reward. Their balance may have changed since the request.`)
-      } else if (err.message === 'ALREADY_REVIEWED') {
-        alert('This redemption has already been reviewed. The list will refresh.')
-        await load(tab)
-        await loadCounts()
-      } else {
-        console.error('Error approving redemption:', err)
-        alert('Failed to approve redemption. Please try again.')
-      }
+      console.error('Error refunding redemption:', err)
+      alert('Failed to refund redemption. Please try again.')
     } finally { setWorking(null) }
   }
 
@@ -162,6 +166,7 @@ export default function AdminRedemptions() {
     { key: 'approved', label: 'Approved', count: counts.approved },
     { key: 'collected', label: 'Collected', count: counts.collected },
     { key: 'rejected', label: 'Rejected', count: counts.rejected },
+    { key: 'reserving', label: 'Stuck', count: counts.reserving },
   ]
 
   return (
@@ -238,11 +243,6 @@ export default function AdminRedemptions() {
 
               {tab === 'pending' ? (
                 <div className="flex flex-col gap-2 shrink-0">
-                  <button onClick={() => approve(r)} disabled={working === r.id}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-black transition-colors disabled:opacity-50"
-                    style={{ background: '#F0FFF4', color: '#16a34a' }}>
-                    <CheckCircle size={15} /> Approve
-                  </button>
                   <button onClick={() => openReject(r)} disabled={working === r.id}
                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-black transition-colors disabled:opacity-50"
                     style={{ background: '#FFF0F0', color: '#CC0000' }}>
@@ -267,6 +267,13 @@ export default function AdminRedemptions() {
                       className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-black transition-colors disabled:opacity-50"
                       style={{ background: '#F3F4F6', color: '#4b5563' }}>
                       <RotateCcw size={15} /> Undo
+                    </button>
+                  )}
+                  {r.status === 'reserving' && r.reservedPoints > 0 && (
+                    <button onClick={() => refund(r)} disabled={working === r.id}
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-black transition-colors disabled:opacity-50"
+                      style={{ background: '#FFF0F0', color: '#CC0000' }}>
+                      <XCircle size={15} /> Refund
                     </button>
                   )}
                   {r.rejectNote && (

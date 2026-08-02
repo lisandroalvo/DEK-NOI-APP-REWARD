@@ -72,7 +72,7 @@ export const redeemReward = onCall(
         return 'insufficient'
       }
       tx.update(userRef, { points: balance - pointsCost })
-      tx.update(redemptionRef, { status: 'reserving', reservedAt: FieldValue.serverTimestamp() })
+      tx.update(redemptionRef, { status: 'reserving', reservedAt: FieldValue.serverTimestamp(), reservedPoints: pointsCost })
       tx.set(db.collection('pointTransactions').doc(), {
         userId: uid, points: -pointsCost, reason: `Redeemed: ${reward.name ?? 'reward'}`,
         addedBy: 'system', createdAt: FieldValue.serverTimestamp(),
