@@ -39,8 +39,10 @@ export default function CustomerDashboard() {
   const earned = transactions.filter(t => t.points > 0).reduce((a, t) => a + t.points, 0)
   const redeemed = Math.abs(transactions.filter(t => t.points < 0).reduce((a, t) => a + t.points, 0))
 
-  // Progress toward the next point from carried-over spend (spendCarry is 0..BAHT_PER_POINT-1).
-  const carry = profile?.spendCarry ?? 0
+  // Progress toward the next point from carried-over spend. `% BAHT_PER_POINT` keeps this in
+  // 0..BAHT_PER_POINT-1 even for a legacy spendCarry left over from an earlier earning rate
+  // (a smaller rate can leave a stored carry above the new threshold until the next approval).
+  const carry = (profile?.spendCarry ?? 0) % BAHT_PER_POINT
   const toNextPoint = BAHT_PER_POINT - carry
   const carryPct = (carry / BAHT_PER_POINT) * 100
 
