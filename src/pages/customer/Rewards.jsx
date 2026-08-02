@@ -2,18 +2,19 @@ import { useEffect, useState } from 'react'
 import { collection, getDocs, query, where, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../context/AuthContext'
-import { Star, CheckCircle, Lock } from 'lucide-react'
+import { redeemReward as callRedeemReward } from '../../lib/redeemReward'
+import { Star, Lock } from 'lucide-react'
 import charSitting from '../../assets/char-sitting.png'
 import BarcodeScanner from '../../components/BarcodeScanner'
 
 export default function CustomerRewards() {
   const { user, profile } = useAuth()
   const [rewards, setRewards] = useState([])
-  const [success, setSuccess] = useState('')
   const [redeeming, setRedeeming] = useState(null)
   const [showModal, setShowModal] = useState(null)
   const [detailsModal, setDetailsModal] = useState(null)
   const [scanFor, setScanFor] = useState(null)
+  const [result, setResult] = useState(null) // { ok, product?, code?, message?, retry?, reward }
 
   useEffect(() => {
     getDocs(query(collection(db, 'rewards'), where('available', '==', true)))
@@ -21,10 +22,19 @@ export default function CustomerRewards() {
         .sort((a, b) => a.pointsCost - b.pointsCost)))
   }, [])
 
+  const CODE_MESSAGES = {
+    OUT_OF_STOCK: 'That item is out of stock right now.',
+    EXCEEDS_MAX_VALUE: "That item costs more than this reward allows. Please pick a lower-priced item.",
+    PRODUCT_NOT_FOUND: "We couldn't find that barcode. Please scan again.",
+    INSUFFICIENT_POINTS: "You don't have enough points for this reward.",
+    BAD_REQUEST: 'That barcode looks invalid. Please scan again.',
+  }
+
   const redeem = async (reward, barcode) => {
     setRedeeming(reward.id)
+    setScanFor(null)
     try {
-      await addDoc(collection(db, 'redemptions'), {
+      const ref = await addDoc(collection(db, 'redemptions'), {
         userId: user.uid,
         userName: profile.name,
         userEmail: profile.email,
@@ -37,9 +47,15 @@ export default function CustomerRewards() {
         status: 'pending',
         requestedAt: serverTimestamp(),
       })
-      setScanFor(null)
-      setSuccess(`Redemption for "${reward.name}" submitted! The admin will confirm it shortly.`)
-      setTimeout(() => setSuccess(''), 6000)
+      const res = await callRedeemReward(ref.id)
+      if (res?.ok) {
+        setResult({ ok: true, product: res.product ?? null, reward })
+      } else {
+        setResult({ ok: false, code: res?.code, message: CODE_MESSAGES[res?.code] || res?.message || 'This redemption could not be completed.', reward })
+      }
+    } catch {
+      // Transient / unavailable — the redemption stays pending; the customer can retry.
+      setResult({ ok: false, retry: true, message: 'The store system is busy. Please try again in a moment.', reward })
     } finally {
       setRedeeming(null)
     }
@@ -59,16 +75,6 @@ export default function CustomerRewards() {
         </div>
       </div>
       <p className="text-gray-400 text-xs sm:text-sm mb-4 sm:mb-6">Redeem your points for great rewards!</p>
-
-      {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-2xl flex items-start gap-3 text-green-700">
-          <CheckCircle size={20} className="shrink-0 mt-0.5" />
-          <div>
-            <p className="font-bold text-sm">Request Submitted!</p>
-            <p className="text-xs mt-0.5">{success}</p>
-          </div>
-        </div>
-      )}
 
       {rewards.length === 0 ? (
         <div className="text-center py-10 text-gray-400">
@@ -235,6 +241,34 @@ export default function CustomerRewards() {
                   className="flex-1 py-3 rounded-xl text-sm font-black text-white"
                   style={{ background: '#CC0000' }}>
                   Redeem Now
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Redemption result */}
+      {result && (
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4" onClick={() => setResult(null)}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center" onClick={(e) => e.stopPropagation()}>
+            <div className="text-5xl mb-3">{result.ok ? '🎉' : result.retry ? '⏳' : '😕'}</div>
+            <h2 className="text-xl font-black text-gray-900 mb-1">
+              {result.ok ? 'Enjoy your reward!' : result.retry ? 'Almost there' : "Couldn't redeem"}
+            </h2>
+            {result.ok ? (
+              <p className="text-sm text-gray-600 mb-5">
+                Grab your <strong>{result.product?.name || result.reward.name}</strong>. {result.reward.pointsCost.toLocaleString()} points were used.
+              </p>
+            ) : (
+              <p className="text-sm text-gray-600 mb-5">{result.message}</p>
+            )}
+            <div className="flex gap-3">
+              <button onClick={() => setResult(null)} className="flex-1 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-600">Close</button>
+              {!result.ok && (
+                <button onClick={() => { const r = result.reward; setResult(null); setScanFor(r) }}
+                  className="flex-1 py-3 rounded-xl text-sm font-black text-white" style={{ background: '#CC0000' }}>
+                  Try again
                 </button>
               )}
             </div>
