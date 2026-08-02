@@ -30,11 +30,29 @@ export default function CustomerRewards() {
     BAD_REQUEST: 'That barcode looks invalid. Please scan again.',
   }
 
+  const processRedemption = async (redemptionId, reward) => {
+    setRedeeming(reward.id)
+    try {
+      const res = await callRedeemReward(redemptionId)
+      if (res?.ok) {
+        setResult({ ok: true, product: res.product ?? null, reward })
+      } else {
+        setResult({ ok: false, code: res?.code, message: CODE_MESSAGES[res?.code] || res?.message || 'This redemption could not be completed.', reward })
+      }
+    } catch {
+      // Transient — keep the SAME redemptionId so Try again reuses this redemption (never a new key).
+      setResult({ ok: false, retry: true, redemptionId, reward, message: 'The store system is busy. Please try again in a moment.' })
+    } finally {
+      setRedeeming(null)
+    }
+  }
+
   const redeem = async (reward, barcode) => {
     setRedeeming(reward.id)
     setScanFor(null)
+    let ref
     try {
-      const ref = await addDoc(collection(db, 'redemptions'), {
+      ref = await addDoc(collection(db, 'redemptions'), {
         userId: user.uid,
         userName: profile.name,
         userEmail: profile.email,
@@ -47,18 +65,12 @@ export default function CustomerRewards() {
         status: 'pending',
         requestedAt: serverTimestamp(),
       })
-      const res = await callRedeemReward(ref.id)
-      if (res?.ok) {
-        setResult({ ok: true, product: res.product ?? null, reward })
-      } else {
-        setResult({ ok: false, code: res?.code, message: CODE_MESSAGES[res?.code] || res?.message || 'This redemption could not be completed.', reward })
-      }
     } catch {
-      // Transient / unavailable — the redemption stays pending; the customer can retry.
-      setResult({ ok: false, retry: true, message: 'The store system is busy. Please try again in a moment.', reward })
-    } finally {
+      setResult({ ok: false, message: 'Could not start the redemption. Please try again.', reward })
       setRedeeming(null)
+      return
     }
+    await processRedemption(ref.id, reward)
   }
 
   const pts = profile?.points ?? 0
@@ -266,7 +278,17 @@ export default function CustomerRewards() {
             <div className="flex gap-3">
               <button onClick={() => setResult(null)} className="flex-1 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-600">Close</button>
               {!result.ok && (
-                <button onClick={() => { const r = result.reward; setResult(null); setScanFor(r) }}
+                <button onClick={() => {
+                    if (result.retry && result.redemptionId) {
+                      const { redemptionId, reward } = result
+                      setResult(null)
+                      processRedemption(redemptionId, reward)
+                    } else {
+                      const r = result.reward
+                      setResult(null)
+                      setScanFor(r)
+                    }
+                  }}
                   className="flex-1 py-3 rounded-xl text-sm font-black text-white" style={{ background: '#CC0000' }}>
                   Try again
                 </button>
