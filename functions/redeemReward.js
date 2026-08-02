@@ -60,18 +60,16 @@ export const redeemReward = onCall(
     // user can't both pass an affordability check and both dispense. Idempotent: only
     // a 'pending' redemption reserves; a 'reserving' one (retry) skips to the API. An
     // insufficient balance rejects here, before any item is dispensed.
-    let insufficient = false
-    await db.runTransaction(async (tx) => {
+    const reserveOutcome = await db.runTransaction(async (tx) => {
       const rSnap = await tx.get(redemptionRef)
-      if (rSnap.data()?.status !== 'pending') return // already reserved/resolved concurrently
+      if (rSnap.data()?.status !== 'pending') return 'proceed' // already reserved (retry) or resolved
       const balance = (await tx.get(userRef)).data()?.points ?? 0
       if (balance < pointsCost) {
-        insufficient = true
         tx.update(redemptionRef, {
           status: 'rejected', failureCode: 'INSUFFICIENT_POINTS', failureMessage: 'Not enough points.',
           reviewedAt: FieldValue.serverTimestamp(), reviewedBy: 'system',
         })
-        return
+        return 'insufficient'
       }
       tx.update(userRef, { points: balance - pointsCost })
       tx.update(redemptionRef, { status: 'reserving', reservedAt: FieldValue.serverTimestamp() })
@@ -79,8 +77,9 @@ export const redeemReward = onCall(
         userId: uid, points: -pointsCost, reason: `Redeemed: ${reward.name ?? 'reward'}`,
         addedBy: 'system', createdAt: FieldValue.serverTimestamp(),
       })
+      return 'reserved'
     })
-    if (insufficient) {
+    if (reserveOutcome === 'insufficient') {
       return { ok: false, status: 'rejected', code: 'INSUFFICIENT_POINTS', message: 'Not enough points.', product: null }
     }
 
