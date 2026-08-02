@@ -34,7 +34,7 @@ export async function postRewardRedemption(url, apiKey, payload) {
   } catch (err) {
     return { status: 0, body: { ok: false, code: 'INTERNAL_ERROR', message: String(err?.message || err) } }
   }
-  let body = null
+  let body
   try { body = await res.json() } catch { body = null }
   return { status: res.status, body }
 }
