@@ -9,6 +9,9 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      // We register the SW ourselves (src/lib/registerSW.js) to add periodic + on-focus
+      // update checks, so a deploy reaches apps that are already open.
+      injectRegister: false,
       includeAssets: ['icon-192.png', 'icon-512.png'],
       manifest: {
         name: 'DEK NOI Rewards',
