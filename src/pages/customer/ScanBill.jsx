@@ -16,6 +16,7 @@ export default function ScanBill() {
   const [preview, setPreview] = useState(null)
   const [amount, setAmount] = useState('')
   const [ocrAmount, setOcrAmount] = useState(null)
+  const [ocrMerchant, setOcrMerchant] = useState('unclear')
   const [recognizing, setRecognizing] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -43,7 +44,8 @@ export default function ScanBill() {
 
     // Best-effort: auto-recognize the total to pre-fill the amount field.
     setRecognizing(true)
-    const recognized = await recognizeReceiptTotal(file)
+    const { amount: recognized, merchant } = await recognizeReceiptTotal(file)
+    setOcrMerchant(merchant)
     if (recognized != null) {
       setOcrAmount(recognized)
       setAmount(String(recognized))
@@ -95,6 +97,7 @@ export default function ScanBill() {
         fileSize: selectedFile.size,
         amount: amountNum,
         ocrAmount,
+        merchantFlag: ocrMerchant,
         status: 'pending',
         submittedAt: serverTimestamp(),
         reviewedAt: null,

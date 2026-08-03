@@ -255,6 +255,16 @@ export default function BillReview() {
                           ⚠️ {flags.exactImage ? 'Duplicate image' : 'Same amount & day'}
                         </span>
                       )}
+                      {bill.merchantFlag === 'mismatch' && (
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border-2 border-red-300">
+                          ⚠️ Not DEK NOI?
+                        </span>
+                      )}
+                      {bill.merchantFlag === 'unclear' && (
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600 border-2 border-gray-300">
+                          Merchant unverified
+                        </span>
+                      )}
                     </div>
 
                     <p className="font-bold text-gray-900 break-words">{bill.userName}</p>
