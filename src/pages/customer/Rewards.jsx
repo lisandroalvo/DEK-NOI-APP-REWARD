@@ -32,6 +32,7 @@ export default function CustomerRewards() {
 
   const processRedemption = async (redemptionId, reward) => {
     setRedeeming(reward.id)
+    setResult({ processing: true, reward }) // show the spinner immediately (covers retries too)
     try {
       const res = await callRedeemReward(redemptionId)
       if (res?.ok) {
@@ -55,6 +56,7 @@ export default function CustomerRewards() {
   const redeem = async (reward, barcode) => {
     setRedeeming(reward.id)
     setScanFor(null)
+    setResult({ processing: true, reward }) // pop the modal the instant they confirm — no blank gap
     let ref
     try {
       ref = await addDoc(collection(db, 'redemptions'), {
@@ -267,38 +269,47 @@ export default function CustomerRewards() {
 
       {/* Redemption result */}
       {result && (
-        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4" onClick={() => setResult(null)}>
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4"
+          onClick={() => { if (!result.processing) setResult(null) }}>
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center" onClick={(e) => e.stopPropagation()}>
-            <div className="text-5xl mb-3">{result.ok ? '🎉' : result.retry ? '⏳' : '😕'}</div>
-            <h2 className="text-xl font-black text-gray-900 mb-1">
-              {result.ok ? 'Enjoy your reward!' : result.retry ? 'Almost there' : "Couldn't redeem"}
-            </h2>
-            {result.ok ? (
-              <p className="text-sm text-gray-600 mb-5">
-                Grab your <strong>{result.product?.name || result.reward.name}</strong>. {result.reward.pointsCost.toLocaleString()} points were used.
-              </p>
+            {result.processing ? (
+              <>
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 mx-auto mb-4" style={{ borderColor: '#CC0000' }} />
+                <h2 className="text-xl font-black text-gray-900 mb-1">Redeeming…</h2>
+                <p className="text-sm text-gray-600">Confirming your <strong>{result.reward.name}</strong> — one moment.</p>
+              </>
             ) : (
-              <p className="text-sm text-gray-600 mb-5">{result.message}</p>
+              <>
+                <div className="text-5xl mb-3">{result.ok ? '🎉' : result.retry ? '⏳' : '😕'}</div>
+                <h2 className="text-xl font-black text-gray-900 mb-1">
+                  {result.ok ? 'Enjoy your reward!' : result.retry ? 'Almost there' : "Couldn't redeem"}
+                </h2>
+                {result.ok ? (
+                  <p className="text-sm text-gray-600 mb-5">
+                    Grab your <strong>{result.product?.name || result.reward.name}</strong>. {result.reward.pointsCost.toLocaleString()} points were used.
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-600 mb-5">{result.message}</p>
+                )}
+                <div className="flex gap-3">
+                  <button onClick={() => setResult(null)} className="flex-1 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-600">Close</button>
+                  {!result.ok && (
+                    <button onClick={() => {
+                        if (result.retry && result.redemptionId) {
+                          processRedemption(result.redemptionId, result.reward)
+                        } else {
+                          const r = result.reward
+                          setResult(null)
+                          setScanFor(r)
+                        }
+                      }}
+                      className="flex-1 py-3 rounded-xl text-sm font-black text-white" style={{ background: '#CC0000' }}>
+                      Try again
+                    </button>
+                  )}
+                </div>
+              </>
             )}
-            <div className="flex gap-3">
-              <button onClick={() => setResult(null)} className="flex-1 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-600">Close</button>
-              {!result.ok && (
-                <button onClick={() => {
-                    if (result.retry && result.redemptionId) {
-                      const { redemptionId, reward } = result
-                      setResult(null)
-                      processRedemption(redemptionId, reward)
-                    } else {
-                      const r = result.reward
-                      setResult(null)
-                      setScanFor(r)
-                    }
-                  }}
-                  className="flex-1 py-3 rounded-xl text-sm font-black text-white" style={{ background: '#CC0000' }}>
-                  Try again
-                </button>
-              )}
-            </div>
           </div>
         </div>
       )}

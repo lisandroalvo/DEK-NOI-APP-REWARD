@@ -1,8 +1,8 @@
 // ABOUTME: Modal that reads a product barcode from the device camera, with a manual-entry fallback.
-// ABOUTME: Works cross-platform (iOS Safari + Android) via @zxing/browser; calls onDetected(barcode).
+// ABOUTME: A scan fills the input; the customer reviews it and taps Confirm before the redemption runs.
 import { useEffect, useRef, useState } from 'react'
 import { BrowserMultiFormatReader } from '@zxing/browser'
-import { X, Keyboard } from 'lucide-react'
+import { X, Keyboard, CheckCircle } from 'lucide-react'
 
 export default function BarcodeScanner({ onDetected, onCancel }) {
   const videoRef = useRef(null)
@@ -14,18 +14,18 @@ export default function BarcodeScanner({ onDetected, onCancel }) {
 
   const [manual, setManual] = useState('')
   const [cameraError, setCameraError] = useState('')
-  // Guards onDetected so it fires at most once from this component, whether
-  // triggered by a camera scan or the manual "Use" button. A ref (not state)
-  // so the check/set is synchronous and safe to call from the camera decode
-  // callback without going through a setState updater — StrictMode
-  // double-invokes updaters in dev, which would otherwise double-fire it.
-  const firedRef = useRef(false)
-  const [submitted, setSubmitted] = useState(false)
+  const [scanned, setScanned] = useState(false)   // a camera scan filled the input
+  const [submitting, setSubmitting] = useState(false)
+  const capturedRef = useRef(false)               // camera fills the input at most once
+  const firedRef = useRef(false)                  // onDetected fires at most once
 
-  const fireOnce = (code) => {
-    if (firedRef.current) return
+  // Confirm the (scanned or typed) barcode. Requires an explicit tap so the customer
+  // sees what will be redeemed before it goes through. Fires onDetected exactly once.
+  const confirm = () => {
+    const code = manual.trim()
+    if (!code || firedRef.current) return
     firedRef.current = true
-    setSubmitted(true)
+    setSubmitting(true)
     onDetectedRef.current(code)
   }
 
@@ -38,10 +38,13 @@ export default function BarcodeScanner({ onDetected, onCancel }) {
       .decodeFromVideoDevice(undefined, videoRef.current, (result, _err, ctrls) => {
         controls = ctrls
         if (stopped) { ctrls?.stop(); return }
-        if (result) {
+        if (result && !capturedRef.current) {
+          // Fill the input and stop the camera — the customer confirms; no auto-redeem.
+          capturedRef.current = true
           stopped = true
           ctrls.stop()
-          fireOnce(result.getText())
+          setManual(result.getText())
+          setScanned(true)
         }
       })
       .then((ctrls) => { controls = ctrls; if (stopped) ctrls.stop() })
@@ -57,11 +60,6 @@ export default function BarcodeScanner({ onDetected, onCancel }) {
     }
   }, [])
 
-  const submitManual = () => {
-    const code = manual.trim()
-    if (code) fireOnce(code)
-  }
-
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden">
@@ -71,7 +69,12 @@ export default function BarcodeScanner({ onDetected, onCancel }) {
         </div>
 
         <div className="p-4">
-          {cameraError ? (
+          {scanned ? (
+            <div className="rounded-2xl bg-green-50 border-2 border-green-200 p-4 mb-4 flex items-center gap-2 text-green-800">
+              <CheckCircle size={18} className="shrink-0" />
+              <span className="text-sm font-bold">Barcode captured — check it below, then confirm.</span>
+            </div>
+          ) : cameraError ? (
             <div className="rounded-xl bg-yellow-50 border border-yellow-200 p-3 mb-4 text-xs text-yellow-800">
               {cameraError}
             </div>
@@ -82,23 +85,28 @@ export default function BarcodeScanner({ onDetected, onCancel }) {
           )}
 
           <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
-            <Keyboard size={14} /> Or enter it manually
+            <Keyboard size={14} /> Barcode
           </label>
+          <input
+            value={manual}
+            onChange={(e) => { setManual(e.target.value); setScanned(false) }}
+            inputMode="numeric"
+            placeholder="e.g. 8850999320005"
+            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none mb-4"
+            onFocus={e => e.target.style.borderColor = '#CC0000'}
+            onBlur={e => e.target.style.borderColor = '#e5e7eb'}
+            onKeyDown={e => e.key === 'Enter' && confirm()}
+          />
+
           <div className="flex gap-2">
-            <input
-              value={manual}
-              onChange={(e) => setManual(e.target.value)}
-              inputMode="numeric"
-              placeholder="e.g. 8850999320005"
-              className="flex-1 border-2 border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none"
-              onFocus={e => e.target.style.borderColor = '#CC0000'}
-              onBlur={e => e.target.style.borderColor = '#e5e7eb'}
-              onKeyDown={e => e.key === 'Enter' && submitManual()}
-            />
-            <button onClick={submitManual} disabled={submitted || !manual.trim()}
-              className="px-4 py-2.5 rounded-xl text-sm font-black text-white disabled:opacity-50"
+            <button onClick={onCancel}
+              className="flex-1 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-600">
+              Cancel
+            </button>
+            <button onClick={confirm} disabled={submitting || !manual.trim()}
+              className="flex-1 py-3 rounded-xl text-sm font-black text-white disabled:opacity-50"
               style={{ background: '#CC0000' }}>
-              Use
+              {submitting ? 'Redeeming…' : 'Confirm & redeem'}
             </button>
           </div>
         </div>
