@@ -296,10 +296,10 @@ describe('approveBill', () => {
 })
 
 describe('approveBill duplicate-receipt guard', () => {
-  async function seedBill(id, { imageHash = null, status = 'pending' } = {}) {
+  async function seedBill(id, { imageHash = null, receiptRefHash = null, status = 'pending' } = {}) {
     await testEnv.withSecurityRulesDisabled(async (ctx) => {
       await setDoc(doc(ctx.firestore(), 'billSubmissions', id), {
-        userId: ALICE, status, amount: 100, pointsAwarded: 0, imageHash,
+        userId: ALICE, status, amount: 100, pointsAwarded: 0, imageHash, receiptRefHash,
       })
     })
   }
@@ -336,5 +336,16 @@ describe('approveBill duplicate-receipt guard', () => {
     await seedBill('b1', { imageHash: null })
     await approveBill(adminDb(), { id: 'b1', userId: ALICE, imageHash: null }, 100, '', ADMIN)
     expect(await lockCount()).toBe(0)
+  })
+
+  test('rejects a second bill sharing a receipt ref even with a different image, and awards no points', async () => {
+    await seedBill('b1', { imageHash: 'img-a', receiptRefHash: 'ref-xyz' })
+    await seedBill('b2', { imageHash: 'img-b', receiptRefHash: 'ref-xyz' })
+    await approveBill(adminDb(), { id: 'b1', userId: ALICE, imageHash: 'img-a', receiptRefHash: 'ref-xyz' }, 100, '', ADMIN)
+    const afterFirst = await points(ALICE)
+    await expect(
+      approveBill(adminDb(), { id: 'b2', userId: ALICE, imageHash: 'img-b', receiptRefHash: 'ref-xyz' }, 100, '', ADMIN)
+    ).rejects.toThrow('DUPLICATE_RECEIPT')
+    expect(await points(ALICE)).toBe(afterFirst)
   })
 })

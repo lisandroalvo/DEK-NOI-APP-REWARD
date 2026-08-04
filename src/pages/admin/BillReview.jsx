@@ -222,7 +222,7 @@ export default function BillReview() {
         <div className="grid gap-4">
           {filteredBills.map((bill) => {
             const flags = duplicateFlagsFor(bill, bills)
-            const flagged = bill.status === 'pending' && (flags.exactImage || flags.sameAmountDay)
+            const flagged = bill.status === 'pending' && (flags.sameRef || flags.exactImage || flags.sameAmountDay)
             return (
             <div
               key={bill.id}
@@ -252,7 +252,7 @@ export default function BillReview() {
                       )}
                       {flagged && (
                         <span className="px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-800 border-2 border-orange-300">
-                          ⚠️ {flags.exactImage ? 'Duplicate image' : 'Same amount & day'}
+                          ⚠️ {flags.sameRef ? 'Duplicate bill #' : flags.exactImage ? 'Duplicate image' : 'Same amount & day'}
                         </span>
                       )}
                       {bill.merchantFlag === 'mismatch' && (

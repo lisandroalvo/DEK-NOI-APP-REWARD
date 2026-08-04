@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { db, storage } from '../../lib/firebase'
 import { uploadImageFile, validateImageFile } from '../../lib/storage'
 import { recognizeReceiptTotal } from '../../lib/ocr'
-import { hashImageFile } from '../../lib/billDedup'
+import { hashImageFile, normalizeRef, hashText } from '../../lib/billDedup'
 import { BAHT_PER_POINT } from '../../lib/points'
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore'
 import { Camera, Upload, X, CheckCircle } from 'lucide-react'
@@ -17,6 +17,7 @@ export default function ScanBill() {
   const [amount, setAmount] = useState('')
   const [ocrAmount, setOcrAmount] = useState(null)
   const [ocrMerchant, setOcrMerchant] = useState('unclear')
+  const [ocrRef, setOcrRef] = useState(null)
   const [recognizing, setRecognizing] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -44,8 +45,9 @@ export default function ScanBill() {
 
     // Best-effort: auto-recognize the total to pre-fill the amount field.
     setRecognizing(true)
-    const { amount: recognized, merchant } = await recognizeReceiptTotal(file)
+    const { amount: recognized, merchant, ref } = await recognizeReceiptTotal(file)
     setOcrMerchant(merchant)
+    setOcrRef(ref)
     if (recognized != null) {
       setOcrAmount(recognized)
       setAmount(String(recognized))
@@ -68,6 +70,13 @@ export default function ScanBill() {
     try {
       // Fingerprint the image so the same receipt can't be turned into points twice.
       const imageHash = await hashImageFile(selectedFile)
+
+      // The receipt reference (Ref2 / bill id / transaction ref) is the strongest duplicate
+      // key — it catches the same receipt even when re-photographed or submitted from another
+      // account. Hash the normalized ref for a Firestore-safe lock-doc id. A missing/unreadable
+      // ref just means dedup falls back to the image hash for this submission.
+      const receiptRef = normalizeRef(ocrRef)
+      const receiptRefHash = receiptRef ? await hashText(receiptRef) : null
 
       // Block re-submitting a receipt the customer already has pending or approved.
       // A previously rejected one is allowed through so a mistaken rejection can be fixed.
@@ -98,6 +107,8 @@ export default function ScanBill() {
         amount: amountNum,
         ocrAmount,
         merchantFlag: ocrMerchant,
+        receiptRef,
+        receiptRefHash,
         status: 'pending',
         submittedAt: serverTimestamp(),
         reviewedAt: null,

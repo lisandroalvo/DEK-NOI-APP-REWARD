@@ -84,5 +84,11 @@ service cloud.firestore {
     match /receiptHashes/{hash} {
       allow read, write: if isAdmin();
     }
+
+    // Receipt-reference dedup locks: one doc per approved receipt ref hash (Ref2 / bill id),
+    // written by the admin approval transaction. Customers never touch this collection.
+    match /receiptRefs/{refHash} {
+      allow read, write: if isAdmin();
+    }
   }
 }

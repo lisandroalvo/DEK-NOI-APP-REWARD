@@ -17,10 +17,11 @@ function blobToBase64(blob) {
   })
 }
 
-// Returns { amount, merchant }: amount is a positive number or null (OCR is best-effort,
+// Returns { amount, merchant, ref }: amount is a positive number or null (OCR is best-effort,
 // so any failure resolves to null and the customer types it in); merchant is
-// 'match' | 'mismatch' | 'unclear' — an admin-advisory hint about whether the receipt/slip
-// is a DEK NOI purchase. Never throws.
+// 'match' | 'mismatch' | 'unclear' — an admin-advisory hint about whether the receipt/slip is
+// a DEK NOI purchase; ref is the receipt's Ref2 / bill id / transaction reference (or null),
+// used for duplicate detection. Never throws.
 export async function recognizeReceiptTotal(file) {
   try {
     const blob = await compressImageToBlob(file)
@@ -29,9 +30,10 @@ export async function recognizeReceiptTotal(file) {
     const { data } = await call({ imageBase64 })
     const amount = typeof data?.amount === 'number' && data.amount > 0 ? data.amount : null
     const merchant = ['match', 'mismatch', 'unclear'].includes(data?.merchant) ? data.merchant : 'unclear'
-    return { amount, merchant }
+    const ref = typeof data?.ref === 'string' && data.ref.trim() ? data.ref.trim() : null
+    return { amount, merchant, ref }
   } catch (err) {
     console.error('Receipt OCR failed:', err)
-    return { amount: null, merchant: 'unclear' }
+    return { amount: null, merchant: 'unclear', ref: null }
   }
 }
