@@ -11,3 +11,11 @@ export async function redeemReward(redemptionId) {
   const { data } = await call({ redemptionId })
   return data
 }
+
+// Admin-only: re-drives a stuck redemption server-side (points already held). Returns the
+// same shape as redeemReward; transient failures reject the promise for the caller to catch.
+export async function retryRedemption(redemptionId) {
+  const call = httpsCallable(functions, 'retryRedemption')
+  const { data } = await call({ redemptionId })
+  return data
+}

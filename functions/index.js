@@ -63,3 +63,4 @@ export const recognizeReceiptTotal = onCall(
 )
 
 export { redeemReward } from './redeemReward.js'
+export { retryRedemption } from './retryRedemption.js'
