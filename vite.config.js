@@ -1,9 +1,29 @@
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      // functions/ is its own npm package with its own (older) firebase-admin copy. Under
+      // Vitest, code under functions/ and code under test/ would otherwise each resolve
+      // 'firebase-admin' to a different physical install — two different classes, so a
+      // FieldValue sentinel made in one is rejected as foreign by a Firestore instance
+      // made from the other. Force both to the single root copy for the test run only;
+      // this has no effect on the deployed Cloud Function, which never runs through Vite.
+      'firebase-admin/app': fileURLToPath(new URL('./node_modules/firebase-admin/lib/esm/app/index.js', import.meta.url)),
+      'firebase-admin/firestore': fileURLToPath(new URL('./node_modules/firebase-admin/lib/esm/firestore/index.js', import.meta.url)),
+    },
+  },
+  test: {
+    // The Firestore emulator runs in singleProjectMode (firebase.json), so every test file's
+    // "projectId" aliases to the same underlying data. redeemCore.test.js clears the entire
+    // emulator between its own tests, which corrupts state for any other emulator-backed suite
+    // running concurrently. Running test files one at a time keeps each suite's data isolated.
+    fileParallelism: false,
+  },
   plugins: [
     react(),
     tailwindcss(),
