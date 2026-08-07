@@ -3,18 +3,20 @@ import { collection, getDocs, query, where, orderBy, limit } from 'firebase/fire
 import { db } from '../../lib/firebase'
 import { Users, Gift, ShoppingBag, Star, TrendingUp, ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { outcomeOf } from '../../lib/redemptions'
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({ customers: 0, rewards: 0, pending: 0, totalPoints: 0 })
+  const [stats, setStats] = useState({ customers: 0, rewards: 0, attention: 0, totalPoints: 0 })
   const [recentRedemptions, setRecentRedemptions] = useState([])
   const [recentTx, setRecentTx] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const load = async () => {
-      const [customers, rewards, pending, redemptions, transactions] = await Promise.all([
+      const [customers, rewards, reserving, pending, redemptions, transactions] = await Promise.all([
         getDocs(query(collection(db, 'users'), where('role', '==', 'customer'))),
         getDocs(query(collection(db, 'rewards'), where('available', '==', true))),
+        getDocs(query(collection(db, 'redemptions'), where('status', '==', 'reserving'))),
         getDocs(query(collection(db, 'redemptions'), where('status', '==', 'pending'))),
         getDocs(query(collection(db, 'redemptions'), orderBy('requestedAt', 'desc'), limit(5))),
         getDocs(query(collection(db, 'pointTransactions'), orderBy('createdAt', 'desc'), limit(5))),
@@ -22,7 +24,7 @@ export default function AdminDashboard() {
       setStats({
         customers: customers.size,
         rewards: rewards.size,
-        pending: pending.size,
+        attention: reserving.size + pending.size,
         totalPoints: customers.docs.reduce((a, d) => a + (d.data().points || 0), 0),
       })
       setRecentRedemptions(redemptions.docs.map(d => ({ id: d.id, ...d.data() })))
@@ -35,14 +37,15 @@ export default function AdminDashboard() {
   const statCards = [
     { label: 'Total Members', value: stats.customers, icon: <Users size={20} />, accent: '#CC0000', to: '/admin/customers' },
     { label: 'Active Rewards', value: stats.rewards, icon: <Gift size={20} />, accent: '#CC7700', to: '/admin/rewards' },
-    { label: 'Pending Requests', value: stats.pending, icon: <ShoppingBag size={20} />, accent: stats.pending > 0 ? '#CC0000' : '#888', to: '/admin/redemptions' },
+    { label: 'Needs attention', value: stats.attention, icon: <ShoppingBag size={20} />, accent: stats.attention > 0 ? '#CC0000' : '#888', to: '/admin/redemptions' },
     { label: 'Points Distributed', value: stats.totalPoints.toLocaleString(), icon: <Star size={20} />, accent: '#CC7700', to: null },
   ]
 
-  const statusStyle = {
-    pending:  { bg: '#FFF9E0', color: '#CC7700', label: '⏳ Pending' },
-    approved: { bg: '#F0FFF4', color: '#16a34a', label: '✅ Approved' },
-    rejected: { bg: '#FFF0F0', color: '#CC0000', label: '❌ Rejected' },
+  const outcomeStyle = {
+    completed: { bg: '#F0FFF4', color: '#16a34a', label: '✅ Completed' },
+    rejected:  { bg: '#FFF0F0', color: '#CC0000', label: '❌ Rejected' },
+    stuck:     { bg: '#FFF9E0', color: '#CC7700', label: '⏳ Stuck' },
+    other:     { bg: '#F3F4F6', color: '#4b5563', label: '•' },
   }
 
   return (
@@ -50,18 +53,17 @@ export default function AdminDashboard() {
       <h1 className="text-xl sm:text-2xl font-black text-gray-900 mb-1">Admin Dashboard</h1>
       <p className="text-gray-400 text-sm mb-6">DEK NOI Rewards — overview</p>
 
-      {/* Pending alert banner */}
-      {stats.pending > 0 && (
+      {stats.attention > 0 && (
         <Link to="/admin/redemptions"
           className="flex items-center justify-between mb-6 p-4 rounded-2xl border-2"
           style={{ background: '#FFF9E0', borderColor: '#FFE600' }}>
           <div className="flex items-center gap-3">
-            <span className="text-2xl">⏳</span>
+            <span className="text-2xl">⚠️</span>
             <div>
               <p className="font-black text-sm" style={{ color: '#CC7700' }}>
-                {stats.pending} redemption request{stats.pending > 1 ? 's' : ''} waiting for approval
+                {stats.attention} redemption{stats.attention > 1 ? 's' : ''} need{stats.attention > 1 ? '' : 's'} attention
               </p>
-              <p className="text-xs text-gray-500">Tap to review and approve</p>
+              <p className="text-xs text-gray-500">Tap to review stuck or unprocessed redemptions</p>
             </div>
           </div>
           <ChevronRight size={18} style={{ color: '#CC7700' }} />
@@ -102,7 +104,7 @@ export default function AdminDashboard() {
           ) : (
             <ul className="divide-y divide-gray-50">
               {recentRedemptions.map(r => {
-                const s = statusStyle[r.status] ?? statusStyle.pending
+                const s = outcomeStyle[outcomeOf(r.status)]
                 return (
                   <li key={r.id} className="px-4 py-3 flex items-center justify-between gap-3">
                     <div>
