@@ -12,6 +12,16 @@ const REWARDS_API_URL = 'https://dek-noi-dashboard.vercel.app/api/reward-redempt
 
 if (getApps().length === 0) initializeApp()
 
+// Throw unless redemptions/{redemptionId}.userId === uid (the sole guard stopping one
+// customer from driving another's redemption). Returns the redemption data on success.
+export async function assertOwner(db, redemptionId, uid) {
+  const snap = await db.collection('redemptions').doc(redemptionId).get()
+  if (!snap.exists) throw new HttpsError('not-found', 'Redemption not found.')
+  const data = snap.data()
+  if (data.userId !== uid) throw new HttpsError('permission-denied', 'Not your redemption.')
+  return data
+}
+
 export const redeemReward = onCall(
   { region: 'asia-southeast1', memory: '256MiB', timeoutSeconds: 60, secrets: [REWARDS_API_KEY] },
   async (request) => {
@@ -22,9 +32,7 @@ export const redeemReward = onCall(
       throw new HttpsError('invalid-argument', 'Missing redemptionId.')
     }
     const db = getFirestore()
-    const snap = await db.collection('redemptions').doc(redemptionId).get()
-    if (!snap.exists) throw new HttpsError('not-found', 'Redemption not found.')
-    if (snap.data().userId !== uid) throw new HttpsError('permission-denied', 'Not your redemption.')
+    await assertOwner(db, redemptionId, uid)
     const dispense = makeDispenser(REWARDS_API_URL, REWARDS_API_KEY.value())
     return redeemCore({ db, redemptionId, dispense })
   },
