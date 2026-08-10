@@ -19,8 +19,8 @@ export default defineConfig([
     },
   },
   {
-    // Node code (the rewards seeder, Cloud Functions) runs under node, not the browser.
-    files: ['scripts/**/*.js', 'functions/**/*.js'],
+    // Node code (the rewards seeder, Cloud Functions, emulator tests) runs under node, not the browser.
+    files: ['scripts/**/*.js', 'functions/**/*.js', 'test/**/*.js'],
     languageOptions: { globals: globals.node },
   },
 ])

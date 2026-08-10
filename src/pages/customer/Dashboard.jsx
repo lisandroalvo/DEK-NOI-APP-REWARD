@@ -39,8 +39,10 @@ export default function CustomerDashboard() {
   const earned = transactions.filter(t => t.points > 0).reduce((a, t) => a + t.points, 0)
   const redeemed = Math.abs(transactions.filter(t => t.points < 0).reduce((a, t) => a + t.points, 0))
 
-  // Progress toward the next point from carried-over spend (spendCarry is 0..BAHT_PER_POINT-1).
-  const carry = profile?.spendCarry ?? 0
+  // Progress toward the next point from carried-over spend. `% BAHT_PER_POINT` keeps this in
+  // 0..BAHT_PER_POINT-1 even for a legacy spendCarry left over from an earlier earning rate
+  // (a smaller rate can leave a stored carry above the new threshold until the next approval).
+  const carry = (profile?.spendCarry ?? 0) % BAHT_PER_POINT
   const toNextPoint = BAHT_PER_POINT - carry
   const carryPct = (carry / BAHT_PER_POINT) * 100
 
@@ -186,7 +188,7 @@ export default function CustomerDashboard() {
 
       {/* Pending alert */}
       {pendingCount > 0 && (
-        <Link to="/my-redemptions" className="flex items-center justify-between mb-5 p-4 rounded-2xl border-2" style={{ background: '#FFF9E0', borderColor: '#FFE600' }}>
+        <Link to="/activity?tab=rewards" className="flex items-center justify-between mb-5 p-4 rounded-2xl border-2" style={{ background: '#FFF9E0', borderColor: '#FFE600' }}>
           <div className="flex items-center gap-3">
             <span className="text-xl">⏳</span>
             <div>
@@ -212,7 +214,7 @@ export default function CustomerDashboard() {
           </div>
           <ChevronRight size={18} className="text-gray-400" />
         </Link>
-        <Link to="/my-redemptions" className="flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+        <Link to="/activity?tab=rewards" className="flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#F0FFF4' }}>
               <Gift size={20} style={{ color: '#16a34a' }} />

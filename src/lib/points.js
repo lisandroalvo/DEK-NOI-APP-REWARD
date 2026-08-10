@@ -5,7 +5,7 @@ import { doc, collection, runTransaction, serverTimestamp } from 'firebase/fires
 // Earning rate: this many baht of approved spend equals one point. Leftover baht
 // below this threshold is banked in the user's spendCarry and rolls into the next
 // approval, so no spend is ever wasted. Change here to retune the whole app.
-export const BAHT_PER_POINT = 50
+export const BAHT_PER_POINT = 25
 
 // Round to satang (2 decimals). Receipts are usually whole baht but sometimes carry
 // satang; rounding each stored money value keeps floating-point drift out of the
@@ -100,6 +100,10 @@ export async function approveBill(db, bill, amount, notes, adminUid) {
     // by the image hash; if a different bill already claimed it, refuse this approval.
     // Legacy bills without an imageHash skip the lock entirely.
     const lockRef = bill.imageHash ? doc(db, 'receiptHashes', bill.imageHash) : null
+    // A second lock keyed by the receipt's reference (Ref2 / bill id / transaction ref).
+    // It catches the same receipt even when re-photographed or submitted from another
+    // account. Bills without a receiptRefHash skip it and rely on the image-hash lock.
+    const refLockRef = bill.receiptRefHash ? doc(db, 'receiptRefs', bill.receiptRefHash) : null
 
     // Re-read the bill inside the transaction so a stale list or a double-click
     // can't approve (and award points for) the same bill twice.
@@ -109,6 +113,9 @@ export async function approveBill(db, bill, amount, notes, adminUid) {
 
     const lockSnap = lockRef ? await tx.get(lockRef) : null
     if (lockSnap?.exists() && lockSnap.data().billId !== bill.id) throw new Error('DUPLICATE_RECEIPT')
+
+    const refLockSnap = refLockRef ? await tx.get(refLockRef) : null
+    if (refLockSnap?.exists() && refLockSnap.data().billId !== bill.id) throw new Error('DUPLICATE_RECEIPT')
 
     const userSnap = await tx.get(userRef)
     if (!userSnap.exists()) throw new Error('User not found')
@@ -144,5 +151,6 @@ export async function approveBill(db, bill, amount, notes, adminUid) {
       createdAt: serverTimestamp(),
     })
     if (lockRef) tx.set(lockRef, { billId: bill.id, userId: bill.userId, createdAt: serverTimestamp() })
+    if (refLockRef) tx.set(refLockRef, { billId: bill.id, userId: bill.userId, createdAt: serverTimestamp() })
   })
 }

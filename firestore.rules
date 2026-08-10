@@ -50,10 +50,11 @@ service cloud.firestore {
     
     // Redemptions
     match /redemptions/{redemptionId} {
-      allow read: if request.auth != null && 
+      allow read: if request.auth != null &&
                      (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if request.auth != null && 
-                       request.resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null
+                       && request.resource.data.userId == request.auth.uid
+                       && request.resource.data.status == 'pending';
       allow update: if isAdmin();
       allow delete: if false; // Keep redemption history
     }
@@ -81,6 +82,12 @@ service cloud.firestore {
     // Receipt-image dedup locks: one doc per approved receipt hash, written by the
     // admin approval transaction. Customers never touch this collection.
     match /receiptHashes/{hash} {
+      allow read, write: if isAdmin();
+    }
+
+    // Receipt-reference dedup locks: one doc per approved receipt ref hash (Ref2 / bill id),
+    // written by the admin approval transaction. Customers never touch this collection.
+    match /receiptRefs/{refHash} {
       allow read, write: if isAdmin();
     }
   }

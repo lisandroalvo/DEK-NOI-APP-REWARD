@@ -4,7 +4,7 @@ import { db } from '../../lib/firebase'
 import { Plus, Pencil, Trash2, X, Gift } from 'lucide-react'
 import ImageUpload from '../../components/ImageUpload'
 
-const EMPTY = { name: '', description: '', pointsCost: '', emoji: '', available: true, imageUrl: null }
+const EMPTY = { name: '', description: '', pointsCost: '', maxValue: '', emoji: '', available: true, imageUrl: null }
 
 export default function AdminRewards() {
   const [rewards, setRewards] = useState([])
@@ -17,13 +17,14 @@ export default function AdminRewards() {
   useEffect(() => { load() }, [])
 
   const open = (r = null) => {
-    setForm(r ? { name: r.name, description: r.description, pointsCost: String(r.pointsCost), emoji: r.emoji || '', available: r.available, imageUrl: r.imageUrl || null } : EMPTY)
+    setForm(r ? { name: r.name, description: r.description, pointsCost: String(r.pointsCost), maxValue: r.maxValue != null ? String(r.maxValue) : '', emoji: r.emoji || '', available: r.available, imageUrl: r.imageUrl || null } : EMPTY)
     setModal(r ?? 'new')
   }
 
   const save = async () => {
+    if (!(parseInt(form.maxValue) > 0)) { alert('Please set a Max value (฿) greater than 0.'); return }
     setSaving(true)
-    const data = { ...form, pointsCost: parseInt(form.pointsCost) || 0, updatedAt: serverTimestamp() }
+    const data = { ...form, pointsCost: parseInt(form.pointsCost) || 0, maxValue: parseInt(form.maxValue) || 0, updatedAt: serverTimestamp() }
     try {
       if (modal === 'new') await addDoc(collection(db, 'rewards'), { ...data, createdAt: serverTimestamp() })
       else await updateDoc(doc(db, 'rewards', modal.id), data)
@@ -105,6 +106,7 @@ export default function AdminRewards() {
                 { label: 'Reward name', key: 'name', placeholder: 'Free coffee', type: 'text' },
                 { label: 'Description', key: 'description', placeholder: 'One free coffee of any size', type: 'text' },
                 { label: 'Points cost', key: 'pointsCost', placeholder: '500', type: 'number' },
+                { label: 'Max value (฿)', key: 'maxValue', placeholder: '20', type: 'number' },
                 { label: 'Emoji', key: 'emoji', placeholder: '☕', type: 'text' },
               ].map(({ label, key, placeholder, type }) => (
                 <div key={key}>

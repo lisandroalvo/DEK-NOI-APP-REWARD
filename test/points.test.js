@@ -204,33 +204,33 @@ describe('adjustPoints (admin backfill / manual correction)', () => {
 
 describe('approveBill', () => {
   // Alice starts with points:100, spendCarry:0, totalSpent:0 (see beforeEach).
-  // Rate is 50฿ = 1pt.
+  // Rate is 25฿ = 1pt.
 
-  test('awards floor(amount/50) points, banks the remainder, and records spend', async () => {
+  test('awards floor(amount/25) points, banks the remainder, and records spend', async () => {
     await seedBill('b1')
     await approveBill(adminDb(), { id: 'b1', userId: ALICE }, 120, 'Looks good', ADMIN)
 
     const u = await userDoc(ALICE)
-    expect(u.points).toBe(102)      // 100 + floor(120/50)=2
-    expect(u.spendCarry).toBe(20)   // 120 % 50
+    expect(u.points).toBe(104)      // 100 + floor(120/25)=4
+    expect(u.spendCarry).toBe(20)   // 120 % 25
     expect(u.totalSpent).toBe(120)
 
     await testEnv.withSecurityRulesDisabled(async (ctx) => {
       const tx = await getDocs(collection(ctx.firestore(), 'pointTransactions'))
       expect(tx.size).toBe(1)
-      expect(tx.docs[0].data().points).toBe(2)
+      expect(tx.docs[0].data().points).toBe(4)
       expect(tx.docs[0].data().amount).toBe(120)
     })
   })
 
   test('banks sub-threshold spend as carry with zero points (nothing wasted)', async () => {
     await seedBill('b1')
-    await approveBill(adminDb(), { id: 'b1', userId: ALICE }, 30, '', ADMIN)
+    await approveBill(adminDb(), { id: 'b1', userId: ALICE }, 20, '', ADMIN)
 
     const u = await userDoc(ALICE)
-    expect(u.points).toBe(100)      // no point yet
-    expect(u.spendCarry).toBe(30)
-    expect(u.totalSpent).toBe(30)
+    expect(u.points).toBe(100)      // no point yet (20 < 25)
+    expect(u.spendCarry).toBe(20)
+    expect(u.totalSpent).toBe(20)
 
     await testEnv.withSecurityRulesDisabled(async (ctx) => {
       const tx = await getDocs(collection(ctx.firestore(), 'pointTransactions'))
@@ -241,18 +241,18 @@ describe('approveBill', () => {
 
   test('rolls carried baht into the next approval', async () => {
     await seedBill('b1')
-    await approveBill(adminDb(), { id: 'b1', userId: ALICE }, 80, '', ADMIN)
-    // 80 -> +1pt, carry 30
-    expect((await userDoc(ALICE)).spendCarry).toBe(30)
+    await approveBill(adminDb(), { id: 'b1', userId: ALICE }, 40, '', ADMIN)
+    // 40 -> +1pt, carry 15
+    expect((await userDoc(ALICE)).spendCarry).toBe(15)
 
     await seedBill('b2')
-    await approveBill(adminDb(), { id: 'b2', userId: ALICE }, 30, '', ADMIN)
-    // carry 30 + 30 = 60 -> +1pt, carry 10
+    await approveBill(adminDb(), { id: 'b2', userId: ALICE }, 15, '', ADMIN)
+    // carry 15 + 15 = 30 -> +1pt, carry 5 (15 alone would earn nothing)
 
     const u = await userDoc(ALICE)
     expect(u.points).toBe(102)      // 100 + 1 + 1
-    expect(u.spendCarry).toBe(10)
-    expect(u.totalSpent).toBe(110)
+    expect(u.spendCarry).toBe(5)
+    expect(u.totalSpent).toBe(55)
   })
 
   test('preserves satang (2-decimal amounts) without floating-point drift', async () => {
@@ -260,8 +260,8 @@ describe('approveBill', () => {
     await approveBill(adminDb(), { id: 'b1', userId: ALICE }, 50.10, '', ADMIN)
 
     const u = await userDoc(ALICE)
-    expect(u.points).toBe(101)      // 100 + floor(50.10/50)=1
-    expect(u.spendCarry).toBe(0.1)  // 50.10 % 50 = 0.10 exactly, not 0.0999…
+    expect(u.points).toBe(102)      // 100 + floor(50.10/25)=2
+    expect(u.spendCarry).toBe(0.1)  // 50.10 % 25 = 0.10 exactly, not 0.0999…
     expect(u.totalSpent).toBe(50.1)
   })
 
@@ -279,14 +279,14 @@ describe('approveBill', () => {
   test('refuses to approve the same bill twice (no double-count of spend or points)', async () => {
     await seedBill('b1')
     await approveBill(adminDb(), { id: 'b1', userId: ALICE }, 100, 'Looks good', ADMIN)
-    expect((await userDoc(ALICE)).points).toBe(102)
+    expect((await userDoc(ALICE)).points).toBe(104)
 
     await expect(
       approveBill(adminDb(), { id: 'b1', userId: ALICE }, 100, 'Looks good', ADMIN)
     ).rejects.toThrow(/ALREADY_REVIEWED/)
 
     const u = await userDoc(ALICE)
-    expect(u.points).toBe(102)
+    expect(u.points).toBe(104)
     expect(u.totalSpent).toBe(100)
     await testEnv.withSecurityRulesDisabled(async (ctx) => {
       const tx = await getDocs(collection(ctx.firestore(), 'pointTransactions'))
@@ -296,10 +296,10 @@ describe('approveBill', () => {
 })
 
 describe('approveBill duplicate-receipt guard', () => {
-  async function seedBill(id, { imageHash = null, status = 'pending' } = {}) {
+  async function seedBill(id, { imageHash = null, receiptRefHash = null, status = 'pending' } = {}) {
     await testEnv.withSecurityRulesDisabled(async (ctx) => {
       await setDoc(doc(ctx.firestore(), 'billSubmissions', id), {
-        userId: ALICE, status, amount: 100, pointsAwarded: 0, imageHash,
+        userId: ALICE, status, amount: 100, pointsAwarded: 0, imageHash, receiptRefHash,
       })
     })
   }
@@ -336,5 +336,16 @@ describe('approveBill duplicate-receipt guard', () => {
     await seedBill('b1', { imageHash: null })
     await approveBill(adminDb(), { id: 'b1', userId: ALICE, imageHash: null }, 100, '', ADMIN)
     expect(await lockCount()).toBe(0)
+  })
+
+  test('rejects a second bill sharing a receipt ref even with a different image, and awards no points', async () => {
+    await seedBill('b1', { imageHash: 'img-a', receiptRefHash: 'ref-xyz' })
+    await seedBill('b2', { imageHash: 'img-b', receiptRefHash: 'ref-xyz' })
+    await approveBill(adminDb(), { id: 'b1', userId: ALICE, imageHash: 'img-a', receiptRefHash: 'ref-xyz' }, 100, '', ADMIN)
+    const afterFirst = await points(ALICE)
+    await expect(
+      approveBill(adminDb(), { id: 'b2', userId: ALICE, imageHash: 'img-b', receiptRefHash: 'ref-xyz' }, 100, '', ADMIN)
+    ).rejects.toThrow('DUPLICATE_RECEIPT')
+    expect(await points(ALICE)).toBe(afterFirst)
   })
 })

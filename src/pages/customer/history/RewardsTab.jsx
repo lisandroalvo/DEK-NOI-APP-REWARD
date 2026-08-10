@@ -1,22 +1,23 @@
+// ABOUTME: Rewards sub-tab of the customer Activity page — lists reward redemptions.
+// ABOUTME: Pending and history sections plus a redemption-status notification toast.
 import { useEffect, useState } from 'react'
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore'
-import { db } from '../../lib/firebase'
-import { useAuth } from '../../context/AuthContext'
+import { db } from '../../../lib/firebase'
+import { useAuth } from '../../../context/AuthContext'
 import { Link } from 'react-router-dom'
-import lineQr from '../../assets/line-qr.png'
-import charSitting from '../../assets/char-sitting.png'
-import Toast from '../../components/Toast'
-import { useRedemptionNotifications } from '../../hooks/useRedemptionNotifications'
+import charSitting from '../../../assets/char-sitting.png'
+import Toast from '../../../components/Toast'
+import { useRedemptionNotifications } from '../../../hooks/useRedemptionNotifications'
 
 const STATUS = {
   pending:   { bg: '#FFF9E0', color: '#CC7700', label: '⏳ Pending Approval', desc: 'Admin will review your request shortly.' },
-  approved:  { bg: '#F0FFF4', color: '#16a34a', label: '✅ Approved',         desc: 'Visit the store to collect your reward!' },
+  reserving: { bg: '#FFF9E0', color: '#CC7700', label: '⏳ Processing', desc: 'Finishing your redemption…' },
+  approved:  { bg: '#F0FFF4', color: '#16a34a', label: '✅ Approved',         desc: 'Enjoy — your reward is yours!' },
   collected: { bg: '#EEF6FF', color: '#1d4ed8', label: '🛍️ Collected',       desc: 'Enjoy your reward — thanks for collecting!' },
   rejected:  { bg: '#FFF0F0', color: '#CC0000', label: '❌ Not Approved',     desc: 'Contact us on LINE if you have questions.' },
 }
 
-
-export default function MyRedemptions() {
+export default function RewardsTab() {
   const { user } = useAuth()
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
@@ -25,7 +26,7 @@ export default function MyRedemptions() {
 
   useEffect(() => {
     if (!user) return
-    
+
     const loadRedemptions = async () => {
       setLoading(true)
       setError(null)
@@ -37,15 +38,14 @@ export default function MyRedemptions() {
           console.warn('Firestore index not found, using fallback query:', indexError.message)
           snap = await getDocs(query(collection(db, 'redemptions'), where('userId', '==', user.uid)))
         }
-        
+
         let data = snap.docs.map(d => ({ id: d.id, ...d.data() }))
         data.sort((a, b) => {
           const aTime = a.requestedAt?.toMillis?.() || 0
           const bTime = b.requestedAt?.toMillis?.() || 0
           return bTime - aTime
         })
-        
-        console.log('Loaded redemptions:', data)
+
         setItems(data)
       } catch (err) {
         console.error('Error loading redemptions:', err)
@@ -54,7 +54,7 @@ export default function MyRedemptions() {
         setLoading(false)
       }
     }
-    
+
     loadRedemptions()
   }, [user])
 
@@ -62,7 +62,7 @@ export default function MyRedemptions() {
   const done    = items.filter(i => i.status !== 'pending')
 
   return (
-    <div className="p-6 md:p-8 max-w-lg">
+    <>
       {notification && (
         <Toast
           message={notification.message}
@@ -71,8 +71,6 @@ export default function MyRedemptions() {
           duration={8000}
         />
       )}
-      
-      <h1 className="text-2xl font-black text-gray-900 mb-6">My Redemptions</h1>
 
       {error && (
         <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-4">
@@ -94,7 +92,6 @@ export default function MyRedemptions() {
         </div>
       ) : (
         <>
-          {/* Pending */}
           {pending.length > 0 && (
             <div className="mb-6">
               <p className="text-xs font-black uppercase tracking-wider text-gray-400 mb-3">Pending</p>
@@ -104,7 +101,6 @@ export default function MyRedemptions() {
             </div>
           )}
 
-          {/* History */}
           {done.length > 0 && (
             <div className="mb-6">
               <p className="text-xs font-black uppercase tracking-wider text-gray-400 mb-3">History</p>
@@ -115,16 +111,7 @@ export default function MyRedemptions() {
           )}
         </>
       )}
-
-      {/* LINE help */}
-      <div className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4">
-        <img src={lineQr} alt="LINE QR" className="w-16 h-16 object-contain rounded-xl shrink-0" />
-        <div>
-          <p className="font-black text-gray-900 text-sm mb-0.5">Have a question?</p>
-          <p className="text-xs text-gray-500 leading-relaxed">Scan to contact us on <strong>LINE</strong> for help with your rewards.</p>
-        </div>
-      </div>
-    </div>
+    </>
   )
 }
 
@@ -140,6 +127,12 @@ function RedemptionCard({ r }) {
             <p className="text-xs text-gray-400">
               {r.requestedAt?.toDate?.()?.toLocaleDateString() ?? '—'} · <span className="font-bold" style={{ color: '#CC0000' }}>⭐ {r.pointsCost} pts</span>
             </p>
+            {r.barcode && (
+              <p className="text-[11px] text-gray-400 mt-0.5 font-mono break-all">🔖 {r.barcode}</p>
+            )}
+            {r.product?.name && (
+              <p className="text-[11px] text-gray-500 mt-0.5">📦 {r.product.name}</p>
+            )}
           </div>
         </div>
         <span className="text-xs font-black px-3 py-1.5 rounded-full shrink-0" style={{ background: s.bg, color: s.color }}>

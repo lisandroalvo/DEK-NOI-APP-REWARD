@@ -165,6 +165,20 @@ describe('redemptions — only admins fulfil', () => {
     const db = testEnv.authenticatedContext(ALICE).firestore()
     await assertFails(updateDoc(doc(db, 'redemptions', 'red1'), { status: 'collected' }))
   })
+
+  test('a customer can create a pending redemption for themselves', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertSucceeds(setDoc(doc(db, 'redemptions', 'rdmA'), {
+      userId: ALICE, rewardId: 'r1', rewardName: 'Soft Drink', pointsCost: 70, barcode: '885', status: 'pending',
+    }))
+  })
+
+  test('a customer cannot create a redemption that is already approved', async () => {
+    const db = testEnv.authenticatedContext(ALICE).firestore()
+    await assertFails(setDoc(doc(db, 'redemptions', 'rdmB'), {
+      userId: ALICE, rewardId: 'r1', rewardName: 'Soft Drink', pointsCost: 70, barcode: '885', status: 'approved',
+    }))
+  })
 })
 
 describe('storage — must be authenticated', () => {

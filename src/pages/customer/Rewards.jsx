@@ -2,16 +2,19 @@ import { useEffect, useState } from 'react'
 import { collection, getDocs, query, where, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { useAuth } from '../../context/AuthContext'
-import { Star, CheckCircle, Lock } from 'lucide-react'
+import { redeemReward as callRedeemReward } from '../../lib/redeemReward'
+import { Star, Lock } from 'lucide-react'
 import charSitting from '../../assets/char-sitting.png'
+import BarcodeScanner from '../../components/BarcodeScanner'
 
 export default function CustomerRewards() {
   const { user, profile } = useAuth()
   const [rewards, setRewards] = useState([])
-  const [success, setSuccess] = useState('')
   const [redeeming, setRedeeming] = useState(null)
   const [showModal, setShowModal] = useState(null)
   const [detailsModal, setDetailsModal] = useState(null)
+  const [scanFor, setScanFor] = useState(null)
+  const [result, setResult] = useState(null) // { ok, product?, code?, message?, retry?, reward }
 
   useEffect(() => {
     getDocs(query(collection(db, 'rewards'), where('available', '==', true)))
@@ -19,10 +22,44 @@ export default function CustomerRewards() {
         .sort((a, b) => a.pointsCost - b.pointsCost)))
   }, [])
 
-  const redeem = async (reward) => {
+  const CODE_MESSAGES = {
+    OUT_OF_STOCK: 'That item is out of stock right now.',
+    EXCEEDS_MAX_VALUE: "That item costs more than this reward allows. Please pick a lower-priced item.",
+    PRODUCT_NOT_FOUND: "We couldn't find that barcode. Please scan again.",
+    INSUFFICIENT_POINTS: "You don't have enough points for this reward.",
+    BAD_REQUEST: 'That barcode looks invalid. Please scan again.',
+  }
+
+  const processRedemption = async (redemptionId, reward) => {
     setRedeeming(reward.id)
+    setResult({ processing: true, reward }) // show the spinner immediately (covers retries too)
     try {
-      await addDoc(collection(db, 'redemptions'), {
+      const res = await callRedeemReward(redemptionId)
+      if (res?.ok) {
+        setResult({ ok: true, product: res.product ?? null, reward })
+      } else {
+        setResult({ ok: false, code: res?.code, message: CODE_MESSAGES[res?.code] || res?.message || 'This redemption could not be completed.', reward })
+      }
+    } catch (err) {
+      if (err?.code === 'functions/unavailable') {
+        // Transient — keep the SAME redemptionId so Try again reuses this redemption (never a new key).
+        setResult({ ok: false, retry: true, redemptionId, reward, message: 'The store system is busy. Please try again in a moment.' })
+      } else {
+        // Permanent — drop redemptionId so Try again re-scans a fresh doc instead of re-calling the same failed id.
+        setResult({ ok: false, reward, message: 'This reward can’t be redeemed right now. Please try a different item or contact support.' })
+      }
+    } finally {
+      setRedeeming(null)
+    }
+  }
+
+  const redeem = async (reward, barcode) => {
+    setRedeeming(reward.id)
+    setScanFor(null)
+    setResult({ processing: true, reward }) // pop the modal the instant they confirm — no blank gap
+    let ref
+    try {
+      ref = await addDoc(collection(db, 'redemptions'), {
         userId: user.uid,
         userName: profile.name,
         userEmail: profile.email,
@@ -30,15 +67,17 @@ export default function CustomerRewards() {
         rewardName: reward.name,
         rewardEmoji: reward.emoji || '🎁',
         pointsCost: reward.pointsCost,
+        maxValue: reward.maxValue ?? null,
+        barcode,
         status: 'pending',
         requestedAt: serverTimestamp(),
       })
-      setShowModal(null)
-      setSuccess(`Request for "${reward.name}" submitted! The admin will approve it shortly.`)
-      setTimeout(() => setSuccess(''), 6000)
-    } finally {
+    } catch {
+      setResult({ ok: false, message: 'Could not start the redemption. Please try again.', reward })
       setRedeeming(null)
+      return
     }
+    await processRedemption(ref.id, reward)
   }
 
   const pts = profile?.points ?? 0
@@ -55,16 +94,6 @@ export default function CustomerRewards() {
         </div>
       </div>
       <p className="text-gray-400 text-xs sm:text-sm mb-4 sm:mb-6">Redeem your points for great rewards!</p>
-
-      {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-2xl flex items-start gap-3 text-green-700">
-          <CheckCircle size={20} className="shrink-0 mt-0.5" />
-          <div>
-            <p className="font-bold text-sm">Request Submitted!</p>
-            <p className="text-xs mt-0.5">{success}</p>
-          </div>
-        </div>
-      )}
 
       {rewards.length === 0 ? (
         <div className="text-center py-10 text-gray-400">
@@ -148,17 +177,17 @@ export default function CustomerRewards() {
               <p className="text-sm text-gray-600">This will use</p>
               <p className="text-2xl font-black" style={{ color: '#CC0000' }}>⭐ {showModal.pointsCost.toLocaleString()} points</p>
               <p className="text-xs text-gray-400 mt-1">
-                You'll have <strong>{(pts - showModal.pointsCost).toLocaleString()} pts</strong> remaining after approval
+                You'll have <strong>{(pts - showModal.pointsCost).toLocaleString()} pts</strong> remaining after redeeming
               </p>
             </div>
             <p className="text-xs text-gray-400 text-center mb-5">
-              Your request will be sent to the admin for approval. Points are deducted once approved.
+              Next, scan the barcode of the item you're taking — your points are used right away.
             </p>
             <div className="flex gap-3">
               <button onClick={() => setShowModal(null)} className="flex-1 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-600">
                 Cancel
               </button>
-              <button onClick={() => redeem(showModal)} disabled={redeeming === showModal.id}
+              <button onClick={() => { setScanFor(showModal); setShowModal(null) }} disabled={redeeming === showModal.id}
                 className="flex-1 py-3 rounded-xl text-sm font-black text-white disabled:opacity-60"
                 style={{ background: '#CC0000' }}>
                 {redeeming === showModal.id ? 'Submitting…' : 'Confirm Redeem'}
@@ -236,6 +265,61 @@ export default function CustomerRewards() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Redemption result */}
+      {result && (
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4"
+          onClick={() => { if (!result.processing) setResult(null) }}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center" onClick={(e) => e.stopPropagation()}>
+            {result.processing ? (
+              <>
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 mx-auto mb-4" style={{ borderColor: '#CC0000' }} />
+                <h2 className="text-xl font-black text-gray-900 mb-1">Redeeming…</h2>
+                <p className="text-sm text-gray-600">Confirming your <strong>{result.reward.name}</strong> — one moment.</p>
+              </>
+            ) : (
+              <>
+                <div className="text-5xl mb-3">{result.ok ? '🎉' : result.retry ? '⏳' : '😕'}</div>
+                <h2 className="text-xl font-black text-gray-900 mb-1">
+                  {result.ok ? 'Enjoy your reward!' : result.retry ? 'Almost there' : "Couldn't redeem"}
+                </h2>
+                {result.ok ? (
+                  <p className="text-sm text-gray-600 mb-5">
+                    Grab your <strong>{result.product?.name || result.reward.name}</strong>. {result.reward.pointsCost.toLocaleString()} points were used.
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-600 mb-5">{result.message}</p>
+                )}
+                <div className="flex gap-3">
+                  <button onClick={() => setResult(null)} className="flex-1 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-600">Close</button>
+                  {!result.ok && (
+                    <button onClick={() => {
+                        if (result.retry && result.redemptionId) {
+                          processRedemption(result.redemptionId, result.reward)
+                        } else {
+                          const r = result.reward
+                          setResult(null)
+                          setScanFor(r)
+                        }
+                      }}
+                      className="flex-1 py-3 rounded-xl text-sm font-black text-white" style={{ background: '#CC0000' }}>
+                      Try again
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Barcode capture */}
+      {scanFor && (
+        <BarcodeScanner
+          onDetected={(barcode) => redeem(scanFor, barcode)}
+          onCancel={() => setScanFor(null)}
+        />
       )}
     </div>
   )

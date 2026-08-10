@@ -11,7 +11,7 @@ import Privacy from './pages/Privacy'
 // Customer pages
 import CustomerDashboard from './pages/customer/Dashboard'
 import CustomerRewards from './pages/customer/Rewards'
-import MyRedemptions from './pages/customer/MyRedemptions'
+import History from './pages/customer/History'
 import Profile from './pages/customer/Profile'
 import ScanBill from './pages/customer/ScanBill'
 
@@ -73,7 +73,7 @@ function AppContent() {
       {/* Customer routes */}
       <Route path="/dashboard" element={<RequireAuth><Layout><CustomerDashboard /></Layout></RequireAuth>} />
       <Route path="/rewards" element={<RequireAuth><Layout><CustomerRewards /></Layout></RequireAuth>} />
-      <Route path="/my-redemptions" element={<RequireAuth><Layout><MyRedemptions /></Layout></RequireAuth>} />
+      <Route path="/activity" element={<RequireAuth><Layout><History /></Layout></RequireAuth>} />
       <Route path="/profile" element={<RequireAuth><Layout><Profile /></Layout></RequireAuth>} />
       <Route path="/scan-bill" element={<RequireAuth><Layout><ScanBill /></Layout></RequireAuth>} />
 
