@@ -2,7 +2,7 @@
 import { describe, test, expect } from 'vitest'
 import {
   NEEDS_ATTENTION_STATUSES, isNeedsAttention, outcomeOf,
-  matchesHistoryFilter, matchesSearch, summarize,
+  matchesHistoryFilter, matchesSearch, summarize, heldPointsOnReject,
 } from '../src/lib/redemptions.js'
 
 describe('needs-attention selection', () => {
@@ -48,6 +48,21 @@ describe('matchesSearch', () => {
     expect(matchesSearch(r, 'drink')).toBe(true)
   })
   test('non-match returns false', () => { expect(matchesSearch(r, 'coffee')).toBe(false) })
+})
+
+describe('heldPointsOnReject', () => {
+  test('reserving with reservedPoints returns that amount', () => {
+    expect(heldPointsOnReject({ status: 'reserving', reservedPoints: 30 })).toBe(30)
+  })
+  test('reserving with missing or zero reservedPoints returns 0', () => {
+    expect(heldPointsOnReject({ status: 'reserving' })).toBe(0)
+    expect(heldPointsOnReject({ status: 'reserving', reservedPoints: 0 })).toBe(0)
+  })
+  test('pending, approved, and rejected all return 0 (no points held)', () => {
+    expect(heldPointsOnReject({ status: 'pending', reservedPoints: 30 })).toBe(0)
+    expect(heldPointsOnReject({ status: 'approved', reservedPoints: 30 })).toBe(0)
+    expect(heldPointsOnReject({ status: 'rejected', reservedPoints: 30 })).toBe(0)
+  })
 })
 
 describe('summarize', () => {

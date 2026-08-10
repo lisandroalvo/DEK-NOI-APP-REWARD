@@ -16,6 +16,12 @@ export function outcomeOf(status) {
   return 'other'
 }
 
+// Points that must be credited back if r is rejected right now. Only 'reserving' has
+// points already deducted (reserved at request time); every other status is a no-op.
+export function heldPointsOnReject(r) {
+  return r.status === 'reserving' ? (r.reservedPoints || 0) : 0
+}
+
 export function matchesHistoryFilter(r, filter) {
   if (filter === 'all') return true
   return outcomeOf(r.status) === filter

@@ -5,7 +5,7 @@ import { collection, query, where, getDocs, orderBy, doc, updateDoc, serverTimes
 import { db } from '../../lib/firebase'
 import { adjustPoints } from '../../lib/points'
 import { retryRedemption } from '../../lib/redeemReward'
-import { isNeedsAttention, outcomeOf, matchesHistoryFilter, matchesSearch, summarize } from '../../lib/redemptions'
+import { isNeedsAttention, outcomeOf, matchesHistoryFilter, matchesSearch, summarize, heldPointsOnReject } from '../../lib/redemptions'
 import { useAuth } from '../../context/AuthContext'
 import { CheckCircle, XCircle, Clock, X, RefreshCw } from 'lucide-react'
 
@@ -114,11 +114,18 @@ export default function AdminRedemptions() {
     if (!rejectModal) return
     setWorking(rejectModal.id)
     try {
+      // A 'reserving' row already had its points deducted at reserve time — rejecting it
+      // must refund those points or the customer's balance is silently stranded.
+      const refundPts = heldPointsOnReject(rejectModal)
+      if (refundPts > 0) {
+        await adjustPoints(db, rejectModal.userId, refundPts, 'Refund: rejected stuck redemption', user.uid)
+      }
       await updateDoc(doc(db, 'redemptions', rejectModal.id), {
         status: 'rejected',
         rejectNote: rejectNote.trim() || null,
         reviewedAt: serverTimestamp(),
         reviewedBy: user.uid,
+        ...(refundPts > 0 ? { failureCode: 'REFUNDED', failureMessage: 'Refunded on reject.' } : {}),
       })
       setRejectModal(null)
       await loadAll()
