@@ -10,8 +10,10 @@ import charHappy from '../../assets/char-happy.png'
 import Toast from '../../components/Toast'
 import { useRedemptionNotifications } from '../../hooks/useRedemptionNotifications'
 import WelcomeBanner from '../../components/WelcomeBanner'
+import { useT } from '../../i18n/LanguageContext'
 
 export default function CustomerDashboard() {
+  const { t } = useT()
   const { user, profile } = useAuth()
   const [transactions, setTransactions] = useState([])
   const [txError, setTxError] = useState(false)
@@ -80,7 +82,7 @@ export default function CustomerDashboard() {
             </div>
           )}
         </div>
-        <h1 className="text-xl sm:text-2xl font-black text-gray-900">Hi, {profile?.name?.split(' ')[0]} 👋</h1>
+        <h1 className="text-xl sm:text-2xl font-black text-gray-900">{t('dashboard.greeting', { name: profile?.name?.split(' ')[0] || '' })}</h1>
       </div>
 
       {/* Welcome banner (promos carousel hidden pre-MVP) */}
@@ -104,7 +106,7 @@ export default function CustomerDashboard() {
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-2">
             <Star size={18} fill="#FFE600" className="text-yellow-400 animate-pulse" />
-            <p className="text-white/90 text-sm font-bold tracking-wide">POINTS BALANCE</p>
+            <p className="text-white/90 text-sm font-bold tracking-wide">{t('dashboard.pointsBalance')}</p>
           </div>
           
           {/* Big Points Number */}
@@ -117,8 +119,8 @@ export default function CustomerDashboard() {
               {pts.toLocaleString()}
             </span>
             <div className="flex flex-col">
-              <span className="text-xl sm:text-2xl font-black" style={{ color: '#FFE600' }}>PTS</span>
-              <span className="text-xs text-white/70 font-bold">Available</span>
+              <span className="text-xl sm:text-2xl font-black" style={{ color: '#FFE600' }}>{t('dashboard.ptsUnit')}</span>
+              <span className="text-xs text-white/70 font-bold">{t('dashboard.available')}</span>
             </div>
           </div>
           
@@ -143,14 +145,14 @@ export default function CustomerDashboard() {
           <div className="flex items-center justify-between gap-2 text-xs">
             <span className="font-bold text-white/80">
               {rewards.length === 0
-                ? 'Earn points to unlock rewards'
+                ? t('dashboard.earnToUnlock')
                 : nextReward
-                  ? `${(nextReward.pointsCost - pts).toLocaleString()} pts to unlock ${nextReward.emoji || '🎁'} ${nextReward.name}`
-                  : 'You can redeem any reward! 🎉'}
+                  ? t('dashboard.ptsToUnlock', { n: (nextReward.pointsCost - pts).toLocaleString(), emoji: nextReward.emoji || '🎁', name: nextReward.name })
+                  : t('dashboard.allUnlocked')}
             </span>
             {affordable.length > 0 && (
               <span className="font-black px-2 py-0.5 rounded-full text-xs whitespace-nowrap" style={{ background: '#FFE600', color: '#CC0000' }}>
-                ⭐ {affordable.length} reward{affordable.length > 1 ? 's' : ''} ready
+                ⭐ {t('dashboard.rewardsReady', { n: affordable.length, s: affordable.length > 1 ? 's' : '' })}
               </span>
             )}
           </div>
@@ -160,7 +162,7 @@ export default function CustomerDashboard() {
       {/* Progress toward the next point (spend-based) */}
       <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 mb-5">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-sm font-black text-gray-900">🎯 ฿{toNextPoint} to your next point</p>
+          <p className="text-sm font-black text-gray-900">🎯 {t('dashboard.toNextPoint', { n: toNextPoint })}</p>
           <span className="text-xs font-bold text-gray-400">{carry}/{BAHT_PER_POINT}฿</span>
         </div>
         <div className="bg-gray-100 rounded-full h-3 overflow-hidden">
@@ -169,7 +171,7 @@ export default function CustomerDashboard() {
             style={{ width: `${carryPct}%`, background: 'linear-gradient(90deg, #CC0000 0%, #FF3333 100%)' }}
           />
         </div>
-        <p className="text-xs text-gray-500 mt-2">Every ฿{BAHT_PER_POINT} you spend earns 1 point — keep going!</p>
+        <p className="text-xs text-gray-500 mt-2">{t('dashboard.spendHint', { n: BAHT_PER_POINT })}</p>
       </div>
 
       {/* Stats */}
@@ -177,12 +179,12 @@ export default function CustomerDashboard() {
         <div className="bg-white rounded-2xl p-4 shadow-sm border-l-4" style={{ borderColor: '#CC0000' }}>
           <TrendingUp size={20} className="mb-2" style={{ color: '#CC0000' }} />
           <p className="text-2xl font-black text-gray-900">{txError ? '—' : earned.toLocaleString()}</p>
-          <p className="text-xs text-gray-500 font-medium">Points Earned</p>
+          <p className="text-xs text-gray-500 font-medium">{t('dashboard.pointsEarned')}</p>
         </div>
         <div className="bg-white rounded-2xl p-4 shadow-sm border-l-4" style={{ borderColor: '#FFE600' }}>
           <Gift size={20} className="mb-2" style={{ color: '#CC7700' }} />
           <p className="text-2xl font-black text-gray-900">{txError ? '—' : redeemed.toLocaleString()}</p>
-          <p className="text-xs text-gray-500 font-medium">Points Redeemed</p>
+          <p className="text-xs text-gray-500 font-medium">{t('dashboard.pointsRedeemed')}</p>
         </div>
       </div>
 
@@ -193,9 +195,9 @@ export default function CustomerDashboard() {
             <span className="text-xl">⏳</span>
             <div>
               <p className="font-black text-sm" style={{ color: '#CC7700' }}>
-                {pendingCount} redemption{pendingCount > 1 ? 's' : ''} pending approval
+                {t('dashboard.pendingApproval', { n: pendingCount, s: pendingCount > 1 ? 's' : '' })}
               </p>
-              <p className="text-xs text-gray-500">Tap to check status</p>
+              <p className="text-xs text-gray-500">{t('dashboard.tapToCheckStatus')}</p>
             </div>
           </div>
           <ChevronRight size={16} style={{ color: '#CC7700' }} />
@@ -208,8 +210,8 @@ export default function CustomerDashboard() {
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: '#FFE600' }}>🎁</div>
             <div>
-              <p className="font-black text-gray-900 text-sm">Rewards Store</p>
-              <p className="text-xs text-gray-500">Redeem your points for gifts</p>
+              <p className="font-black text-gray-900 text-sm">{t('dashboard.rewardsStore')}</p>
+              <p className="text-xs text-gray-500">{t('dashboard.redeemForGifts')}</p>
             </div>
           </div>
           <ChevronRight size={18} className="text-gray-400" />
@@ -220,8 +222,8 @@ export default function CustomerDashboard() {
               <Gift size={20} style={{ color: '#16a34a' }} />
             </div>
             <div>
-              <p className="font-black text-gray-900 text-sm">My Redemptions</p>
-              <p className="text-xs text-gray-500">View your reward requests</p>
+              <p className="font-black text-gray-900 text-sm">{t('dashboard.myRedemptions')}</p>
+              <p className="text-xs text-gray-500">{t('dashboard.viewRewardRequests')}</p>
             </div>
           </div>
           <ChevronRight size={18} className="text-gray-400" />
@@ -232,28 +234,28 @@ export default function CustomerDashboard() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6">
         <div className="p-4 border-b border-gray-100 flex items-center gap-2">
           <Clock size={16} className="text-gray-400" />
-          <h2 className="font-black text-gray-700">Recent Activity</h2>
+          <h2 className="font-black text-gray-700">{t('dashboard.recentActivity')}</h2>
         </div>
         {txError ? (
           <div className="p-8 text-center text-gray-400">
             <Star size={32} className="mx-auto mb-2 opacity-20" />
-            <p className="text-sm">Couldn't load your activity right now. Please try again later.</p>
+            <p className="text-sm">{t('dashboard.loadError')}</p>
           </div>
         ) : transactions.length === 0 ? (
           <div className="p-8 text-center text-gray-400">
             <Star size={32} className="mx-auto mb-2 opacity-20" />
-            <p className="text-sm">No activity yet. Start shopping to earn points!</p>
+            <p className="text-sm">{t('dashboard.noActivity')}</p>
           </div>
         ) : (
           <ul className="divide-y divide-gray-50">
-            {transactions.slice(0, 10).map(t => (
-              <li key={t.id} className="px-4 py-3 flex justify-between items-center">
+            {transactions.slice(0, 10).map(tx => (
+              <li key={tx.id} className="px-4 py-3 flex justify-between items-center">
                 <div>
-                  <p className="text-sm font-semibold text-gray-700">{t.reason || 'Points added'}</p>
-                  <p className="text-xs text-gray-400">{t.createdAt?.toDate?.()?.toLocaleDateString() ?? '—'}</p>
+                  <p className="text-sm font-semibold text-gray-700">{tx.reason || t('dashboard.pointsAdded')}</p>
+                  <p className="text-xs text-gray-400">{tx.createdAt?.toDate?.()?.toLocaleDateString() ?? '—'}</p>
                 </div>
-                <span className="font-black text-sm" style={{ color: t.points > 0 ? '#CC0000' : '#888' }}>
-                  {t.points > 0 ? '+' : ''}{t.points} pts
+                <span className="font-black text-sm" style={{ color: tx.points > 0 ? '#CC0000' : '#888' }}>
+                  {tx.points > 0 ? '+' : ''}{tx.points} {t('common.pts')}
                 </span>
               </li>
             ))}
