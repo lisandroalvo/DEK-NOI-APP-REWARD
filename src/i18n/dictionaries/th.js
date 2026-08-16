@@ -39,4 +39,12 @@ export default {
     updateFailed: 'อัปเดตโปรไฟล์ไม่สำเร็จ',
     language: 'ภาษา / Language',
   },
+  completeProfile: {
+    title: 'อีกนิดเดียว!',
+    subtitle: 'กรอกเบอร์โทรศัพท์เพื่อให้เราติดต่อคุณเรื่องของรางวัลได้',
+    phoneLabel: 'เบอร์โทรศัพท์',
+    save: 'บันทึกและดำเนินการต่อ',
+    saving: 'กำลังบันทึก…',
+    skip: 'ข้ามไปก่อน',
+  },
 }

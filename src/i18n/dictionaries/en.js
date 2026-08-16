@@ -39,4 +39,12 @@ export default {
     updateFailed: 'Failed to update profile',
     language: 'Language / ภาษา',
   },
+  completeProfile: {
+    title: 'One more thing!',
+    subtitle: 'Add your phone number so we can reach you about your rewards.',
+    phoneLabel: 'Phone Number',
+    save: 'Save & Continue',
+    saving: 'Saving…',
+    skip: 'Skip for now',
+  },
 }
