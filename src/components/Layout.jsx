@@ -176,7 +176,7 @@ export default function Layout({ children }) {
         <div className="p-3">
           <button onClick={doLogout}
             className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm font-medium text-gray-500 hover:bg-red-50 transition-all">
-            <LogOut size={16} /> Logout
+            <LogOut size={16} /> {isAdmin ? 'Logout' : t('nav.logout')}
           </button>
         </div>
       </div>

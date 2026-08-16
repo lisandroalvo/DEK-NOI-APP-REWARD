@@ -17,6 +17,7 @@ export default {
     profile: 'Profile',
     rewardsClub: '— Rewards Club —',
     signOut: 'Sign Out',
+    logout: 'Logout',
   },
   profile: {
     title: 'My Profile',

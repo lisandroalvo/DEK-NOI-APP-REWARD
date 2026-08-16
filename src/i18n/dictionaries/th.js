@@ -17,6 +17,7 @@ export default {
     profile: 'โปรไฟล์',
     rewardsClub: '— สมาชิกสะสมแต้ม —',
     signOut: 'ออกจากระบบ',
+    logout: 'ออกจากระบบ',
   },
   profile: {
     title: 'โปรไฟล์ของฉัน',
