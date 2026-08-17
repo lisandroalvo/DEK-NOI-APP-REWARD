@@ -6,8 +6,10 @@ import { redeemReward as callRedeemReward } from '../../lib/redeemReward'
 import { Star, Lock } from 'lucide-react'
 import charSitting from '../../assets/char-sitting.png'
 import BarcodeScanner from '../../components/BarcodeScanner'
+import { useT } from '../../i18n/LanguageContext'
 
 export default function CustomerRewards() {
+  const { t } = useT()
   const { user, profile } = useAuth()
   const [rewards, setRewards] = useState([])
   const [redeeming, setRedeeming] = useState(null)
@@ -23,11 +25,11 @@ export default function CustomerRewards() {
   }, [])
 
   const CODE_MESSAGES = {
-    OUT_OF_STOCK: 'That item is out of stock right now.',
-    EXCEEDS_MAX_VALUE: "That item costs more than this reward allows. Please pick a lower-priced item.",
-    PRODUCT_NOT_FOUND: "We couldn't find that barcode. Please scan again.",
-    INSUFFICIENT_POINTS: "You don't have enough points for this reward.",
-    BAD_REQUEST: 'That barcode looks invalid. Please scan again.',
+    OUT_OF_STOCK: t('rewards.errOutOfStock'),
+    EXCEEDS_MAX_VALUE: t('rewards.errExceedsMax'),
+    PRODUCT_NOT_FOUND: t('rewards.errNotFound'),
+    INSUFFICIENT_POINTS: t('rewards.errInsufficient'),
+    BAD_REQUEST: t('rewards.errBadRequest'),
   }
 
   const processRedemption = async (redemptionId, reward) => {
@@ -38,15 +40,15 @@ export default function CustomerRewards() {
       if (res?.ok) {
         setResult({ ok: true, product: res.product ?? null, reward })
       } else {
-        setResult({ ok: false, code: res?.code, message: CODE_MESSAGES[res?.code] || res?.message || 'This redemption could not be completed.', reward })
+        setResult({ ok: false, code: res?.code, message: CODE_MESSAGES[res?.code] || res?.message || t('rewards.errGenericComplete'), reward })
       }
     } catch (err) {
       if (err?.code === 'functions/unavailable') {
         // Transient — keep the SAME redemptionId so Try again reuses this redemption (never a new key).
-        setResult({ ok: false, retry: true, redemptionId, reward, message: 'The store system is busy. Please try again in a moment.' })
+        setResult({ ok: false, retry: true, redemptionId, reward, message: t('rewards.errBusy') })
       } else {
         // Permanent — drop redemptionId so Try again re-scans a fresh doc instead of re-calling the same failed id.
-        setResult({ ok: false, reward, message: 'This reward can’t be redeemed right now. Please try a different item or contact support.' })
+        setResult({ ok: false, reward, message: t('rewards.errPermanent') })
       }
     } finally {
       setRedeeming(null)
@@ -73,7 +75,7 @@ export default function CustomerRewards() {
         requestedAt: serverTimestamp(),
       })
     } catch {
-      setResult({ ok: false, message: 'Could not start the redemption. Please try again.', reward })
+      setResult({ ok: false, message: t('rewards.errStart'), reward })
       setRedeeming(null)
       return
     }
@@ -86,19 +88,19 @@ export default function CustomerRewards() {
     <div className="p-4 sm:p-6 md:p-8 w-full max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-2 gap-2">
-        <h1 className="text-xl sm:text-2xl font-black text-gray-900">Rewards Store</h1>
+        <h1 className="text-xl sm:text-2xl font-black text-gray-900">{t('rewards.storeTitle')}</h1>
         <div className="flex items-center gap-1 sm:gap-1.5 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 font-black text-xs sm:text-sm whitespace-nowrap" style={{ background: '#FFE600', color: '#CC0000' }}>
           <Star size={12} className="sm:hidden" fill="currentColor" />
           <Star size={14} className="hidden sm:block" fill="currentColor" />
-          {pts.toLocaleString()} pts
+          {pts.toLocaleString()} {t('common.pts')}
         </div>
       </div>
-      <p className="text-gray-400 text-xs sm:text-sm mb-4 sm:mb-6">Redeem your points for great rewards!</p>
+      <p className="text-gray-400 text-xs sm:text-sm mb-4 sm:mb-6">{t('rewards.subtitle')}</p>
 
       {rewards.length === 0 ? (
         <div className="text-center py-10 text-gray-400">
           <img src={charSitting} alt="" className="h-36 mx-auto mb-3" />
-          <p>No rewards available right now. Check back soon!</p>
+          <p>{t('rewards.empty')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -124,7 +126,7 @@ export default function CustomerRewards() {
                   {!canAfford && (
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                       <span className="text-xs font-bold text-white flex items-center gap-1 bg-black/60 px-3 py-1.5 rounded-full">
-                        <Lock size={12} /> Need {ptsNeeded.toLocaleString()} more pts
+                        <Lock size={12} /> {t('rewards.needMore', { n: ptsNeeded.toLocaleString() })}
                       </span>
                     </div>
                   )}
@@ -134,7 +136,7 @@ export default function CustomerRewards() {
                   <p className="text-sm text-gray-500 mt-1 mb-4 leading-relaxed">{r.description}</p>
                   <div className="flex items-center justify-between mt-auto">
                     <div className="flex items-center gap-1 font-black text-sm" style={{ color: '#CC0000' }}>
-                      <Star size={13} fill="currentColor" /> {r.pointsCost.toLocaleString()} pts
+                      <Star size={13} fill="currentColor" /> {r.pointsCost.toLocaleString()} {t('common.pts')}
                     </div>
                     <button
                       onClick={(e) => {
@@ -144,7 +146,7 @@ export default function CustomerRewards() {
                       disabled={!canAfford}
                       className="px-4 py-1.5 rounded-xl text-sm font-black transition-all"
                       style={canAfford ? { background: '#CC0000', color: '#fff' } : { background: '#f3f4f6', color: '#bbb', cursor: 'not-allowed' }}>
-                      {canAfford ? 'Redeem' : 'Locked 🔒'}
+                      {canAfford ? t('rewards.redeem') : t('rewards.locked')}
                     </button>
                   </div>
                 </div>
@@ -174,23 +176,23 @@ export default function CustomerRewards() {
               <p className="text-sm text-gray-500 mt-1">{showModal.description}</p>
             </div>
             <div className="rounded-2xl p-4 mb-5 text-center" style={{ background: '#FFF0F0' }}>
-              <p className="text-sm text-gray-600">This will use</p>
-              <p className="text-2xl font-black" style={{ color: '#CC0000' }}>⭐ {showModal.pointsCost.toLocaleString()} points</p>
+              <p className="text-sm text-gray-600">{t('rewards.thisWillUse')}</p>
+              <p className="text-2xl font-black" style={{ color: '#CC0000' }}>⭐ {showModal.pointsCost.toLocaleString()} {t('rewards.pointsWord')}</p>
               <p className="text-xs text-gray-400 mt-1">
-                You'll have <strong>{(pts - showModal.pointsCost).toLocaleString()} pts</strong> remaining after redeeming
+                {t('rewards.remainingAfter', { n: (pts - showModal.pointsCost).toLocaleString() })}
               </p>
             </div>
             <p className="text-xs text-gray-400 text-center mb-5">
-              Next, scan the barcode of the item you're taking — your points are used right away.
+              {t('rewards.scanHint')}
             </p>
             <div className="flex gap-3">
               <button onClick={() => setShowModal(null)} className="flex-1 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-600">
-                Cancel
+                {t('common.cancel')}
               </button>
               <button onClick={() => { setScanFor(showModal); setShowModal(null) }} disabled={redeeming === showModal.id}
                 className="flex-1 py-3 rounded-xl text-sm font-black text-white disabled:opacity-60"
                 style={{ background: '#CC0000' }}>
-                {redeeming === showModal.id ? 'Submitting…' : 'Confirm Redeem'}
+                {redeeming === showModal.id ? t('rewards.submitting') : t('rewards.confirmRedeem')}
               </button>
             </div>
           </div>
@@ -223,7 +225,7 @@ export default function CustomerRewards() {
             {/* Points Cost */}
             <div className="rounded-2xl p-4 mb-5" style={{ background: '#FFF0F0' }}>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-gray-600">Points Required</span>
+                <span className="text-sm font-semibold text-gray-600">{t('rewards.pointsRequired')}</span>
                 <div className="flex items-center gap-1 text-2xl font-black" style={{ color: '#CC0000' }}>
                   <Star size={20} fill="currentColor" /> {detailsModal.pointsCost.toLocaleString()}
                 </div>
@@ -233,33 +235,33 @@ export default function CustomerRewards() {
             {/* Your Balance */}
             <div className="rounded-2xl p-4 mb-5 border-2 border-gray-100">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-gray-600">Your Balance</span>
+                <span className="text-sm font-semibold text-gray-600">{t('rewards.yourBalance')}</span>
                 <div className="flex items-center gap-1 text-xl font-black" style={{ color: pts >= detailsModal.pointsCost ? '#10b981' : '#ef4444' }}>
-                  <Star size={16} fill="currentColor" /> {pts.toLocaleString()} pts
+                  <Star size={16} fill="currentColor" /> {pts.toLocaleString()} {t('common.pts')}
                 </div>
               </div>
               {pts < detailsModal.pointsCost && (
                 <p className="text-xs text-gray-500 mt-2">
-                  You need <strong>{(detailsModal.pointsCost - pts).toLocaleString()} more points</strong> to redeem this reward
+                  {t('rewards.needToRedeem', { n: (detailsModal.pointsCost - pts).toLocaleString() })}
                 </p>
               )}
             </div>
 
             {/* Actions */}
             <div className="flex gap-3">
-              <button onClick={() => setDetailsModal(null)} 
+              <button onClick={() => setDetailsModal(null)}
                 className="flex-1 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-600">
-                Close
+                {t('common.close')}
               </button>
               {pts >= detailsModal.pointsCost && (
-                <button 
+                <button
                   onClick={() => {
                     setShowModal(detailsModal)
                     setDetailsModal(null)
                   }}
                   className="flex-1 py-3 rounded-xl text-sm font-black text-white"
                   style={{ background: '#CC0000' }}>
-                  Redeem Now
+                  {t('rewards.redeemNow')}
                 </button>
               )}
             </div>
@@ -275,24 +277,24 @@ export default function CustomerRewards() {
             {result.processing ? (
               <>
                 <div className="animate-spin rounded-full h-10 w-10 border-b-2 mx-auto mb-4" style={{ borderColor: '#CC0000' }} />
-                <h2 className="text-xl font-black text-gray-900 mb-1">Redeeming…</h2>
-                <p className="text-sm text-gray-600">Confirming your <strong>{result.reward.name}</strong> — one moment.</p>
+                <h2 className="text-xl font-black text-gray-900 mb-1">{t('rewards.redeeming')}</h2>
+                <p className="text-sm text-gray-600">{t('rewards.confirmingReward', { name: result.reward.name })}</p>
               </>
             ) : (
               <>
                 <div className="text-5xl mb-3">{result.ok ? '🎉' : result.retry ? '⏳' : '😕'}</div>
                 <h2 className="text-xl font-black text-gray-900 mb-1">
-                  {result.ok ? 'Enjoy your reward!' : result.retry ? 'Almost there' : "Couldn't redeem"}
+                  {result.ok ? t('rewards.enjoyTitle') : result.retry ? t('rewards.almostTitle') : t('rewards.couldntTitle')}
                 </h2>
                 {result.ok ? (
                   <p className="text-sm text-gray-600 mb-5">
-                    Grab your <strong>{result.product?.name || result.reward.name}</strong>. {result.reward.pointsCost.toLocaleString()} points were used.
+                    {t('rewards.enjoyBody', { name: result.product?.name || result.reward.name, n: result.reward.pointsCost.toLocaleString() })}
                   </p>
                 ) : (
                   <p className="text-sm text-gray-600 mb-5">{result.message}</p>
                 )}
                 <div className="flex gap-3">
-                  <button onClick={() => setResult(null)} className="flex-1 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-600">Close</button>
+                  <button onClick={() => setResult(null)} className="flex-1 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-600">{t('common.close')}</button>
                   {!result.ok && (
                     <button onClick={() => {
                         if (result.retry && result.redemptionId) {
@@ -304,7 +306,7 @@ export default function CustomerRewards() {
                         }
                       }}
                       className="flex-1 py-3 rounded-xl text-sm font-black text-white" style={{ background: '#CC0000' }}>
-                      Try again
+                      {t('common.tryAgain')}
                     </button>
                   )}
                 </div>
