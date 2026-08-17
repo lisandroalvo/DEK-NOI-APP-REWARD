@@ -8,10 +8,12 @@ import { hashImageFile, normalizeRef, hashText } from '../../lib/billDedup'
 import { BAHT_PER_POINT } from '../../lib/points'
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore'
 import { Camera, Upload, X, CheckCircle } from 'lucide-react'
+import { useT } from '../../i18n/LanguageContext'
 
 export default function ScanBill() {
   const { user, profile } = useAuth()
   const navigate = useNavigate()
+  const { t } = useT()
   const [selectedFile, setSelectedFile] = useState(null)
   const [preview, setPreview] = useState(null)
   const [amount, setAmount] = useState('')
@@ -31,8 +33,8 @@ export default function ScanBill() {
       validateImageFile(file)
     } catch (err) {
       setError(err.message.startsWith('FILE_TOO_LARGE')
-        ? 'File size must be less than 10MB'
-        : 'Please choose an image file')
+        ? t('scanBill.errTooLarge')
+        : t('scanBill.errChooseImage'))
       return
     }
 
@@ -60,7 +62,7 @@ export default function ScanBill() {
 
     const amountNum = Math.round(parseFloat(amount) * 100) / 100
     if (!(amountNum > 0)) {
-      setError('Please enter the bill amount (฿).')
+      setError(t('scanBill.errEnterAmount'))
       return
     }
 
@@ -87,7 +89,7 @@ export default function ScanBill() {
       ))
       const alreadyActive = dupSnap.docs.some(d => ['pending', 'approved'].includes(d.data().status))
       if (alreadyActive) {
-        setError('คุณส่งใบเสร็จนี้ไปแล้ว / You have already submitted this receipt.')
+        setError(t('scanBill.errAlreadySubmitted'))
         setUploading(false)
         return
       }
@@ -133,13 +135,13 @@ export default function ScanBill() {
     } catch (err) {
       console.error('Error uploading bill:', err)
 
-      let errorMessage = 'Failed to upload bill. '
+      let errorMessage = t('scanBill.errUpload')
       if (err.code === 'permission-denied') {
-        errorMessage += 'Permission denied. Please contact support.'
+        errorMessage += t('scanBill.errPermission')
       } else if (err.message?.startsWith('FILE_TOO_LARGE')) {
-        errorMessage += 'Image too large. Try a smaller image.'
+        errorMessage += t('scanBill.errImageTooLarge')
       } else {
-        errorMessage += 'Please try again.'
+        errorMessage += t('scanBill.errTryAgain')
       }
 
       setError(errorMessage)
@@ -167,15 +169,15 @@ export default function ScanBill() {
 
   return (
     <div className="p-4 sm:p-6 md:p-8 max-w-2xl w-full mx-auto">
-      <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">📄 Scan Your Bill</h1>
-      <p className="text-gray-600 mb-6">Upload your receipt to collect points!</p>
+      <h1 className="text-2xl sm:text-3xl font-black text-gray-900 mb-2">{t('scanBill.title')}</h1>
+      <p className="text-gray-600 mb-6">{t('scanBill.subtitle')}</p>
 
       {success && (
         <div className="mb-6 p-4 bg-green-50 border-2 border-green-500 rounded-xl flex items-center gap-3">
           <CheckCircle size={24} className="text-green-600" />
           <div>
-            <p className="font-bold text-green-900">Bill submitted successfully!</p>
-            <p className="text-sm text-green-700">An admin will review it soon.</p>
+            <p className="font-bold text-green-900">{t('scanBill.submittedTitle')}</p>
+            <p className="text-sm text-green-700">{t('scanBill.submittedBody')}</p>
           </div>
         </div>
       )}
@@ -199,12 +201,12 @@ export default function ScanBill() {
             />
             <div className="border-4 border-dashed border-gray-300 rounded-2xl p-12 text-center cursor-pointer hover:border-red-500 hover:bg-red-50 transition-all">
               <Camera size={64} className="mx-auto mb-4 text-gray-400" />
-              <p className="text-lg font-bold text-gray-700 mb-2">Take a Photo</p>
-              <p className="text-sm text-gray-500">Tap to use camera</p>
+              <p className="text-lg font-bold text-gray-700 mb-2">{t('scanBill.takePhoto')}</p>
+              <p className="text-sm text-gray-500">{t('scanBill.tapCamera')}</p>
             </div>
           </label>
 
-          <div className="text-center text-gray-500 font-bold">OR</div>
+          <div className="text-center text-gray-500 font-bold">{t('scanBill.or')}</div>
 
           <label className="block">
             <input
@@ -215,18 +217,18 @@ export default function ScanBill() {
             />
             <div className="border-4 border-dashed border-gray-300 rounded-2xl p-12 text-center cursor-pointer hover:border-red-500 hover:bg-red-50 transition-all">
               <Upload size={64} className="mx-auto mb-4 text-gray-400" />
-              <p className="text-lg font-bold text-gray-700 mb-2">Upload from Gallery</p>
-              <p className="text-sm text-gray-500">Tap to browse files</p>
+              <p className="text-lg font-bold text-gray-700 mb-2">{t('scanBill.uploadGallery')}</p>
+              <p className="text-sm text-gray-500">{t('scanBill.tapBrowse')}</p>
             </div>
           </label>
 
           <div className="bg-yellow-50 border-2 border-yellow-400 rounded-xl p-4 mt-6">
-            <p className="font-bold text-yellow-900 mb-2">📌 Tips for best results:</p>
+            <p className="font-bold text-yellow-900 mb-2">{t('scanBill.tipsTitle')}</p>
             <ul className="text-sm text-yellow-800 space-y-1 list-disc list-inside">
-              <li>Make sure the bill is clearly visible</li>
-              <li>Include the total amount and date</li>
-              <li>Avoid blurry or dark photos</li>
-              <li>Photos up to 10MB accepted (auto-compressed)</li>
+              <li>{t('scanBill.tipVisible')}</li>
+              <li>{t('scanBill.tipTotal')}</li>
+              <li>{t('scanBill.tipBlur')}</li>
+              <li>{t('scanBill.sizeHint')}</li>
             </ul>
           </div>
         </div>
@@ -234,7 +236,7 @@ export default function ScanBill() {
         <div className="space-y-4">
           {/* Preview */}
           <div className="relative rounded-2xl overflow-hidden border-4 border-red-600">
-            <img src={preview} alt="Bill preview" className="w-full h-auto" />
+            <img src={preview} alt={t('scanBill.previewAlt')} className="w-full h-auto" />
             <button
               onClick={handleCancel}
               className="absolute top-2 right-2 p-2 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700"
@@ -246,28 +248,28 @@ export default function ScanBill() {
           {/* Bill amount (auto-recognized, editable) */}
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">
-              Bill Amount (฿)
+              {t('scanBill.amountLabel')}
             </label>
             <input
               type="number"
               inputMode="decimal"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder={recognizing ? 'Reading receipt…' : 'Enter the total'}
+              placeholder={recognizing ? t('scanBill.readingShort') : t('scanBill.enterTotal')}
               disabled={recognizing}
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-red-500 focus:outline-none text-lg font-bold disabled:bg-gray-100"
             />
             {recognizing && (
-              <p className="text-sm text-gray-500 mt-1">📷 Reading the total from your receipt…</p>
+              <p className="text-sm text-gray-500 mt-1">{t('scanBill.reading')}</p>
             )}
             {!recognizing && ocrAmount != null && (
-              <p className="text-xs text-gray-400 mt-1">Auto-read ฿{ocrAmount} — fix it if that's wrong.</p>
+              <p className="text-xs text-gray-400 mt-1">{t('scanBill.autoRead', { amount: ocrAmount })}</p>
             )}
             {amountNum > 0 && (
               <div className="mt-2 p-3 bg-yellow-50 border-2 border-yellow-300 rounded-xl">
                 <p className="text-sm font-bold text-yellow-900">
-                  ⭐ Earns +{estEarned} {estEarned === 1 ? 'point' : 'points'}
-                  {estToNext < BAHT_PER_POINT && ` — then ฿${estToNext} to your next point!`}
+                  {t('scanBill.earns', { n: estEarned, s: estEarned === 1 ? '' : 's' })}
+                  {estToNext < BAHT_PER_POINT && t('scanBill.toNextPoint', { n: estToNext })}
                 </p>
               </div>
             )}
@@ -283,14 +285,14 @@ export default function ScanBill() {
               color: '#fff'
             }}
           >
-            {uploading ? 'Uploading...' : '✅ Submit Bill'}
+            {uploading ? t('scanBill.uploading') : t('scanBill.submit')}
           </button>
 
           <button
             onClick={handleCancel}
             className="w-full py-3 rounded-xl font-bold text-gray-700 border-2 border-gray-300 hover:bg-gray-100"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
         </div>
       )}
