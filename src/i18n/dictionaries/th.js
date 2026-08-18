@@ -205,5 +205,6 @@ export default {
     alreadyMember: 'เป็นสมาชิกอยู่แล้ว?',
     agreeTo: 'ฉันยอมรับ',
     agreeRequired: 'กรุณายอมรับนโยบายความเป็นส่วนตัวก่อนดำเนินการต่อ',
+    passwordHint: 'อย่างน้อย 8 ตัวอักษร',
   },
 }

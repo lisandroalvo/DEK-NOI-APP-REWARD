@@ -64,7 +64,7 @@ export default function Register() {
     { label: t('auth.fullName'),     key: 'name',     type: 'text',     placeholder: 'John Doe' },
     { label: t('auth.phoneNumber'),  key: 'phone',    type: 'tel',      placeholder: '+66 00 000 0000' },
     { label: t('auth.emailAddress'), key: 'email',    type: 'email',    placeholder: 'you@email.com' },
-    { label: t('auth.password'),     key: 'password', type: 'password', placeholder: '8+ characters' },
+    { label: t('auth.password'),     key: 'password', type: 'password', placeholder: t('auth.passwordHint') },
   ]
 
   return (

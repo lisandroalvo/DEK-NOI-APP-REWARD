@@ -212,5 +212,6 @@ export default {
     alreadyMember: 'Already a member?',
     agreeTo: 'I agree to the',
     agreeRequired: 'Please agree to the Privacy Policy to continue.',
+    passwordHint: '8+ characters',
   },
 }
