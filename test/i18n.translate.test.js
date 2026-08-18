@@ -23,6 +23,9 @@ describe('translate', () => {
   test('leaves an unmatched placeholder literal', () => {
     expect(translate(en, en, 'dashboard.greeting')).toBe('Hi, {name} 👋')
   })
+  test('interpolates a falsy (0) var instead of dropping it', () => {
+    expect(translate(en, en, 'dashboard.greeting', { name: 0 })).toBe('Hi, 0 👋')
+  })
 })
 
 describe('resolveInitialLang', () => {

@@ -5,7 +5,6 @@ export default {
     cancel: 'Cancel',
     close: 'Close',
     tryAgain: 'Try again',
-    loading: 'Loading…',
     pts: 'pts',
     points: 'points',
     or: 'or',

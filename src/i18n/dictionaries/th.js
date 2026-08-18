@@ -5,7 +5,6 @@ export default {
     cancel: 'ยกเลิก',
     close: 'ปิด',
     tryAgain: 'ลองอีกครั้ง',
-    loading: 'กำลังโหลด…',
     pts: 'แต้ม',
     points: 'แต้ม',
     or: 'หรือ',
