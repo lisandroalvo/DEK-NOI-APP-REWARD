@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react'
 import { collection, query, where, onSnapshot } from 'firebase/firestore'
 import { db } from '../lib/firebase'
+import { translate, resolveInitialLang } from '../i18n/translate'
+import en from '../i18n/dictionaries/en'
+import th from '../i18n/dictionaries/th'
+
+const DICTS = { en, th }
+function tMsg(key, vars) {
+  const lang = resolveInitialLang(localStorage.getItem('dekNoiLang'))
+  return translate(DICTS[lang], en, key, vars)
+}
 
 export function useRedemptionNotifications(userId) {
   const [notification, setNotification] = useState(null)
@@ -32,14 +41,14 @@ export function useRedemptionNotifications(userId) {
             if (data.status === 'approved') {
               setNotification({
                 type: 'success',
-                message: `🎉 Your "${data.rewardName}" redemption was approved! Visit the store to collect it.`,
+                message: tMsg('toast.redeemApproved', { reward: data.rewardName }),
                 redemptionId,
               })
             } else if (data.status === 'rejected') {
               const reason = data.rejectNote ? ` Reason: ${data.rejectNote}` : ''
               setNotification({
                 type: 'error',
-                message: `Your "${data.rewardName}" redemption was not approved.${reason}`,
+                message: tMsg('toast.redeemRejected', { reward: data.rewardName, reason }),
                 redemptionId,
               })
             }

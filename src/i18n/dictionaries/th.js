@@ -207,4 +207,10 @@ export default {
     agreeRequired: 'กรุณายอมรับนโยบายความเป็นส่วนตัวก่อนดำเนินการต่อ',
     passwordHint: 'อย่างน้อย 8 ตัวอักษร',
   },
+  toast: {
+    redeemApproved: '🎉 อนุมัติการแลก "{reward}" แล้ว! เชิญมารับที่ร้านได้เลย',
+    redeemRejected: 'การแลก "{reward}" ไม่ได้รับอนุมัติ{reason}',
+    pointsReceived: 'คุณได้รับ +{points} แต้ม!',
+    billNeedsAttention: 'กรุณาตรวจสอบใบเสร็จแล้วลองใหม่อีกครั้ง',
+  },
 }

@@ -214,4 +214,10 @@ export default {
     agreeRequired: 'Please agree to the Privacy Policy to continue.',
     passwordHint: '8+ characters',
   },
+  toast: {
+    redeemApproved: '🎉 Your "{reward}" redemption was approved! Visit the store to collect it.',
+    redeemRejected: 'Your "{reward}" redemption was not approved.{reason}',
+    pointsReceived: 'You received +{points} points!',
+    billNeedsAttention: 'Please check the bill and try again.',
+  },
 }
