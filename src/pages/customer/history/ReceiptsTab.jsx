@@ -5,8 +5,10 @@ import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestor
 import { db } from '../../../lib/firebase'
 import { useAuth } from '../../../context/AuthContext'
 import { Receipt, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { useT } from '../../../i18n/LanguageContext'
 
 export default function ReceiptsTab() {
+  const { t } = useT()
   const { user } = useAuth()
   const [bills, setBills] = useState([])
   const [selectedBill, setSelectedBill] = useState(null)
@@ -54,21 +56,30 @@ export default function ReceiptsTab() {
     }
   }
 
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'pending': return t('history.statusPending')
+      case 'approved': return t('history.statusApproved')
+      case 'rejected': return t('history.statusRejected')
+      default: return status?.toUpperCase()
+    }
+  }
+
   return (
     <>
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-black text-gray-900 flex items-center gap-2">
           <Receipt size={20} style={{ color: '#CC0000' }} />
-          Bill History
+          {t('history.billHistory')}
         </h3>
-        <span className="text-sm font-bold text-gray-500">{bills.length} total</span>
+        <span className="text-sm font-bold text-gray-500">{t('history.billsTotal', { n: bills.length })}</span>
       </div>
 
       {bills.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <Receipt size={48} className="mx-auto mb-2 opacity-30" />
-          <p className="text-sm">No bills submitted yet</p>
-          <p className="text-xs mt-1">Tap the 📄 button to upload your first bill!</p>
+          <p className="text-sm">{t('history.noBills')}</p>
+          <p className="text-xs mt-1">{t('history.uploadFirst')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -81,7 +92,7 @@ export default function ReceiptsTab() {
               <div className="flex items-start gap-3">
                 <img
                   src={bill.imageData || bill.imageUrl}
-                  alt="Bill"
+                  alt={t('history.bill')}
                   className="w-16 h-16 object-cover rounded-lg border-2 border-gray-300"
                 />
 
@@ -89,11 +100,11 @@ export default function ReceiptsTab() {
                   <div className="flex items-center gap-2 mb-1">
                     <span className={`px-2 py-0.5 rounded-full text-xs font-bold border flex items-center gap-1 ${getStatusColor(bill.status)}`}>
                       {getStatusIcon(bill.status)}
-                      {bill.status.toUpperCase()}
+                      {getStatusLabel(bill.status)}
                     </span>
                     {bill.pointsAwarded > 0 && (
                       <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 border border-yellow-300">
-                        +{bill.pointsAwarded} pts
+                        +{bill.pointsAwarded} {t('common.pts')}
                       </span>
                     )}
                     <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-300">
@@ -101,7 +112,7 @@ export default function ReceiptsTab() {
                     </span>
                   </div>
                   <p className="text-xs text-gray-600">
-                    {bill.submittedAt?.toDate().toLocaleDateString()} at {bill.submittedAt?.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {bill.submittedAt?.toDate().toLocaleDateString()} {t('history.at')} {bill.submittedAt?.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                   {bill.notes && (
                     <p className="text-xs text-gray-500 mt-1 italic truncate">{bill.notes}</p>
@@ -119,7 +130,7 @@ export default function ReceiptsTab() {
           <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-black">Bill Details</h2>
+                <h2 className="text-xl font-black">{t('history.billDetails')}</h2>
                 <button
                   onClick={() => setSelectedBill(null)}
                   className="p-2 hover:bg-gray-100 rounded-lg"
@@ -130,7 +141,7 @@ export default function ReceiptsTab() {
 
               <img
                 src={selectedBill.imageData || selectedBill.imageUrl}
-                alt="Bill"
+                alt={t('history.bill')}
                 className="w-full h-auto rounded-xl border-4 border-red-600 mb-4"
               />
 
@@ -138,25 +149,25 @@ export default function ReceiptsTab() {
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`px-3 py-1 rounded-full text-sm font-bold border-2 flex items-center gap-2 ${getStatusColor(selectedBill.status)}`}>
                     {getStatusIcon(selectedBill.status)}
-                    {selectedBill.status.toUpperCase()}
+                    {getStatusLabel(selectedBill.status)}
                   </span>
                   {selectedBill.pointsAwarded > 0 && (
                     <span className="px-3 py-1 rounded-full text-sm font-bold bg-yellow-100 text-yellow-800 border-2 border-yellow-300">
-                      +{selectedBill.pointsAwarded} points
+                      +{selectedBill.pointsAwarded} {t('common.points')}
                     </span>
                   )}
                 </div>
                 <p className="text-sm text-gray-600">
-                  Submitted: {selectedBill.submittedAt?.toDate().toLocaleString()}
+                  {t('history.submittedLabel')} {selectedBill.submittedAt?.toDate().toLocaleString()}
                 </p>
                 {selectedBill.reviewedAt && (
                   <p className="text-sm text-gray-600">
-                    Reviewed: {selectedBill.reviewedAt?.toDate().toLocaleString()}
+                    {t('history.reviewedLabel')} {selectedBill.reviewedAt?.toDate().toLocaleString()}
                   </p>
                 )}
                 {selectedBill.notes && (
                   <div className="mt-3 pt-3 border-t border-gray-200">
-                    <p className="text-xs font-bold text-gray-700 mb-1">Admin Notes:</p>
+                    <p className="text-xs font-bold text-gray-700 mb-1">{t('history.adminNotes')}</p>
                     <p className="text-sm text-gray-600">{selectedBill.notes}</p>
                   </div>
                 )}
@@ -166,7 +177,7 @@ export default function ReceiptsTab() {
                 onClick={() => setSelectedBill(null)}
                 className="w-full py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300"
               >
-                Close
+                {t('common.close')}
               </button>
             </div>
           </div>

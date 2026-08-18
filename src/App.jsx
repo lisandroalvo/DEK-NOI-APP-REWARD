@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { LanguageProvider } from './i18n/LanguageContext'
 import Layout from './components/Layout'
 import SplashScreen from './components/SplashScreen'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -94,9 +95,11 @@ export default function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <BrowserRouter>
-          <AppContent />
-        </BrowserRouter>
+        <LanguageProvider>
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+        </LanguageProvider>
       </AuthProvider>
     </ErrorBoundary>
   )

@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { authErrorMessage, passwordError } from '../lib/authForm'
+import { useT } from '../i18n/LanguageContext'
+import LanguageSwitcher from '../components/LanguageSwitcher'
 import logo from '../assets/logo.png'
 import charHappy from '../assets/char-happy.png'
 
@@ -24,13 +26,14 @@ export default function Register() {
   const [agreed, setAgreed] = useState(false)
   const { register, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
+  const { t } = useT()
 
   const set = k => e => setForm(f => ({ ...f, [k]: e.target.value }))
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    if (!agreed) { setError('Please agree to the Privacy Policy to continue. / กรุณายอมรับนโยบายความเป็นส่วนตัว'); return }
+    if (!agreed) { setError(t('auth.agreeRequired')); return }
     const pwError = passwordError(form.password)
     if (pwError) { setError(pwError); return }
     setLoading(true)
@@ -38,7 +41,7 @@ export default function Register() {
       await register(form.email, form.password, form.name, form.phone)
       navigate('/dashboard')
     } catch (err) {
-      setError(authErrorMessage(err.code, 'Registration failed.'))
+      setError(authErrorMessage(err.code, t('auth.registrationFailed')))
     } finally {
       setLoading(false)
     }
@@ -51,17 +54,17 @@ export default function Register() {
       await loginWithGoogle()
       navigate('/')
     } catch (err) {
-      if (err.code !== 'auth/popup-closed-by-user') setError('Google sign-in failed. Please try again.')
+      if (err.code !== 'auth/popup-closed-by-user') setError(t('auth.googleFailed'))
     } finally {
       setGLoading(false)
     }
   }
 
   const fields = [
-    { label: 'Full Name',       key: 'name',     type: 'text',     placeholder: 'John Doe' },
-    { label: 'Phone Number',    key: 'phone',    type: 'tel',      placeholder: '+66 00 000 0000' },
-    { label: 'Email Address',   key: 'email',    type: 'email',    placeholder: 'you@email.com' },
-    { label: 'Password',        key: 'password', type: 'password', placeholder: '8+ characters' },
+    { label: t('auth.fullName'),     key: 'name',     type: 'text',     placeholder: 'John Doe' },
+    { label: t('auth.phoneNumber'),  key: 'phone',    type: 'tel',      placeholder: '+66 00 000 0000' },
+    { label: t('auth.emailAddress'), key: 'email',    type: 'email',    placeholder: 'you@email.com' },
+    { label: t('auth.password'),     key: 'password', type: 'password', placeholder: t('auth.passwordHint') },
   ]
 
   return (
@@ -78,8 +81,11 @@ export default function Register() {
         </div>
 
         <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
-          <h2 className="text-xl font-black text-gray-900 mb-1">Join Rewards Club</h2>
-          <p className="text-sm text-gray-500 mb-5">Earn points with every purchase!</p>
+          <div className="flex justify-end mb-2">
+            <LanguageSwitcher />
+          </div>
+          <h2 className="text-xl font-black text-gray-900 mb-1">{t('auth.joinTitle')}</h2>
+          <p className="text-sm text-gray-500 mb-5">{t('auth.joinSub')}</p>
 
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">{error}</div>
@@ -89,20 +95,19 @@ export default function Register() {
           <button onClick={handleGoogle} disabled={gLoading || !agreed}
             className="w-full flex items-center justify-center gap-3 py-3 rounded-xl border-2 border-gray-200 text-sm font-bold text-gray-700 hover:bg-gray-50 transition-colors mb-4 disabled:opacity-60">
             <GoogleIcon />
-            {gLoading ? 'Signing up…' : 'Sign up with Google'}
+            {gLoading ? t('auth.signingUp') : t('auth.signUpGoogle')}
           </button>
 
           <p className="text-[11px] text-gray-400 text-center mb-4 -mt-1 leading-snug">
-            By continuing with Google, you agree to our{' '}
+            {t('auth.googleTerms')}{' '}
             <Link to="/privacy" target="_blank" className="font-bold hover:underline" style={{ color: '#CC0000' }}>
-              Privacy Policy
+              {t('auth.privacyPolicy')}
             </Link>
-            {' '}/ เมื่อดำเนินการต่อ ถือว่าคุณยอมรับนโยบายความเป็นส่วนตัว
           </p>
 
           <div className="flex items-center gap-3 mb-4">
             <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400 font-medium">or fill in manually</span>
+            <span className="text-xs text-gray-400 font-medium">{t('auth.fillManually')}</span>
             <div className="flex-1 h-px bg-gray-200" />
           </div>
 
@@ -121,23 +126,22 @@ export default function Register() {
               <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)}
                 className="mt-0.5 shrink-0" />
               <span>
-                I agree to the{' '}
+                {t('auth.agreeTo')}{' '}
                 <Link to="/privacy" target="_blank" className="font-bold hover:underline" style={{ color: '#CC0000' }}>
-                  Privacy Policy
-                </Link>{' '}
-                / ฉันยอมรับนโยบายความเป็นส่วนตัว
+                  {t('auth.privacyPolicy')}
+                </Link>
               </span>
             </label>
             <button type="submit" disabled={loading || !agreed}
               className="w-full py-3 rounded-xl text-sm font-black text-white disabled:opacity-60 mt-1"
               style={{ background: '#CC0000' }}>
-              {loading ? 'Creating account…' : 'Create My Account'}
+              {loading ? t('auth.creatingAccount') : t('auth.createAccount')}
             </button>
           </form>
 
           <p className="text-center text-sm text-gray-500 mt-5">
-            Already a member?{' '}
-            <Link to="/login" className="font-black hover:underline" style={{ color: '#CC0000' }}>Sign In</Link>
+            {t('auth.alreadyMember')}{' '}
+            <Link to="/login" className="font-black hover:underline" style={{ color: '#CC0000' }}>{t('auth.signIn')}</Link>
           </p>
         </div>
       </div>

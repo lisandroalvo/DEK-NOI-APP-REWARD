@@ -10,8 +10,10 @@ import { usePendingBillCount } from '../hooks/usePendingBillCount'
 import { initAudio } from '../utils/soundEffects'
 import BillNotificationToast from './BillNotificationToast'
 import logo from '../assets/logo.png'
+import { useT } from '../i18n/LanguageContext'
 
 function CompleteProfileModal({ userId }) {
+  const { t } = useT()
   const [phone, setPhone] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -27,11 +29,11 @@ function CompleteProfileModal({ userId }) {
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6">
         <div className="text-center mb-5">
           <div className="text-4xl mb-2">📱</div>
-          <h2 className="text-lg font-black text-gray-900">One more thing!</h2>
-          <p className="text-sm text-gray-500 mt-1">Add your phone number so we can reach you about your rewards.</p>
+          <h2 className="text-lg font-black text-gray-900">{t('completeProfile.title')}</h2>
+          <p className="text-sm text-gray-500 mt-1">{t('completeProfile.subtitle')}</p>
         </div>
         <div className="mb-4">
-          <label className="block text-sm font-semibold text-gray-700 mb-1.5">Phone Number</label>
+          <label className="block text-sm font-semibold text-gray-700 mb-1.5">{t('completeProfile.phoneLabel')}</label>
           <input
             type="tel" value={phone} onChange={e => setPhone(e.target.value)}
             placeholder="+66 00 000 0000" autoFocus
@@ -44,11 +46,11 @@ function CompleteProfileModal({ userId }) {
         <button onClick={save} disabled={saving || !phone.trim()}
           className="w-full py-3 rounded-xl text-sm font-black text-white disabled:opacity-50"
           style={{ background: '#CC0000' }}>
-          {saving ? 'Saving…' : 'Save & Continue'}
+          {saving ? t('completeProfile.saving') : t('completeProfile.save')}
         </button>
         <button onClick={() => updateDoc(doc(db, 'users', userId), { phone: '-' })}
           className="w-full mt-2 py-2 text-xs text-gray-400 hover:text-gray-600">
-          Skip for now
+          {t('completeProfile.skip')}
         </button>
       </div>
     </div>
@@ -56,6 +58,7 @@ function CompleteProfileModal({ userId }) {
 }
 
 export default function Layout({ children }) {
+  const { t } = useT()
   const { user, profile, logout } = useAuth()
   const navigate = useNavigate()
   const { pathname } = useLocation()
@@ -101,10 +104,10 @@ export default function Layout({ children }) {
   ]
 
   const customerLinks = [
-    { to: '/dashboard',      icon: <Star size={22} />,        label: 'My Points' },
-    { to: '/rewards',        icon: <Gift size={22} />,        label: 'Rewards' },
-    { to: '/activity',       icon: <Receipt size={22} />,     label: 'Activity' },
-    { to: '/profile',        icon: <User size={22} />,        label: 'Profile' },
+    { to: '/dashboard',      icon: <Star size={22} />,        label: t('nav.myPoints') },
+    { to: '/rewards',        icon: <Gift size={22} />,        label: t('nav.rewards') },
+    { to: '/activity',       icon: <Receipt size={22} />,     label: t('nav.activity') },
+    { to: '/profile',        icon: <User size={22} />,        label: t('nav.profile') },
   ]
 
   const links = isAdmin ? adminLinks : customerLinks
@@ -132,12 +135,12 @@ export default function Layout({ children }) {
         
         <img src={logo} alt="DEK NOI" className="h-16 w-auto mx-auto object-contain" />
         <p className="text-center text-xs font-bold mt-1" style={{ color: '#CC0000' }}>
-          {isAdmin ? '— Admin Panel —' : '— Rewards Club —'}
+          {isAdmin ? '— Admin Panel —' : t('nav.rewardsClub')}
         </p>
         {!isAdmin && (
           <div className="flex items-center justify-center gap-1.5 mt-2 rounded-full px-3 py-1" style={{ background: '#FFE600' }}>
             <Star size={12} style={{ color: '#CC0000' }} fill="currentColor" />
-            <span className="text-xs font-black" style={{ color: '#CC0000' }}>{(profile?.points ?? 0).toLocaleString()} pts</span>
+            <span className="text-xs font-black" style={{ color: '#CC0000' }}>{(profile?.points ?? 0).toLocaleString()} {t('common.pts')}</span>
           </div>
         )}
         <p className="text-center text-xs text-gray-400 mt-1 truncate">{profile?.name}</p>
@@ -173,7 +176,7 @@ export default function Layout({ children }) {
         <div className="p-3">
           <button onClick={doLogout}
             className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm font-medium text-gray-500 hover:bg-red-50 transition-all">
-            <LogOut size={16} /> Logout
+            <LogOut size={16} /> {isAdmin ? 'Logout' : t('nav.logout')}
           </button>
         </div>
       </div>

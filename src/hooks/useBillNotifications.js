@@ -2,6 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { playSuccessSound } from '../utils/soundEffects'
+import { translate, resolveInitialLang } from '../i18n/translate'
+import en from '../i18n/dictionaries/en'
+import th from '../i18n/dictionaries/th'
+
+const DICTS = { en, th }
+function tMsg(key, vars) {
+  const lang = resolveInitialLang(localStorage.getItem('dekNoiLang'))
+  return translate(DICTS[lang], en, key, vars)
+}
 
 export function useBillNotifications(userId) {
   const [notification, setNotification] = useState(null)
@@ -48,14 +57,14 @@ export function useBillNotifications(userId) {
             setNotification({
               type: 'success',
               title: '✅ Bill Approved!',
-              message: `You received +${bill.pointsAwarded} points!`,
+              message: tMsg('toast.pointsReceived', { points: bill.pointsAwarded }),
               notes: bill.notes
             })
           } else if (bill.status === 'rejected') {
             setNotification({
               type: 'error',
               title: '❌ Bill Not Approved',
-              message: bill.notes || 'Please check the bill and try again.',
+              message: bill.notes || tMsg('toast.billNeedsAttention'),
               notes: bill.notes
             })
           }

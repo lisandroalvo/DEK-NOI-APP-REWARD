@@ -6,6 +6,8 @@ import { User, Mail, Phone, Camera, Save, LogOut, MessageCircle, ChevronRight } 
 import { useNavigate } from 'react-router-dom'
 import ImageUpload from '../../components/ImageUpload'
 import lineChar from '../../assets/line-qr.png'
+import { useT } from '../../i18n/LanguageContext'
+import LanguageSwitcher from '../../components/LanguageSwitcher'
 
 // Opening our LINE official account: chats for existing followers, and shows
 // LINE's own add-friend screen for anyone who hasn't followed yet.
@@ -14,6 +16,7 @@ const LINE_URL = 'https://line.me/R/ti/p/@167fnbxs'
 export default function Profile() {
   const { user, profile, logout } = useAuth()
   const navigate = useNavigate()
+  const { t } = useT()
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
@@ -34,7 +37,7 @@ export default function Profile() {
       window.location.reload() // Refresh to update profile
     } catch (error) {
       console.error('Error updating profile:', error)
-      alert('Failed to update profile')
+      alert(t('profile.updateFailed'))
     } finally {
       setSaving(false)
     }
@@ -47,7 +50,7 @@ export default function Profile() {
 
   return (
     <div className="p-4 sm:p-6 md:p-8 max-w-2xl w-full mx-auto">
-      <h1 className="text-xl sm:text-2xl font-black text-gray-900 mb-4 sm:mb-6">My Profile</h1>
+      <h1 className="text-xl sm:text-2xl font-black text-gray-900 mb-4 sm:mb-6">{t('profile.title')}</h1>
 
       {/* Profile Card */}
       <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg border-2 overflow-hidden mb-4 sm:mb-6" style={{ borderColor: '#CC0000' }}>
@@ -81,18 +84,18 @@ export default function Profile() {
             <div className="space-y-4 mb-6">
               {/* Photo Upload */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Profile Photo</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">{t('profile.profilePhoto')}</label>
                 <ImageUpload
                   value={form.photoURL}
                   onChange={(url) => setForm(f => ({ ...f, photoURL: url }))}
-                  label="Upload Photo"
+                  label={t('profile.uploadPhoto')}
                   folder={`avatars/${user.uid}`}
                 />
               </div>
 
               {/* Name */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">{t('profile.fullName')}</label>
                 <input
                   type="text"
                   value={form.name}
@@ -105,7 +108,7 @@ export default function Profile() {
 
               {/* Phone */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Phone Number</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">{t('profile.phoneNumber')}</label>
                 <input
                   type="tel"
                   value={form.phone}
@@ -120,7 +123,7 @@ export default function Profile() {
             <div className="space-y-4 mb-6">
               <div>
                 <h2 className="text-2xl font-black text-gray-900">{profile?.name}</h2>
-                <p className="text-sm text-gray-500">{profile?.role === 'admin' ? 'Administrator' : 'Customer'}</p>
+                <p className="text-sm text-gray-500">{profile?.role === 'admin' ? t('profile.administrator') : t('profile.customer')}</p>
               </div>
 
               <div className="space-y-3">
@@ -152,7 +155,7 @@ export default function Profile() {
                     })
                   }}
                   className="flex-1 py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-600">
-                  Cancel
+                  {t('profile.cancel')}
                 </button>
                 <button
                   onClick={handleSave}
@@ -160,7 +163,7 @@ export default function Profile() {
                   className="flex-1 py-3 rounded-xl text-sm font-black text-white flex items-center justify-center gap-2 disabled:opacity-60"
                   style={{ background: '#CC0000' }}>
                   <Save size={16} />
-                  {saving ? 'Saving...' : 'Save Changes'}
+                  {saving ? t('profile.saving') : t('profile.save')}
                 </button>
               </>
             ) : (
@@ -168,7 +171,7 @@ export default function Profile() {
                 onClick={() => setEditing(true)}
                 className="flex-1 py-3 rounded-xl text-sm font-black text-white"
                 style={{ background: '#CC0000' }}>
-                Edit Profile
+                {t('profile.editProfile')}
               </button>
             )}
           </div>
@@ -178,15 +181,15 @@ export default function Profile() {
       {/* Stats Card */}
       {profile?.role !== 'admin' && (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-          <h3 className="font-black text-gray-900 mb-4">Your Stats</h3>
+          <h3 className="font-black text-gray-900 mb-4">{t('profile.yourStats')}</h3>
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center p-4 rounded-xl" style={{ background: '#FFF0F0' }}>
               <p className="text-3xl font-black" style={{ color: '#CC0000' }}>{profile?.points || 0}</p>
-              <p className="text-xs text-gray-500 font-semibold mt-1">Total Points</p>
+              <p className="text-xs text-gray-500 font-semibold mt-1">{t('profile.totalPoints')}</p>
             </div>
             <div className="text-center p-4 rounded-xl bg-gray-50">
               <p className="text-3xl font-black text-gray-900">-</p>
-              <p className="text-xs text-gray-500 font-semibold mt-1">Rewards Claimed</p>
+              <p className="text-xs text-gray-500 font-semibold mt-1">{t('profile.rewardsClaimed')}</p>
             </div>
           </div>
         </div>
@@ -201,24 +204,30 @@ export default function Profile() {
       >
         <h3 className="font-black text-gray-900 flex items-center gap-2 mb-4">
           <MessageCircle size={20} style={{ color: '#00B900' }} />
-          Contact Us on LINE
+          {t('profile.contactLine')}
         </h3>
         <div className="flex items-center gap-4">
           <img src={lineChar} alt="" className="w-20 h-20 object-contain shrink-0" />
           <div className="min-w-0">
-            <p className="text-sm font-bold text-gray-700">Tap to chat with us on LINE</p>
-            <p className="text-xs text-gray-500 mt-0.5">Get support and updates!</p>
+            <p className="text-sm font-bold text-gray-700">{t('profile.tapToChat')}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{t('profile.getSupport')}</p>
           </div>
           <ChevronRight size={18} className="text-gray-400 shrink-0 ml-auto" />
         </div>
       </a>
+
+      {/* Language */}
+      <div className="flex items-center justify-between bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6">
+        <span className="text-sm font-bold text-gray-700">{t('profile.language')}</span>
+        <LanguageSwitcher />
+      </div>
 
       {/* Logout Button */}
       <button
         onClick={handleLogout}
         className="w-full py-3 rounded-xl text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-colors flex items-center justify-center gap-2">
         <LogOut size={16} />
-        Sign Out
+        {t('nav.signOut')}
       </button>
     </div>
   )
