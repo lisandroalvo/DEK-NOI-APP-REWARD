@@ -196,6 +196,10 @@ export default {
     joinFree: 'Join for free!',
     invalidLogin: 'Invalid email or password.',
     googleFailed: 'Google sign-in failed. Please try again.',
+    // in-app browser (LINE/Facebook/Instagram) — Google OAuth is blocked in these webviews
+    inAppHint: "Google Sign-In doesn't work inside this app.",
+    inAppOpenBrowser: 'Open in browser',
+    inAppManualHint: 'Tap the ⋯ menu and choose "Open in browser", or sign in with email below.',
     // register
     joinTitle: 'Join Rewards Club',
     joinSub: 'Earn points with every purchase!',

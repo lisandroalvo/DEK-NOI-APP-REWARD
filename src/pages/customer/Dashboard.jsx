@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import { BAHT_PER_POINT } from '../../lib/points'
+import { summarizePointTransactions } from '../../lib/pointStats'
 import { useAuth } from '../../context/AuthContext'
 import { Star, TrendingUp, Gift, Clock, ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -38,8 +39,8 @@ export default function CustomerDashboard() {
   }, [user])
 
   const pts = profile?.points ?? 0
-  const earned = transactions.filter(t => t.points > 0).reduce((a, t) => a + t.points, 0)
-  const redeemed = Math.abs(transactions.filter(t => t.points < 0).reduce((a, t) => a + t.points, 0))
+  // Net refund credits out of both tiles: a refunded rejection is neither earned nor redeemed.
+  const { earned, redeemed } = summarizePointTransactions(transactions)
 
   // Progress toward the next point from carried-over spend. `% BAHT_PER_POINT` keeps this in
   // 0..BAHT_PER_POINT-1 even for a legacy spendCarry left over from an earlier earning rate
