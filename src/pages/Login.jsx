@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { detectInAppBrowser, buildExternalUrl } from '../lib/inAppBrowser'
+import InAppBrowserNotice from '../components/InAppBrowserNotice'
 import PageTransition from '../components/PageTransition'
 import { useT } from '../i18n/LanguageContext'
 import LanguageSwitcher from '../components/LanguageSwitcher'
@@ -27,11 +27,6 @@ export default function Login() {
   const { login, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
   const { t } = useT()
-
-  // Google OAuth is blocked inside in-app browser webviews (LINE, Facebook, Instagram),
-  // where signInWithPopup silently hangs. Detect them and steer the user to a real browser.
-  const inApp = detectInAppBrowser(typeof navigator !== 'undefined' ? navigator.userAgent : '')
-  const openInBrowser = () => { window.location.href = buildExternalUrl(window.location.href) }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -85,19 +80,7 @@ export default function Login() {
           )}
 
           {/* In-app browser (LINE/FB/IG) — Google sign-in is blocked here; guide the user out */}
-          {inApp && (
-            <div className="mb-4 p-3 rounded-xl border-2" style={{ borderColor: '#FFE600', background: '#FFFBEB' }}>
-              <p className="text-sm font-bold text-gray-800 mb-2">{t('auth.inAppHint')}</p>
-              {inApp.canForceExternal ? (
-                <button onClick={openInBrowser}
-                  className="w-full py-2.5 rounded-lg text-sm font-black text-white" style={{ background: '#CC0000' }}>
-                  {t('auth.inAppOpenBrowser')}
-                </button>
-              ) : (
-                <p className="text-xs text-gray-600 leading-snug">{t('auth.inAppManualHint')}</p>
-              )}
-            </div>
-          )}
+          <InAppBrowserNotice />
 
           {/* Google button */}
           <button onClick={handleGoogle} disabled={gLoading}

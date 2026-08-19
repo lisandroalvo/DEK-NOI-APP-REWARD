@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { authErrorMessage, passwordError } from '../lib/authForm'
+import InAppBrowserNotice from '../components/InAppBrowserNotice'
 import { useT } from '../i18n/LanguageContext'
 import LanguageSwitcher from '../components/LanguageSwitcher'
 import logo from '../assets/logo.png'
@@ -90,6 +91,9 @@ export default function Register() {
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">{error}</div>
           )}
+
+          {/* In-app browser (LINE/FB/IG) — Google sign-in is blocked here; guide the user out */}
+          <InAppBrowserNotice />
 
           {/* Google button */}
           <button onClick={handleGoogle} disabled={gLoading || !agreed}
