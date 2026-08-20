@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!-- ABOUTME: DEK NOI public landing page, Thai-first with an English toggle. -->
+<!-- ABOUTME: Static single-page marketing site; links out to the rewards web app. -->
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DEK NOI — สะสมแต้ม แลกของรางวัล</title>
+  <link rel="icon" href="assets/logo.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <img class="logo" src="assets/logo.png" alt="DEK NOI" />
+    <button id="lang-toggle" class="lang-toggle" type="button">EN</button>
+  </header>
+
+  <section class="hero">
+    <h1 id="tagline">สะสมแต้ม แลกของรางวัล ที่ร้านเด็กน้อย</h1>
+    <a id="open-app" class="cta" href="https://app.deknoi24.com">เปิดแอป</a>
+  </section>
+
+  <section class="props">
+    <div id="value-props" class="props-grid"></div>
+  </section>
+
+  <section class="location">
+    <h2 id="location-heading">ที่ตั้งร้าน</h2>
+    <a id="location-map" href="https://maps.google.com/?q=Supalai+River+Resort" target="_blank" rel="noopener">
+      <span id="location-name">Supalai River Resort</span>
+    </a>
+  </section>
+
+  <section class="contact">
+    <h2 id="contact-heading">ติดต่อเรา</h2>
+    <p><a id="contact-email" href="mailto:deknoi24@gmail.com">deknoi24@gmail.com</a></p>
+    <p><a id="contact-phone" href="tel:+66620283183">062-028-3183</a></p>
+    <img class="qr" src="assets/line-qr.png" alt="LINE QR" />
+  </section>
+
+  <footer class="footer">
+    <span id="footer-text">© DEK NOI</span>
+    <a href="https://app.deknoi24.com/privacy">Privacy</a>
+  </footer>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
