@@ -1,5 +1,13 @@
 {
   "projects": {
     "default": "dek-noi-4a39d"
+  },
+  "targets": {
+    "dek-noi-4a39d": {
+      "hosting": {
+        "app": ["dek-noi-4a39d"],
+        "landing": ["dek-noi-landing"]
+      }
+    }
   }
 }
