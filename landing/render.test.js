@@ -1,5 +1,6 @@
 // ABOUTME: Tests that applyContent writes the right locale into the DOM.
 // ABOUTME: Uses a minimal happy-dom/jsdom document built inline.
+// @vitest-environment jsdom
 import { describe, it, expect, beforeEach } from 'vitest'
 import { applyContent } from './render.js'
 import { CONTENT } from './content.js'
