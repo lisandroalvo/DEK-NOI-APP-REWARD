@@ -223,4 +223,13 @@ export default {
     pointsReceived: 'You received +{points} points!',
     billNeedsAttention: 'Please check the bill and try again.',
   },
+  install: {
+    title: 'Install the DEK NOI app',
+    body: 'Add it to your home screen for one-tap access to your points.',
+    button: 'Install',
+    iosHint: 'Tap the Share icon, then choose "Add to Home Screen".',
+    lineBody: 'Open this page in your browser to install the app.',
+    openBrowser: 'Open in browser',
+    dismiss: 'Dismiss',
+  },
 }

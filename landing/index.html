@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<!-- ABOUTME: DEK NOI public landing page, Thai-first with an English toggle. -->
+<!-- ABOUTME: Static single-page marketing site; links out to the rewards web app. -->
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="เด็กน้อย รีวอร์ด — สะสมแต้ม แลกของรางวัล ที่ Supalai River Resort" />
+  <title>DEK NOI — สะสมแต้ม แลกของรางวัล</title>
+  <link rel="icon" href="assets/logo.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Brand stripe frame (top) -->
+  <div class="stripe stripe-top" aria-hidden="true">
+    <div class="stripe-red"></div>
+    <div class="stripe-yellow"></div>
+  </div>
+
+  <header class="topbar">
+    <img class="logo" src="assets/logo.png" alt="DEK NOI" />
+    <button id="lang-toggle" class="lang-toggle" type="button" aria-label="Switch language / เปลี่ยนภาษา">EN</button>
+  </header>
+
+  <main class="page">
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-circle hero-circle-a" aria-hidden="true"></div>
+      <div class="hero-circle hero-circle-b" aria-hidden="true"></div>
+      <div class="hero-circle hero-circle-c" aria-hidden="true"></div>
+
+      <div class="hero-content">
+        <span id="hero-eyebrow" class="hero-eyebrow">⭐ เด็กน้อย รีวอร์ด</span>
+        <h1 id="tagline" class="hero-title">สะสมแต้ม แลกของรางวัล</h1>
+        <p id="hero-sub" class="hero-sub">ทุกการใช้บริการที่ร้านเด็กน้อย เปลี่ยนเป็นแต้มสะสม แลกของรางวัลสุดพิเศษได้เลย</p>
+        <a id="open-app" class="cta" href="https://app.deknoi24.com">เปิดแอป</a>
+      </div>
+
+      <img class="hero-char" src="assets/char-happy.png" alt="" aria-hidden="true" />
+    </section>
+
+    <!-- Value props -->
+    <section class="props">
+      <h2 id="props-heading" class="section-heading">จุดเด่นของเรา</h2>
+      <div id="value-props" class="props-grid"></div>
+    </section>
+
+    <!-- Location -->
+    <section class="location">
+      <div class="card location-card">
+        <span class="pin" aria-hidden="true">📍</span>
+        <h2 id="location-heading" class="card-title">ที่ตั้งร้าน</h2>
+        <a id="location-map" class="location-link" href="https://maps.app.goo.gl/syfFACayWBc6bYyj9" target="_blank" rel="noopener">
+          <span id="location-name">Supalai River Resort</span>
+          <span class="location-arrow" aria-hidden="true">→</span>
+        </a>
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section class="contact">
+      <div class="card contact-card">
+        <h2 id="contact-heading" class="card-title">ติดต่อเรา</h2>
+
+        <div class="contact-rows">
+          <a class="contact-row" id="contact-email" href="mailto:deknoi24@gmail.com">
+            <span class="contact-icon" aria-hidden="true">✉️</span>
+            deknoi24@gmail.com
+          </a>
+          <a class="contact-row" id="contact-phone" href="tel:+66620283183">
+            <span class="contact-icon" aria-hidden="true">📞</span>
+            062-028-3183
+          </a>
+        </div>
+
+        <div class="line-block">
+          <p id="contact-line-label" class="line-label">แอดไลน์เพื่อรับข่าวสารและโปรโมชั่น</p>
+          <a id="line-link" class="line-link" href="https://line.me/R/ti/p/%40167nbxs" target="_blank" rel="noopener">
+            <div class="qr-frame">
+              <img class="qr" src="assets/line-qr.png" alt="LINE QR" />
+            </div>
+            <span class="line-cta">แอดไลน์ / Add on LINE</span>
+          </a>
+        </div>
+
+        <img class="contact-char" src="assets/char-snacks.png" alt="" aria-hidden="true" />
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span id="footer-text" class="footer-text">© DEK NOI</span>
+      <a class="footer-link" href="https://app.deknoi24.com/privacy">Privacy</a>
+    </div>
+  </footer>
+
+  <!-- Brand stripe frame (bottom) -->
+  <div class="stripe stripe-bottom" aria-hidden="true">
+    <div class="stripe-yellow"></div>
+    <div class="stripe-red"></div>
+  </div>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

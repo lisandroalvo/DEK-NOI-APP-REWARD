@@ -9,6 +9,7 @@ import { useBillNotifications } from '../hooks/useBillNotifications'
 import { usePendingBillCount } from '../hooks/usePendingBillCount'
 import { initAudio } from '../utils/soundEffects'
 import BillNotificationToast from './BillNotificationToast'
+import InstallPrompt from './InstallPrompt'
 import logo from '../assets/logo.png'
 import { useT } from '../i18n/LanguageContext'
 
@@ -292,6 +293,9 @@ export default function Layout({ children }) {
 
       {/* ── Phone number collection for Google sign-in ── */}
       {needsPhone && <CompleteProfileModal userId={user.uid} />}
+
+      {/* ── Install-to-home-screen banner (customers only) ── */}
+      {!isAdmin && <InstallPrompt />}
     </div>
   )
 }
