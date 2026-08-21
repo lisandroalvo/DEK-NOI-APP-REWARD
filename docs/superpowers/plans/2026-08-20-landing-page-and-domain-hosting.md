@@ -19,7 +19,7 @@
 - Reuse existing assets: `src/assets/logo.png`, `src/assets/line-qr.png` (optionally `src/assets/hero.png`).
 - Contact: email `deknoi24@gmail.com`, phone `062-028-3183`.
 - Single location: **Supalai River Resort**.
-- Hero CTA links to `https://app.<DOMAIN>` where `<DOMAIN>` is the real purchased domain (placeholder `yourdomain.com` until confirmed).
+- Hero CTA links to `https://app.deknoi24.com` where `deknoi24.com` is the real purchased domain (placeholder `deknoi24.com` until confirmed).
 - Do NOT change rewards-app functionality; only its hosting target/domain.
 - Never use `--no-verify`; never commit with failing hooks.
 
@@ -182,7 +182,7 @@ contact, footer. Note the two ABOUTME lines go in an HTML comment.
 
   <section class="hero">
     <h1 id="tagline">สะสมแต้ม แลกของรางวัล ที่ร้านเด็กน้อย</h1>
-    <a id="open-app" class="cta" href="https://app.yourdomain.com">เปิดแอป</a>
+    <a id="open-app" class="cta" href="https://app.deknoi24.com">เปิดแอป</a>
   </section>
 
   <section class="props">
@@ -205,7 +205,7 @@ contact, footer. Note the two ABOUTME lines go in an HTML comment.
 
   <footer class="footer">
     <span id="footer-text">© DEK NOI</span>
-    <a href="https://app.yourdomain.com/privacy">Privacy</a>
+    <a href="https://app.deknoi24.com/privacy">Privacy</a>
   </footer>
 
   <script type="module" src="main.js"></script>
@@ -525,14 +525,14 @@ git commit -m "chore(hosting): add Firebase multi-site config for landing + app"
 ### Task 5: Wire custom domains (manual — Namecheap + consoles)
 
 **Files:** none (registrar + provider dashboards only). This task has no code; it
-is a checklist to run after Task 4 deploys successfully. Replace `yourdomain.com`
+is a checklist to run after Task 4 deploys successfully. Replace `deknoi24.com`
 with the real domain everywhere, then update the two hero/footer links in
-`landing/index.html` (they currently point at `app.yourdomain.com`).
+`landing/index.html` (they currently point at `app.deknoi24.com`).
 
 - [ ] **Step 1: Replace the placeholder domain in the landing page**
 
-In `landing/index.html`, change both `https://app.yourdomain.com` occurrences
-(hero CTA `href` and footer privacy link) to the real `https://app.<DOMAIN>`.
+In `landing/index.html`, change both `https://app.deknoi24.com` occurrences
+(hero CTA `href` and footer privacy link) to the real `https://app.deknoi24.com`.
 Also update `locationMapUrl` in `landing/content.js` if you have the exact Google
 Maps place URL. Re-run `npx vitest run landing/` — expect PASS. Commit:
 `git commit -am "chore(landing): point links at the real domain"`. Re-deploy landing (Task 4, Step 4).
@@ -540,22 +540,22 @@ Maps place URL. Re-run `npx vitest run landing/` — expect PASS. Commit:
 - [ ] **Step 2: Root domain → Firebase landing site**
 
 Firebase Console → Hosting → the `dek-noi-landing` site → **Add custom domain** →
-enter `<DOMAIN>` and `www.<DOMAIN>`. Firebase shows either A records or a TXT
+enter `deknoi24.com` and `www.deknoi24.com`. Firebase shows either A records or a TXT
 verification + A records. Copy them.
 
 - [ ] **Step 3: App subdomain → Firebase app site**
 
 Firebase Console → Hosting → the app site → **Add custom domain** →
-`app.<DOMAIN>`. Copy the records it shows.
+`app.deknoi24.com`. Copy the records it shows.
 
 - [ ] **Step 4: Dashboard subdomain → Vercel**
 
-Vercel → the back-office project → Settings → Domains → add `dashboard.<DOMAIN>`.
+Vercel → the back-office project → Settings → Domains → add `dashboard.deknoi24.com`.
 Copy the CNAME target Vercel gives (typically `cname.vercel-dns.com`).
 
 - [ ] **Step 5: Enter all records in Namecheap**
 
-Namecheap → Domain List → Manage `<DOMAIN>` → **Advanced DNS**. Add:
+Namecheap → Domain List → Manage `deknoi24.com` → **Advanced DNS**. Add:
 - Firebase root/`www` records (A and/or TXT) from Step 2.
 - `app` record (CNAME/A) from Step 3.
 - `dashboard` CNAME → Vercel target from Step 4.
@@ -565,9 +565,9 @@ Remove Namecheap's default "parking" A record and CNAME so they don't conflict.
 
 Wait for DNS (minutes to a few hours). Confirm in each console that the domain
 shows **Connected / valid certificate**. Then load in a browser:
-- `https://<DOMAIN>` → landing page
-- `https://app.<DOMAIN>` → rewards app (login works)
-- `https://dashboard.<DOMAIN>` → back office (login works)
+- `https://deknoi24.com` → landing page
+- `https://app.deknoi24.com` → rewards app (login works)
+- `https://dashboard.deknoi24.com` → back office (login works)
 Expected: all three serve over HTTPS with no cert warnings.
 
 ---
@@ -586,6 +586,6 @@ Expected: all three serve over HTTPS with no cert warnings.
 - Privacy footer link → Task 2. ✅
 - Brand palette → Task 2 CSS (verbatim hex). ✅
 
-**Placeholder scan:** `yourdomain.com` is an intentional, flagged placeholder resolved in Task 5 Step 1; no other TBD/TODO. ✅
+**Placeholder scan:** `deknoi24.com` is an intentional, flagged placeholder resolved in Task 5 Step 1; no other TBD/TODO. ✅
 
 **Type consistency:** `getContent(lang)` (Task 1) consumed by `applyContent` (Task 3); element IDs in Task 2 match those written by `applyContent` and asserted in Task 3's test. ✅
